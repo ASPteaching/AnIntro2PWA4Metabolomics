@@ -60,7 +60,7 @@ editor_options:
 
 ## Session Outline
 
-1. Introducion and objectives
+1. Introduction and objectives
 
 2. Metabolite lists: What do they mean
 
@@ -92,7 +92,7 @@ editor_options:
   - Contextualize findings to help understand biological processes
   - Identify fetures associated with a disease
   - Predict drug targets
-  - Understand how to intervene in disease1
+  - Understand how to intervene in disease
   - Conduct target literature searches
   - Integrate diverse biological information
 
@@ -107,7 +107,7 @@ editor_options:
 
 ![Metabolomics Workflows in MetaboAnalyst 5.0](images/PWA-4_Metabolomics-Slides_insertimage_3.png)
 
-## Analysis yield metabolites lists {.smaller}
+## Analysis yields metabolites lists {.smaller}
 
 :::: {.columns}
 
@@ -150,6 +150,60 @@ editor_options:
   
 - This is *far from possible* for all metabolites.
 - Uniquely and unambiguosly naming all metabolites is, in the best of cases, "work in progress".
+
+## Different annotation levels
+
+<!-- jo aquí diria que això pot dependre de la precisó del mètode de detecció -->
+1. **Exact structure**, including stereochemistry and bond geometry
+2. **Regiochemistry level** (stereochemistry and bond geometry unknown)
+3. **Molecular species level** (regiochemistry unknown)
+4. **Species level** (no information on structural features)
+
+
+## Many names and descriptors {.smaller}
+<!-- jo aquí diria que els més precisos o inequívocs, els computats, són els que menys es fan servir. I no és d'estranyar, vist la pinta que fan-->
+
+- **Computed descriptors**
+  - IUPAC name
+  - InChI, InChIKey
+  - SMILES (canonical or isomeric)
+
+![Computed descriptors for Cholesterol](images/chol_descriptors.png)
+
+<!-- IUPAC Name: (1S,2R,5S,10S,11S,14R,15R)-2,15-dimethyl-14-[(2R)-6-methylheptan-2-yl]tetracyclo[8.7.0.0^{2,7}.0^{11,15}]heptadec-7-en-5-ol -->
+  
+## Many names and descriptors {.smaller}
+<!-- pel que fa als nons-systematic identifiers, hi ha metabòlits que no tenen IDs en alguns sistemes -->
+<!-- també hi ha molts nomes deprecated però que els podem trobar a la literatura, com passa amb el CAS -->
+
+- **Non-systematic identifiers**
+  - Common name
+  - RefMet Name
+  - PubChem ID
+  - HMDB ID
+  - ChEBI ID
+  - KEGG ID
+  - LipidMaps ID
+  - Drug Bank ID
+  - Metabolomics Workbench ID
+  - CAS 
+  - Deprecated CAS
+  - ...
+
+## Many synonyms {.smaller}
+<!-- i que, precisment, els que més es fan servir, tenen un munt de sinònims -->
+![Other names for Cholesterol](images/chol_names.png)
+
+## Many solutions
+![Some compund databases](images/databases.png)
+
+## Many solutions {.smaller}
+![This study highlights the need for standardized and unified metabolite datasets to enhance the reproducibility and comparability of metabolomics studies.](images/PMID38132849.png)
+
+[https://pubmed.ncbi.nlm.nih.gov/38132849/](https://pubmed.ncbi.nlm.nih.gov/38132849/)
+
+
+
 
 ## The *where to, now?* question {.smaller}
 
@@ -345,7 +399,7 @@ process pathways (70)
 
 ## Obtaining Metabolite Sets
 
-- As described, PWA matches lists of metabolites with previously defined metabolite sets that characterize a process, a disease or a group.
+- As described, PwA matches lists of metabolites with previously defined metabolite sets that characterize a process, a disease or a group.
 
 - Some sources of information (Ontologies, Pathways DBs) directly provide metabolite sets.
 
@@ -419,7 +473,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 ## Assess significance: Fisher test
 
-- The examples shows two cases
+- The example shows two cases
   - One  where percentages are quite different
   - Another where percentages are similar.
   
@@ -437,6 +491,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 ## Example 2: Non-enriched
 
 ![P-value high, odds-ratio around 1: List is not  enriched in Feature Set ](PWA-4_Metabolomics-Slides_insertimage_11.png)
+
 ## Summary: Recipe for ORA
 
 1. Define feature list (e.g. thresholding analyzed list ) and background list,
@@ -452,7 +507,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 - No resolution between significant signals with different strengths
 - Weak signals neglected
 - Different results at different threshold settings
-- Based on the wrong assumption of independent feature (or feture group) sampling, which increases false positive predictions.
+- Based on the wrong assumption of independent feature (or feature group) sampling, which increases false positive predictions.
 
 ## Functional Class Scoring
 
@@ -472,7 +527,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 - GSEA method compares, for each feature set, the distribution of the test statistic within the set with the overall distribution of those statistics, i.e. the calculated for all genes.
 
-- To do this, test statistics are ranked (from biggest to smallest) and for set gene set a running sum is computed such that 
+- To do this, test statistics are ranked (from biggest to smallest) and for gene set a running sum is computed such that 
   - If a feature is in the  set add a certain quantity ($\sqrt{N_s/(N-N_s)}$)
   - If a feature is not in the set, substract a (small) quantity ($-\sqrt{(N-N_s)/N_s}$)
   
@@ -498,13 +553,13 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 - What to do when you don’t know what the metabolites ions are?
 
-- Most popular option is Mummichog (li et alt. 2013).
+- Most popular option is Mummichog (Li et al. 2013).
 
 ![](PWA-4_Metabolomics-Slides_insertimage_16.png)
 
 ## Mummichog pathway mapping {.smaller}
 
-- Ions are dividedvinto significant and non-significant groups.
+- Ions are divided into significant and non-significant groups.
   - E.g 1000 ions,150 with p-val <0.05
 - Repeat many times
   - Randomly take 150 of the remaining non-significant ions and mapped onto known pathways.
@@ -542,7 +597,7 @@ metabolic network.
 
 ## Hypothesis Tests Decision Table
 
-![In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and TYpe II errors)](PWA-4_Metabolomics-Slides_insertimage_19.png)
+![In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and Type II errors)](PWA-4_Metabolomics-Slides_insertimage_19.png)
 
 ## Why Multiple testing matters
 
@@ -580,7 +635,7 @@ metabolic network.
 ## False Discovery Rate
 
 - FDR is the expected proportion of "False Positives" that is of the observed enrichments due to chance.
-- Les restrictive than Bonferroni adjustment which is a bound on the probability that **any one** of the observed enrichments could be due to random chance.
+- Less restrictive than Bonferroni adjustment which is a bound on the probability that **any one** of the observed enrichments could be due to random chance.
 - Typically, FDR adjustments are calculated using the Benjamini-Hochberg procedure.
 - FDR threshold is often called the “q-value”
 

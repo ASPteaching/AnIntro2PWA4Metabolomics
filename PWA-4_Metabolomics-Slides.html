@@ -8,7 +8,7 @@
 <link href="PWA-4_Metabolomics-Slides_files/libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="PWA-4_Metabolomics-Slides_files/libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="PWA-4_Metabolomics-Slides_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.4.549">
+  <meta name="generator" content="quarto-1.3.353">
 
   <meta name="author" content="Alex Sanchez">
   <title>Pathway Analysis for metabolomics</title>
@@ -157,8 +157,7 @@
   }
 
   .callout.callout-titled .callout-body > .callout-content > :last-child {
-    padding-bottom: 0.5rem;
-    margin-bottom: 0;
+    margin-bottom: 0.5rem;
   }
 
   .callout.callout-titled .callout-icon::before {
@@ -360,10 +359,10 @@ Alex Sanchez
 <li><p>Get a practical grasp of how to apply it.</p></li>
 </ul>
 </section>
-<section id="session-outline" class="slide level2 scrollable">
+<section id="session-outline" class="slide level2">
 <h2>Session Outline</h2>
 <ol type="1">
-<li><p>Introducion and objectives</p></li>
+<li><p>Introduction and objectives</p></li>
 <li><p>Metabolite lists: What do they mean</p></li>
 <li><p>Information sources to support interpretation</p></li>
 <li><p>Methods and Tools to extract information</p></li>
@@ -389,7 +388,7 @@ Alex Sanchez
 <li>Contextualize findings to help understand biological processes</li>
 <li>Identify fetures associated with a disease</li>
 <li>Predict drug targets</li>
-<li>Understand how to intervene in disease1</li>
+<li>Understand how to intervene in disease</li>
 <li>Conduct target literature searches</li>
 <li>Integrate diverse biological information</li>
 </ul></li>
@@ -408,8 +407,8 @@ Alex Sanchez
 <h2>From samples to <em>features</em> lists (2)</h2>
 
 <img data-src="images/PWA-4_Metabolomics-Slides_insertimage_3.png" class="r-stretch quarto-figure-center"><p class="caption">Metabolomics Workflows in MetaboAnalyst 5.0</p></section>
-<section id="analysis-yield-metabolites-lists" class="slide level2 smaller">
-<h2>Analysis yield metabolites lists</h2>
+<section id="analysis-yields-metabolites-lists" class="slide level2 smaller">
+<h2>Analysis yields metabolites lists</h2>
 <div class="columns">
 <div class="column" style="width:40%;">
 <div class="center">
@@ -454,6 +453,66 @@ Alex Sanchez
 <li><p>This is <em>far from possible</em> for all metabolites.</p></li>
 <li><p>Uniquely and unambiguosly naming all metabolites is, in the best of cases, “work in progress”.</p></li>
 </ul>
+</section>
+<section id="different-annotation-levels" class="slide level2">
+<h2>Different annotation levels</h2>
+<!-- jo aquí diria que això pot dependre de la precisó del mètode de detecció -->
+<ol type="1">
+<li><strong>Exact structure</strong>, including stereochemistry and bond geometry</li>
+<li><strong>Regiochemistry level</strong> (stereochemistry and bond geometry unknown)</li>
+<li><strong>Molecular species level</strong> (regiochemistry unknown)</li>
+<li><strong>Species level</strong> (no information on structural features)</li>
+</ol>
+</section>
+<section id="many-names-and-descriptors" class="slide level2 smaller">
+<h2>Many names and descriptors</h2>
+<!-- jo aquí diria que els més precisos o inequívocs, els computats, són els que menys es fan servir. I no és d'estranyar, vist la pinta que fan-->
+<ul>
+<li><strong>Computed descriptors</strong>
+<ul>
+<li>IUPAC name</li>
+<li>InChI, InChIKey</li>
+<li>SMILES (canonical or isomeric)</li>
+</ul></li>
+</ul>
+
+<!-- IUPAC Name: (1S,2R,5S,10S,11S,14R,15R)-2,15-dimethyl-14-[(2R)-6-methylheptan-2-yl]tetracyclo[8.7.0.0^{2,7}.0^{11,15}]heptadec-7-en-5-ol -->
+<img data-src="images/chol_descriptors.png" class="r-stretch quarto-figure-center"><p class="caption">Computed descriptors for Cholesterol</p></section>
+<section id="many-names-and-descriptors-1" class="slide level2 smaller">
+<h2>Many names and descriptors</h2>
+<!-- pel que fa als nons-systematic identifiers, hi ha metabòlits que no tenen IDs en alguns sistemes -->
+<!-- també hi ha molts nomes deprecated però que els podem trobar a la literatura, com passa amb el CAS -->
+<ul>
+<li><strong>Non-systematic identifiers</strong>
+<ul>
+<li>Common name</li>
+<li>RefMet Name</li>
+<li>PubChem ID</li>
+<li>HMDB ID</li>
+<li>ChEBI ID</li>
+<li>KEGG ID</li>
+<li>LipidMaps ID</li>
+<li>Drug Bank ID</li>
+<li>Metabolomics Workbench ID</li>
+<li>CAS</li>
+<li>Deprecated CAS</li>
+<li>…</li>
+</ul></li>
+</ul>
+</section>
+<section id="many-synonyms" class="slide level2 smaller">
+<h2>Many synonyms</h2>
+<!-- i que, precisment, els que més es fan servir, tenen un munt de sinònims -->
+
+<img data-src="images/chol_names.png" class="r-stretch quarto-figure-center"><p class="caption">Other names for Cholesterol</p></section>
+<section id="many-solutions" class="slide level2">
+<h2>Many solutions</h2>
+
+<img data-src="images/databases.png" class="r-stretch quarto-figure-center"><p class="caption">Some compund databases</p></section>
+<section id="many-solutions-1" class="slide level2 smaller">
+<h2>Many solutions</h2>
+
+<img data-src="images/PMID38132849.png" class="r-stretch quarto-figure-center"><p class="caption">This study highlights the need for standardized and unified metabolite datasets to enhance the reproducibility and comparability of metabolomics studies.</p><p><a href="https://pubmed.ncbi.nlm.nih.gov/38132849/">https://pubmed.ncbi.nlm.nih.gov/38132849/</a></p>
 </section>
 <section id="the-where-to-now-question" class="slide level2 smaller">
 <h2>The <em>where to, now?</em> question</h2>
@@ -613,7 +672,7 @@ Alex Sanchez
 <section id="obtaining-metabolite-sets" class="slide level2">
 <h2>Obtaining Metabolite Sets</h2>
 <ul>
-<li><p>As described, PWA matches lists of metabolites with previously defined metabolite sets that characterize a process, a disease or a group.</p></li>
+<li><p>As described, PwA matches lists of metabolites with previously defined metabolite sets that characterize a process, a disease or a group.</p></li>
 <li><p>Some sources of information (Ontologies, Pathways DBs) directly provide metabolite sets.</p></li>
 <li><p>For compound DBs, Metabolite sets have to be built</p>
 <ul>
@@ -687,7 +746,7 @@ Alex Sanchez
 <section id="assess-significance-fisher-test" class="slide level2">
 <h2>Assess significance: Fisher test</h2>
 <ul>
-<li>The examples shows two cases
+<li>The example shows two cases
 <ul>
 <li>One where percentages are quite different</li>
 <li>Another where percentages are similar.</li>
@@ -704,9 +763,12 @@ Alex Sanchez
 <h2>Example 1: Surprisingly enriched</h2>
 
 <img data-src="PWA-4_Metabolomics-Slides_insertimage_12.png" class="r-stretch quarto-figure-center"><p class="caption">P-value small, odds-ratio high: List is surprisingly enriched in Feature Set</p></section>
-<section id="example-2-non-enriched" class="slide level2 scrollable">
+<section id="example-2-non-enriched" class="slide level2">
 <h2>Example 2: Non-enriched</h2>
-<p><img data-src="PWA-4_Metabolomics-Slides_insertimage_11.png" alt="P-value high, odds-ratio around 1: List is not enriched in Feature Set"> ## Summary: Recipe for ORA</p>
+
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_11.png" class="r-stretch quarto-figure-center"><p class="caption">P-value high, odds-ratio around 1: List is not enriched in Feature Set</p></section>
+<section id="summary-recipe-for-ora" class="slide level2">
+<h2>Summary: Recipe for ORA</h2>
 <ol type="1">
 <li>Define feature list (e.g.&nbsp;thresholding analyzed list ) and background list,</li>
 <li>Select feature sets to test for enrichment,</li>
@@ -723,7 +785,7 @@ Alex Sanchez
 <li>No resolution between significant signals with different strengths</li>
 <li>Weak signals neglected</li>
 <li>Different results at different threshold settings</li>
-<li>Based on the wrong assumption of independent feature (or feture group) sampling, which increases false positive predictions.</li>
+<li>Based on the wrong assumption of independent feature (or feature group) sampling, which increases false positive predictions.</li>
 </ul>
 </section>
 <section id="functional-class-scoring" class="slide level2">
@@ -744,7 +806,7 @@ Alex Sanchez
 <h2>The GSEA Method (1)</h2>
 <ul>
 <li><p>GSEA method compares, for each feature set, the distribution of the test statistic within the set with the overall distribution of those statistics, i.e.&nbsp;the calculated for all genes.</p></li>
-<li><p>To do this, test statistics are ranked (from biggest to smallest) and for set gene set a running sum is computed such that</p>
+<li><p>To do this, test statistics are ranked (from biggest to smallest) and for gene set a running sum is computed such that</p>
 <ul>
 <li>If a feature is in the set add a certain quantity (<span class="math inline">\(\sqrt{N_s/(N-N_s)}\)</span>)</li>
 <li>If a feature is not in the set, substract a (small) quantity (<span class="math inline">\(-\sqrt{(N-N_s)/N_s}\)</span>)</li>
@@ -776,14 +838,14 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <h2>PWA for untargeted studies</h2>
 <ul>
 <li><p>What to do when you don’t know what the metabolites ions are?</p></li>
-<li><p>Most popular option is Mummichog (li et alt. 2013).</p></li>
+<li><p>Most popular option is Mummichog (Li et al.&nbsp;2013).</p></li>
 </ul>
 
 <img data-src="PWA-4_Metabolomics-Slides_insertimage_16.png" class="r-stretch"></section>
 <section id="mummichog-pathway-mapping" class="slide level2 smaller">
 <h2>Mummichog pathway mapping</h2>
 <ul>
-<li>Ions are dividedvinto significant and non-significant groups.
+<li>Ions are divided into significant and non-significant groups.
 <ul>
 <li>E.g 1000 ions,150 with p-val &lt;0.05</li>
 </ul></li>
@@ -795,7 +857,7 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <li>The significant ions are now mapped to the pathways and evidence is sought for enhanced associations (Fisher exact test)</li>
 </ul>
 </section>
-<section id="mummichog-change-of-approach" class="slide level2 scrollable">
+<section id="mummichog-change-of-approach" class="slide level2">
 <h2>Mummichog change of approach</h2>
 
 <img data-src="PWA-4_Metabolomics-Slides_insertimage_18.png" class="r-stretch quarto-figure-center"><p class="caption">Mummichog redefines the work flow of untargeted metabolomics</p><aside class="notes">
@@ -838,7 +900,7 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <section id="hypothesis-tests-decision-table" class="slide level2">
 <h2>Hypothesis Tests Decision Table</h2>
 
-<img data-src="PWA-4_Metabolomics-Slides_insertimage_19.png" class="r-stretch quarto-figure-center"><p class="caption">In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and TYpe II errors)</p></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_19.png" class="r-stretch quarto-figure-center"><p class="caption">In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and Type II errors)</p></section>
 <section id="why-multiple-testing-matters" class="slide level2">
 <h2>Why Multiple testing matters</h2>
 
@@ -874,7 +936,7 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <h2>False Discovery Rate</h2>
 <ul>
 <li>FDR is the expected proportion of “False Positives” that is of the observed enrichments due to chance.</li>
-<li>Les restrictive than Bonferroni adjustment which is a bound on the probability that <strong>any one</strong> of the observed enrichments could be due to random chance.</li>
+<li>Less restrictive than Bonferroni adjustment which is a bound on the probability that <strong>any one</strong> of the observed enrichments could be due to random chance.</li>
 <li>Typically, FDR adjustments are calculated using the Benjamini-Hochberg procedure.</li>
 <li>FDR threshold is often called the “q-value”</li>
 </ul>
@@ -883,13 +945,13 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <h2>An example</h2>
 <div class="cell">
 <div class="cell-output-display">
-<table>
+<table data-quarto-postprocess="true">
 <thead>
 <tr class="header">
-<th style="text-align: left;"></th>
-<th style="text-align: right;">raw</th>
-<th style="text-align: right;">Bonferroni</th>
-<th style="text-align: right;">FDR</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th"></th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">raw</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Bonferroni</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">FDR</th>
 </tr>
 </thead>
 <tbody>
@@ -1273,6 +1335,8 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 </tr>
 </tbody>
 </table>
+
+
 </div>
 </div>
 </section></section>
@@ -1328,10 +1392,8 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <img data-src="PWA-4_Metabolomics-Slides_insertimage_24.png" class="r-stretch quarto-figure-center"><p class="caption">Common pathway analysis tools for metabolomics data.</p></section></section>
 <section id="a-use-case-with-metaboanalyst" class="title-slide slide level1 center">
 <h1>A use case with MetaboAnalyst</h1>
-<div class="quarto-auto-generated-content">
 <div class="footer footer-default">
 
-</div>
 </div>
 </section>
     </div>
@@ -1360,6 +1422,7 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
       Reveal.initialize({
 'controlsAuto': true,
 'previewLinksAuto': false,
+'smaller': false,
 'pdfSeparateFragments': false,
 'autoAnimateEasing': "ease",
 'autoAnimateDuration': 1,
@@ -1658,9 +1721,10 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
         // clear code selection
         e.clearSelection();
       });
-      function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      function tippyHover(el, contentFn) {
         const config = {
           allowHTML: true,
+          content: contentFn,
           maxWidth: 500,
           delay: 100,
           arrow: false,
@@ -1670,17 +1734,8 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
           interactive: true,
           interactiveBorder: 10,
           theme: 'light-border',
-          placement: 'bottom-start',
+          placement: 'bottom-start'
         };
-        if (contentFn) {
-          config.content = contentFn;
-        }
-        if (onTriggerFn) {
-          config.onTrigger = onTriggerFn;
-        }
-        if (onUntriggerFn) {
-          config.onUntrigger = onUntriggerFn;
-        }
           config['offset'] = [0,0];
           config['maxWidth'] = 700;
         window.tippy(el, config); 
