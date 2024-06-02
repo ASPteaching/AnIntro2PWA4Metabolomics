@@ -1,0 +1,213 @@
+<<include=FALSE>>=
+  library(knitr)
+opts_chunk$set(fig.path='images/grafic', tidy=FALSE, cache=FALSE, message=FALSE, echo=FALSE, print=FALSE)
+@
+  
+\documentclass{article}
+
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage[utf8]{inputenc}
+% \usepackage[spanish]{babel}
+\usepackage{underscore}
+
+\title{"GSEA made simple"}
+
+\author{Alex S\'anchez}
+  
+\bibliographystyle{plain}
+  
+  
+\begin{document}
+  
+\maketitle
+  
+<<librerias, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
+  installifnot <- function (pckgName){
+  if (!(require(pckgName, character.only=TRUE))) {
+  install.packages(pckgName)
+  }else{
+  print(paste("Package", pckgName, "already installed", sep=" "))
+  } 
+  }
+  installBiocifnot <- function (pckgName){
+  if (!(require(pckgName, character.only=TRUE))) {
+  source("https://bioconductor.org/biocLite.R")
+  biocLite(eval(pckgName), suppressUpdates=TRUE)
+  }else{
+  print(paste("Package", pckgName, "already installed", sep=" "))
+  } 
+  }
+  installifnot("GSA")
+  installifnot("naturalsort")
+  installBiocifnot("genefilter")
+  installBiocifnot("Biobase")
+  installBiocifnot("pd.hugene.2.1.st")
+  installBiocifnot("hugene20sttranscriptcluster.db")
+@ 
+  
+<<preparaDirectorios, message=FALSE>>=
+  workingDir <-getwd()
+  dataDir <-file.path(workingDir, "dades")
+  resultsDir <- file.path(workingDir,"results")
+  celfilesDir <- file.path(workingDir,"celfiles")
+  setwd(workingDir)
+@
+
+\section{Preparación de los datos}
+
+\subsection{Las matrices de expresion}
+
+En este analisis se realizara el GSA con varias matrices de expresion, cada una de las cuales es un subconjunto de la matriz general.
+<<dades>>=
+load(file=file.path(dataDir, "normalizedData.Rda"))
+targets <- read.table(file=file.path(dataDir, "targets.SER249.txt"), head=TRUE, row.names=1)
+sum(colnames(exprs(my.norm))!=rownames(targets))
+pData(my.norm)<-targets
+colnames(exprs(my.norm))<-pData(my.norm)$ShortName
+@
+
+En primer lugar se filtra la matriz para conservar únicamente los genes con Entrez, y únicamente con la sonda de mayor variabilidad
+
+<<filterAll>>=
+nrow(exprs( my.norm))
+annotation(my.norm) <- "hugene20sttranscriptcluster.db"
+my.norm.unique <- featureFilter(my.norm)
+nrow(exprs(my.norm.unique))
+@
+
+A continuación se prepara una lista de matrices de expresión, cada una con únicamente las muestras que participan de las comparaciones apareadas.
+
+<<listaMatrices>>=
+listMats<-list()
+listVecs<-list()
+filenames<-rownames(pData(my.norm.unique))
+sum(filenames!=rownames(targets))
+matNames<-colnames(targets)[9:14]
+for (i in 1:length(matNames)){
+  subsetEset <-my.norm.unique[, targets[,8+i]!=0]
+  cat(matNames[i],"\t", as.character(pData(subsetEset)$Grupo), "\n")
+  listMats[[i]] <-exprs(subsetEset)
+  listVecs[[i]] <-pData(subsetEset)[,8+i]
+}
+names(listMats)<-names(listVecs)<- matNames
+# lapply(listMats, function(x) colnames(x))
+# lapply(listVecs, show)
+@
+
+Es decir disponemos de varias matrices de expresión cuyas columnas corresponden a los puntos T3 y T12 de las muestras de una condición (PH, PN, LH o LN) dada y dos matrices de expresión con todas las muestras que agruparemos para comparar "P" con "N" o "H" con "L".
+<<showMats>>=
+lapply(listMats, dim)
+@
+
+De momento nos centraremos en la comparacion "HvsL"
+
+<<expresHvsL>>=
+expresHvsL <-listMats[["HvsL"]]
+dim(expresHvsL)
+groupsHvsL <- as.factor(targets$HvsL)
+groupsHvsL
+@
+  
+\subsection{Las listas de genes}
+
+Los conjuntos de genes con que vamos a contrastar nuestros datos han sido sugeridos por los investigadores
+<<preparaGenests>>=
+require(annotate)
+require(hgu133plus2.db)
+geneSets <- read.csv(file.path(dataDir, "PBTs_all_affy.csv"))
+
+## gene sets a comparar amb cadascuna de les toptable
+gsEntrez <- list()
+for (i in 1:dim(geneSets)[2]) {
+  gs <- as.character(geneSets[,i])
+  gs <- gs[gs != ""]
+  gsE <- getEG(gs, data = "hgu133plus2.db")
+  gsEntrez[[colnames(geneSets[i])]] <- unique(gsE[!is.na(gsE)])
+}
+
+genesetsNames <- names(gsEntrez)
+# lapply(gsEntrez, head)
+@
+
+Finalmente necesitamos disponer de la lista de los nombres de los genes en el mismo tipo de símbolo qen que se han codificado los "geneSets". 
+En este caso se ha utilizado el identificador "Entrez" y la lista de genes será la misma para todas las matrices de expresión analizadas.
+
+<<prepareGSEA>>=
+entrezs<-getEG(rownames(exprs(my.norm.unique)), "hugene20sttranscriptcluster.db")
+@
+
+Para algunas versiones de GSEA necesitamos tener los conjuntos de genes expresados como vectores binarios asociados a todos los genes. Es decir cada conjunto de genes se representara con un 1 si el gen esta en el Geneset y 0 si no lo esta.
+
+<<saveIntermediate>>=
+save(expresHvsL, groupsHvsL, gsEntrez, entrezs, file="data4GSEA.Rda")
+@
+
+
+
+<<tabladeGeneSets>>=
+GSMatrix <- matrix(NA, nrow=length(entrezs), ncol=length(gsEntrez))
+# binaryGenSets <- lapply(gsEntrez, function(gs) entrezs %in% gs)
+for (i in 1:length(gsEntrez)){
+  GSMatrix[,i] <- entrezs %in% gsEntrez[[i]] # binaryGenSets[[i]]
+}
+GSMatrix <- GSMatrix*1
+colnames(GSMatrix)<- names(gsEntrez)
+rownames(GSMatrix)<- entrezs
+head(GSMatrix)
+@
+
+Cada columna de esta matriz tiene unos en las filas correspondientes a sus genes
+<<checkit, eval=FALSE>>=
+require(naturalsort)
+for (i in 1:ncol(GSMatrix)){
+  GSm<- naturalsort(rownames(GSMatrix[GSMatrix[,i]!=0,]))
+  gsE<-naturalsort(gsEntrez[[i]])
+  sumEq <- sum(GSm!=gsE)
+  cat(sumEq, " differences found in Gene Set ", i, " ", colnames(GSMatrix)[i], "\n")
+}
+@
+
+\section{Un GSEA simple}
+
+Para empezar calculamos un test t para cada gen
+
+<<calculaTtests>>=
+require(genefilter)
+rownames(expresHvsL)<-entrezs
+tScores <-rowttests(expresHvsL, groupsHvsL, tstatOnly=TRUE)
+@
+
+Para decidir si un GeneSet esta sobre(sub) representado haremos un test de Wilcoxon sobre los resultados de los ttest
+
+<<testGeneSet1>>=
+for (i in (1:ncol(GSMatrix))){
+  text2show <- paste("Gene Set ", i, ": ", colnames(GSMatrix)[i])
+  cat(text2show,"\n")
+  cat(paste(rep("=", rep(nchar(text2show))), collapse=""),"\n")
+  pOver <-wilcox.test(tScores$statistic~GSMatrix[,i], alternative="greater")$p.value
+  pUnder <-wilcox.test(tScores$statistic~GSMatrix[,i], alternative="less")$p.value
+  cat("\tTest for OverExpression :", pOver,"\n")
+  cat("\tTest for UnderExpression :", pUnder,"\n")
+}
+@
+
+Los resultados no difieren mucho de los que se obtiene con un test "estandar" de GSEA
+
+<<GSA>>=
+  xAB <-expresHvsL
+  yAB <-groupsHvsL
+  con    <- textConnection('stdout', 'wr', local = TRUE)
+  sink(con)
+  GSA.obj<-GSA(xAB, yAB, genenames=entrezs, genesets=gsEntrez,  resp.type="Two class unpaired", nperms=1000)  # Provar amb 1000?
+  sink()
+  text2show <- paste("Conjuntos de genes que aparecen en la comparacion",                      "H vs L")
+  cat("\n",text2show,"\n")
+  cat(paste(rep("=", rep(nchar(text2show))), collapse=""),"\n")
+  genesetsNames <- names(gsEntrez)
+  show(GSA.listsets(GSA.obj, geneset.names=genesetsNames, FDRcut=.6))
+
+@
+
+    

@@ -1,0 +1,367 @@
+% !Rnw weave = knitr
+
+\documentclass{article}
+
+\usepackage{url}
+\usepackage{underscore}
+
+\title{Functional analysis of gene lists}
+\author{Ferran Brians\'o and Alex S\'anchez-Pla. \\ Statistics department. UB \\ \& Statistics and Bioinformatics Unit (UEB). VHIR.}
+        
+        \bibliographystyle{plain}
+        
+        \begin{document}
+        
+        \maketitle
+        \tableofcontents
+        
+        <<include=FALSE>>=
+        opts_chunk$set(fig.path = 'images/grafic',echo=FALSE,message=FALSE, cache=TRUE)
+        options(warn=-1)
+        @
+        
+        
+        <<setDirs, echo=FALSE, message=FALSE>>=
+        SO <- version[["os"]]
+        if (SO=="linux-gnu")
+{mainDir <- "~/Dropbox (VHIR)/UEB-compartida/estudis en curs/2015-07-AnnaMeseguer-VHIR/Analisi funcional (GO-KEGG i altres)"
+}else{
+        mainDir <- "E:/Dropbox (VHIR)/UEB-compartida/estudis en curs/2015-07-AnnaMeseguer-VHIR/Analisi funcional (GO-KEGG i altres)"
+}
+        mainDir <-getwd()
+        workingDir <- mainDir
+        dataDir <-file.path(mainDir, "dades")
+        listsDir <- file.path(workingDir, "geneLists")
+        codeDir <-  file.path(workingDir, "Rcode")
+        resultsDir <- file.path(workingDir, "results")
+        @
+        
+        
+        <<loadpackages, echo=FALSE, message=FALSE>>=
+        installifnot <- function (packageName){
+        if (!(require(packageName, character.only=TRUE))) {
+        install.packages(packageName)
+        }else{
+        detach(paste ("package", packageName, sep=":"), character.only=TRUE)
+        } 
+        }
+        bioCifnot <- function (packageName){
+        if (!(require(packageName, character.only=TRUE))) {
+        source("http://bioconductor.org/biocLite.R")
+        biocLite(packageName)
+        }else{
+        detach(paste ("package", packageName, sep=":"), character.only=TRUE)
+        }  
+        }
+        installifnot("knitr")
+        installifnot("gdata")
+        installifnot("readxl")
+        bioCifnot("org.Ss.eg.db")
+        bioCifnot(c("gage"))
+        bioCifnot(c("gageData"))
+        bioCifnot(c("pathview"))
+        bioCifnot(c("GO.db"))
+        bioCifnot(c("KEGG.db"))
+        bioCifnot(c("reactome.db"))
+        bioCifnot(c("GOstats"))
+        # bioCifnot(c("FGNet"))
+        # bioCifnot(c("RDAVIDWebService"))
+        bioCifnot(c("goProfiles"))
+        @ 
+        
+        \section{Introduction}
+        
+        This document provides some information on the different analyses perfomed on several gene lists to help gain biological insight on the results of a differential expression analysis. Overall these analyses are known as \emph{Functional Analysis}.
+        
+        Functional analysis can be performed in many different ways that lead to similar (or not-so-similar) results.  Because there is not a
+        universal acceptance of what is a \texttt{complete, well done functional analysis} some different approaches will be shown and an
+        arbitrary selection based on "doability", "scriptability" and of course "interpretability" will be performed.
+        
+        \subsection{Input Data for Functional Analysis}
+        
+        Functional analysis can be made, on a first approach on
+        \begin{itemize}
+        \item A list of genes selected by being differentially expressed in a given experimental setting.
+        \item The whole list of genes -or even the whole expression matrix- that has been used in the analysis.
+        \end{itemize}
+        
+        Most tools require that gene list consist of gene identifiers in some standard notation such as \texttt{Entrez}, \texttt{ENSEMBL} or other related to these.
+        
+        These gene lists can be easily extracted from output tables provided by microarrays or RNA-seq data analysis tools.
+        
+        The analysis below is applied on a set of three gene lists obtained from a renal cancer study, but it can be easily extended to more lists or other studies.
+        
+        <<getGeneList, message=FALSE>>=
+        x1<- WLvsPS <- read.table(file.path(dataDir, "ExpressAndTop.Estudi.WLvsPS.csv"), head=T, sep=";", dec=",", row.names=1)
+        x2<- WLvsPR <- read.table(file.path(dataDir, "ExpressAndTop.Estudi.WLvsPR.csv"), head=T, sep=";", dec=",", row.names=1)
+        x3<- PSvsPR <- read.table(file.path(dataDir, "ExpressAndTop.Estudi.PSvsPR.csv"), head=T, sep=";", dec=",", row.names=1)
+        
+        x1M<- M.WLvsPS <- read.table(file.path(dataDir, "ExpressAndTop.Estudi.M.WLvsM.PS.csv"), head=T, sep=";", dec=",", row.names=1)
+        x2M<- M.WLvsPR <- read.table(file.path(dataDir, "ExpressAndTop.Estudi.M.WLvsM.PR.csv"), head=T, sep=";", dec=",", row.names=1)
+        x3M<- M.PSvsPR <- read.table(file.path(dataDir, "ExpressAndTop.Estudi.M.PSvsM.PR.csv"), head=T, sep=";", dec=",", row.names=1)
+        
+        x1F<- F.WLvsPS <- read.table(file.path(dataDir, "ExpressAndTop.Estudi.F.WLvsF.PS.csv"), head=T, sep=";", dec=",", row.names=1)
+        x2F<- F.WLvsPR <- read.table(file.path(dataDir, "ExpressAndTop.Estudi.F.WLvsF.PR.csv"), head=T, sep=";", dec=",", row.names=1)
+        x3F<- F.PSvsPR <- read.table(file.path(dataDir, "ExpressAndTop.Estudi.F.PSvsF.PR.csv"), head=T, sep=";", dec=",", row.names=1)
+        
+        dim(x1);
+        cat("\nHeader of top Table for comparison WLvsPS\n")
+        cat("--------------------------------------------\n")
+        head(x1[1:10, 1:5])
+        
+        cat("\nHeader of top Table for comparison WLvsPR\n")
+        cat("--------------------------------------------\n")
+        dim(x2); head(x2[1:10, 1:5])
+        
+        cat("\nHeader of top Table for comparison PSvsPR\n")
+        cat("--------------------------------------------\n")
+        
+        dim(x3); head(x3[1:10, 1:5])
+        
+        @
+        
+        \subsection{Input data preprocessing}
+        
+        Sometimes lists may need some preprocessing (e.g. in this example the gene list has multiple transcripts per gene identifier that have to be unitized previous to the analysis).
+        
+        <<cleanGeneLists, message=FALSE>>=
+        source (file.path(codeDir, "functions2pack.R"))
+        
+        List1 <- extractInfo(x1, "WLvsPS", "WL|PS", resultsDir, adjOrraw="adj", pCutOff=0.1, fcCutoff=.75); 
+        universeList1 <-List1[[2]]; geneList1<- List1[[1]]; 
+        
+        cat("\nNumber of genes selectable (WLvsPS) with adjusted p-value < 0.1 and logFC > 0.75", length(geneList1))
+        
+        List2 <- extractInfo(x2, "WLvsPR", "WL|PR", resultsDir, adjOrraw="adj", pCutOff=0.1, fcCutoff=.75); 
+        universeList2 <-List2[[2]]; geneList2<- List2[[1]]; 
+        cat("\nNumber of genes selectable (WLvsPR) with adjusted p-value < 0.1 and logFC > 0.75", length(geneList2))
+        
+        List3 <- extractInfo(x3, "PSvsPR", "PS|PR", resultsDir, adjOrraw="adj", pCutOff=0.1, fcCutoff=.75); 
+        universeList3 <-List3[[2]]; geneList3<- List3[[1]]; 
+        cat("\nNumber of genes selectable (PSvsPR) with adjusted p-value < 0.1 and logFC > 0.75", length(geneList3))
+        
+        List1M <- extractInfo(x1M, "M.WLvsPS", "WL|PS", resultsDir, adjOrraw="adj", pCutOff=0.1, fcCutoff=.75); 
+        universeList1M <-List1M[[2]]; geneList1M<- List1M[[1]]; 
+        cat("\nNumber of genes selectable (M.WLvsPS) with adjusted p-value < 0.1 and logFC > 0.75", length(geneList1M))
+        
+        List2M <- extractInfo(x2M, "M.WLvsPR", "WL|PR", resultsDir, adjOrraw="adj", pCutOff=0.1, fcCutoff=.75); 
+        universeList2M <-List2M[[2]]; geneList2M<- List2M[[1]]; 
+        cat("\nNumber of genes selectable (M.WLvsPR) with adjusted p-value < 0.1 and logFC > 0.75", length(geneList2M))
+        
+        List3M <- extractInfo(x3M, "M.PSvsPR", "PS|PR", resultsDir, adjOrraw="adj", pCutOff=0.1, fcCutoff=.75); 
+        universeList3M <-List3M[[2]]; geneList3M<- List3M[[1]]; 
+        cat("\nNumber of genes selectable (M.PSvsPR) with adjusted p-value < 0.1 and logFC > 0.75", length(geneList3M))
+        
+        List1F <- extractInfo(x1F, "F.WLvsPS", "WL|PS", resultsDir, adjOrraw="adj", pCutOff=0.1, fcCutoff=.75); 
+        universeList1F <-List1F[[2]]; geneList1F<- List1F[[1]]; 
+        cat("\nNumber of genes selectable (F.WLvsPS) with adjusted p-value < 0.1 and logFC > 0.75", length(geneList1F))
+        
+        List2F <- extractInfo(x2F, "F.WLvsPR", "WL|PR", resultsDir, adjOrraw="adj", pCutOff=0.1, fcCutoff=.75); 
+        universeList2F <-List2F[[2]]; geneList2F<- List2F[[1]]; 
+        cat("\nNumber of genes selectable (F.WLvsPR) with adjusted p-value < 0.1 and logFC > 0.75", length(geneList2F))
+        
+        List3F <- extractInfo(x3F, "F.PSvsPR", "PS|PR", resultsDir, adjOrraw="adj", pCutOff=0.1, fcCutoff=.75); 
+        universeList3F <-List3F[[2]]; geneList3F<- List3F[[1]]; 
+        cat("\nNumber of genes selectable (F.PSvsPR) with adjusted p-value < 0.1 and logFC > 0.75", length(geneList3F))
+        
+        
+        # test
+        # pattern  <- "WL|PS"; cols2select<- grep(pattern, colnames(x1)); colnames(x1)[cols2select]
+        # pattern  <- "WL\\.M|PS\\.M"; cols2select<- grep(pattern, colnames(x1M)); colnames(x1M)[cols2select]
+        # pattern  <- "WL\\.F|PS\\.F"; cols2select<- grep(pattern, colnames(x1F)); colnames(x1F)[cols2select]
+        @
+        
+        The following diagram shows which genes there are in common (or not) between the three lists.
+        
+        <<vennSigGenes2, message=FALSE>>=
+        require(VennDiagram)
+        vd2<- venn.diagram(list(WLvsPS=geneList1, WLvsPR=geneList2,  PSvsPR=geneList3), filename=NULL)
+        grid.draw(vd2)
+        dev.off()
+        
+        vd2M<- venn.diagram(list(M.WLvsPS=geneList1M, M.WLvsPR=geneList2M,  M.PSvsPR=geneList3M), filename=NULL)
+        grid.draw(vd2M)
+        dev.off()
+        
+        vd2F<- venn.diagram(list(F.WLvsPS=geneList1F, F.WLvsPR=geneList2F,  F.PSvsPR=geneList3F), filename=NULL)
+        grid.draw(vd2F)
+        
+        @ 
+        
+        
+        \subsection{Transforming gene identifiers from Pig to Human databases}
+        
+        It sometimes happen that a given study has been done using some animal model (e.g. mouse or pig). Given that annotation databases are more human-oriented it is generally accepted that previous to the analysis gene identifiers may be mapped to their humann correspondants (orthologs).
+        
+        There are sevaral tools for this conversion. In this case this has been done using \url{http://biodbnet.abcc.ncifcrf.gov/db/dbOrtho.php}. The mapped genes are the ones that have been used for the analysis. The figure shows one top table with the identifiers of the first 25 genes in its original form and after conversion into human.
+        
+        <<pig2Entrezs>>=
+        readTT <- function(fileName, numSheet){
+        require(readxl)
+        xboth <- read_excel(file.path(dataDir, fileName), sheet = numSheet, 
+        col_names = TRUE, col_types = NULL , na = "", skip = 0)
+        xboth$humanEntrezs <- as.integer(xboth$humanEntrezs)
+        xboth$humanEntrezs[xboth$humanEntrezs==0] <- NA
+        return(xboth)
+        }
+        x1h <- readTT("WLvsPRvsPS_topTables.xls", 1); 
+        x2h <- readTT("WLvsPRvsPS_topTables.xls", 2); 
+        x3h <- readTT("WLvsPRvsPS_topTables.xls", 3); 
+        
+        head(x1h[,1:5], 25)
+        
+        geneList1p <- genesFromTopTable (x1, entrezOnly = TRUE, uniqueIds=TRUE, 
+        adjOrrawP = "adj", Pcutoff = 0.1, FCcutoff = .75, 
+        id2Select = "EntrezsA" , cols2Select =3)
+        geneList2p <- genesFromTopTable (x2, entrezOnly = TRUE, uniqueIds=TRUE, 
+        adjOrrawP = "adj", Pcutoff = 0.1, FCcutoff = .75, 
+        id2Select = "EntrezsA" , cols2Select =3)
+        geneList3p <- genesFromTopTable (x3, entrezOnly = TRUE, uniqueIds=TRUE, 
+        adjOrrawP = "adj", Pcutoff = 0.1, FCcutoff = .75, 
+        id2Select = "EntrezsA" , cols2Select =3)
+        
+        geneList1h <- genesFromTopTable (x1h, entrezOnly = TRUE, uniqueIds=TRUE, 
+        adjOrrawP = "adj", Pcutoff = 0.1, FCcutoff = .75, 
+        id2Select = "humanEntrezs" , cols2Select =4)
+        
+        geneList2h <- genesFromTopTable (x2h, entrezOnly = TRUE, uniqueIds=TRUE, 
+        adjOrrawP = "adj", Pcutoff = 0.1, FCcutoff = .75, 
+        id2Select = "humanEntrezs" , cols2Select =4)
+        geneList3h <- genesFromTopTable (x3h, entrezOnly = TRUE, uniqueIds=TRUE, 
+        adjOrrawP = "adj", Pcutoff = 0.1, FCcutoff = .75, 
+        id2Select = "humanEntrezs" , cols2Select =4)
+        
+        @
+        
+        
+        
+        \section{Analysis methods and tools}
+        
+        Following \cite{Khatri:2012} three different approaches have been used with these data:
+        \begin{itemize}
+        \item \textbf{A classical enrichment or overrepresentation analysis}. This has been done using ad-hoc functions included in our analysis pipelines and also using DAVID a public software tool available at \url{https://david.ncifcrf.gov/}.
+        \item G\textbf{ene Set Expression Analysis}. This has been done using the Bioconductor \texttt{gage} package which provides nice representations of genes overexpressed/downregulated in the context of KEGG pathways.
+        \item A \textbf{Network analysis} has also been performed using the Ingenuity Pathways Software.
+        \end{itemize}
+        
+        \subsection{Enrichment Analysis with \texttt{GOstats} and \texttt{DAVID}}
+        
+        Given a list of (potentially) differentially expressed genes Enrichment Analysis or Overrepresentation Analysis (\textbf{ORA}) seeks to select functions and biological processes that characterize this list, this meaning that these functions appear more often in the list than in the remaining set of analyzed genes.
+        
+        There have been developped many variations of this type of analysis (\cite {Khatri:2005}). In a preliminary study we have applied ``classical'' enrichment analysis (\cite{Gentleman:2004}) implemented in the \texttt {GOstats} Bioconductor package. Here we present the improved version of ORA implemented in the DAVID software package
+        
+        One characteristic of ORA is that it uses only a subset of the genes analyzed, usually selected using some threshold such as the significance analysis p--value or the Fold-Change. This has been often criticized and other methods such as Gene Set Expression Analysis, described in next section, rely on all available genes.
+        
+        \subsubsection{DAVID}
+        
+        DAVID (the Database for Annotation, Visualization and Integrated Discovery, \cite{DAVID:2009}) is a free online bioinformatics resource developed by the Laboratory of Immunopathogenesis and Bioinformatics at NIH (\emph{National Institute of Allergy and Infectious Diseases (NIAID)}). 
+        
+        DAVID provides a set of tools to help the functional interpretation of lists of genes derived from genomic studies. DAVID can be found at \url{http://david.niaid.nih.gov} or \url{http://david.abcc.ncifcrf.gov}
+        
+        Given an uploaded gene list, the DAVID Resources provides classical gene-term enrichment analysis, but also new tools and functions that allow users to condense large gene lists into gene functional groups or cluster redundant and heterogeneous terms into groups. This grouping jointly with the dynamical access from results to Biological knowledge database provides a clearer and easy to interpret output than classical enrichment analysis.
+        
+        
+        \subsection{Gene Set Enrichment Analysis with \texttt{GAGE}}
+        
+        Gene set analysis (GSA) is a widely used strategy for gene expression data analysis based on pathway knowledge. GSA focuses on sets of related genes and has established major advantages over individual gene analyses, including greater robustness, sensitivity and biological relevance. 
+        
+        We have applied a recent version of GSA called Generally Applicable Gene-set Enrichment (GAGE, \cite{GAGE:2009}). This method is more robust than other existing related approaches and has been seen to work well with different sample sizes, experimental designs and profiling techniques. GAGE has been shown to provide significantly good results results in the following three aspects: (1) consistency across repeated studies/experiments; (2) sensitivity and specificity; (3) biological relevance of the regulatory mechanisms inferred.
+        
+        Essentially what GAGE -as most GSEA methods- does is to test if a given gene set is \emph{associated} with a gene list. That is for each gene set tested it selects those gene sets whose expression tends to be higher or lower than the expression of the genes in the genelist (in which case the gene set is called to be upregulated or downregulated).
+        
+        Gene Sets can be GO categories or KEGG pathways and each is shown in a different format.
+        \begin{itemize}
+        \item GO categories over or underrepresented are shown in a heatmap
+        \item KEGG pathways are shown on a picture of the pathway with the genes that belong to the list marked in red or green depending on if they are up or down-regulated.
+        \end{itemize}
+        
+        \subsection{Network Analysis with \texttt{IPA}}
+        
+        Ingenuity Pathway Analysis allows searching and using information extracted from public databases and from full text article extraction. It categorizes its findings based on a in-house curated ontology, covering entities (proteins and other molecules), relationships between the entities (inhibites, activates,...) and functional information (pathways, biological process, disease,...).
+        
+        IPA has several differences with the previous tools.
+        \begin{itemize}
+        \item It relies not only on public databases but on their own commercial databases and ontology, that they claim to be better anotated and more intuitive.
+        \item It performs enrichment analysis but besides it does different types of network analysis and allows to view selected genes in:
+        \begin{enumerate}
+        \item Association networks, based on co-citation of genes in the literature
+        \item Canonical pathways based on known biological pathways.
+        \end{enumerate}
+        \item It provides other types of information for analyzed genes such as their association with disease or their potential toxicogenomic properties.
+        \end{itemize}
+        
+        
+        %\section{Results}
+        %
+        %\subsection{Classical Enrichment Analysis}
+        %
+        %Classical Enrichment Analysis has been first done with ad-hoc scripts based on R and Bioconductor
+        
+        <<GEA, eval=FALSE, message=FALSE>>=
+        require(GOstats)
+        source(file.path(codeDir, "hiperGeometricAnalysisFunctions.R"))
+        
+        classicalEnrichment <- function (aGeneList, aGeneUniverse, aCompName, aCutoff, anAnotPackage, anOutDir){
+        hg1 <- newHyperPar(geneList=aGeneList, geneUniverse=aGeneUniverse,
+        anotPackage=anAnotPackage, sourceOnto="GO",
+        pValueCutoff=aCutoff, fileName=paste("hyperGTest", aCompName,sep="."))
+        hg2 <- newHyperPar(geneList=aGeneList, geneUniverse=aGeneUniverse,
+        anotPackage=anAnotPackage, sourceOnto="KEGG",
+        pValueCutoff=aCutoff, , fileName=paste("hyperGTest", aCompName,sep="."))
+        hiperGeometricAnalysis (hg1, outDir=anOutDir)
+        hiperGeometricAnalysis (hg2, outDir=anOutDir)
+        }
+        
+        classicalEnrichment (geneList1, universeList1, "WLvsPS", 0.01  , "org.Ss.eg.db", resultsDir)
+        classicalEnrichment (geneList2, universeList2, "WLvsPR", 0.01  , "org.Ss.eg.db", resultsDir)
+        classicalEnrichment (geneList3, universeList3, "PSvsPR", 0.05  , "org.Ss.eg.db", resultsDir)
+        @
+        
+        \section{Results presentation}
+        
+        The results of the analyses performed following the methodology described in the previous sections consist  of a  high number of tables and figures.
+        
+        In order to facilitate its organization and review a web page (an html file indeed) is prepared that allows to access each file.
+        
+        This page consists consists of a list of links organized by topics which correspond to the files outputted as result of the different steps undertaken in the analysis.
+        
+        A brief description of each group of results and its contents follows below.
+        
+        \begin{enumerate}
+        \item Section \textbf{Reports and results summaries} gives access to the report describing the goals and methods applied in the analysis.
+        \item Section \textbf{Input Files for Biological Significance} gives access to different files from where the genes to be included in the analysis have been obtained.
+        \item Section \textbf{Gene Set Expression Analysis (GAGE)} gives access to the lists of results found, for each comparison of interest, in the Gene Set Enrichment Analysis against the Kyoto Encyclopedia of Genes and the Gene Ontology database, considering up- and down-regulated elements separately. 
+        \begin{itemize}
+        \item For the analysis against the Gene Ontology database. GO Molecular Functions (MFs), GO Biological Processes (BPs), and GO Cellular Components (CCs) classifications have been tested, considering up- and down-regulated elements separately. In this case, only GO terms with an enrichment test q-value (adjusted p-value) below 0.05 have been considered as relevant and included in the tables.
+        \item For each KEGG analyis, a zipped folder with details (plots and xml or txt files) is provided. In this case, only pathways with an enrichment test q-value (adjusted p-value) below 0.15 have been considered as relevant and included in the tables.
+        \end{itemize}
+        
+        \item Section \textbf{DAVID Analysis Results}
+        
+        This section gives access to two types of files generated by DAVID
+        \begin{itemize}
+        \item Functional annotation chart with the main results of enrichment analysis
+        \item Functional annotation clustering where the resulting categories obtained from enrichment analysis are grouped by similarity of functions.
+        \end{itemize}
+        
+        
+        \item Section \textbf{Ingenuity Pathway Analysis}
+        
+        IPA generates many types of results and is intended to be used interactively exploring them on their web site (which requires a password protected access). In order to have an overview of what has been obtaineda pdf with a summary of these resuts can be generated.
+        
+        The links in this section give access to the analysis summary for each gene list.
+        Th
+        
+        \end{enumerate}
+        
+        
+        
+        \bibliography{MDAreferences}
+        
+        \end{document}
+        
+        %%%%%%%%%%%%%%%%%%% Old code
+        
+        
+        
+        

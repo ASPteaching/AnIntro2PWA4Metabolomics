@@ -1,0 +1,811 @@
+---
+title: "Anàlisi de dissenys d'un factor"
+author: "Antonio Miñarro (aminarro@ub.edu)"
+date: "Setembre 2015"
+output: slidy_presentation
+css: my.css
+footer: "A. Miñarro 2015"
+keep_md: true
+highlight: pygments
+---
+
+## Comparant grups o tractaments. Anàlisi de la variància (ANOVA)
+
+- L'objectiu és estudiar si un únic factor amb $k$ nivells pot influir en una determinada variable resposta cuantitativa. 
+
+- Es una generalització del test t de Student per comparar si el valor de la mitjana poblacional de la variable resposta és diferent segons el nivell del factor (diferents poblacions independents)
+
+- En terminologia de l'anàlisi de la variància anomenem
+
+>-- **factor** a la característica que separa els diferents grups
+
+>-- **nivell** a cadascun dels grups que conformen el factor
+
+## Exemple 1. Comparació eficàcia de tres fàrmacs
+
+- Volem comparar l'eficàcia de tres fàrmacs (tractaments)
+
+- La **variable resposta** és la diferència enre els valors després i abans dels tractament d'una determinada variable bioquímica.
+
+![drugs](drugs.jpg)
+
+- Una mostra de 24 pacients **s'aleatoritza** totalment respecte al tractament.
+
+Els resultats han estat els següents
+
+$$ \begin{array}{c|c|c|c}
+Individu & Tract. 1 & Tract. 2 & Tract. 3 \\ \hline
+1 & 4 & 7 & 9 \\
+2 & 2 & 6 & 12 \\
+3 & 6 & 5 & 6 \\
+4 & 6 & 7 & 11 \\
+5 & 5 & 6 & 10 \\
+6 & 6 & 4 & 11 \\
+7 & 2 & 7 & 9 \\
+8 & 6 & 5 & 10 \end{array} $$
+
+En aquest cas tenim **un factor** (el tractament) amb **tres nivells**.
+
+**Provar si hi ha relació entre el tractament i la variable resposta**.
+
+## Disseny completament aletoritzat
+
+- Cada unitat experimental s'assigna, a l'atzar, a exactament una condició experimental o tractament (a cada nivell del factor)
+
+- Com a conseqüència, el "factor" individu està jeràrquicament dins cada grup de tractament
+
+- Diversos noms:
+
+>-- Disseny d'un sol factor: "una via" (one-way layout)
+
+>-- Disseny paral·lel per a un sol factor
+
+>-- Disseny completament aletoritzat
+
+## Terminologia
+
+- **Rèplica**: observacions de la variable resposta fetes sota les mateixes condicions experimentals.
+
+- **Disseny balancejat**: situació experimental on es presenten el mateix nombre de rèpliques en cada grup/tractament . 
+
+- **Aleatorització**: un requisit bàsic. Cada unitat observada (cada rèplica) s'ha d'assignar aleatòriament a un tractament.
+
+- **Factor fix**: si els nivells del factor analitzats són tots els rellevants per l'investigador.
+
+- **Factor aleatori**: si els nivells del factor analitzats en l'experiment són una mostra d'un conjunt més gran de possibles nivells (tractaments) del factor.
+
+## Anàlisi descriptiu de les dades amb R
+
+```{r}
+resp<-c(4,2,6,6,5,6,2,6,7,6,5,7,6,4,7,5,9,12,6,11,10,11,9,10)
+tract<-factor(rep(1:3,each=8),labels=c('Farmac 1','Farmac 2','Farmac 3'))
+farmacs<-data.frame(tract,resp)
+summary(farmacs)
+# descriptiva per grups
+tapply(farmacs$resp,farmacs$tract,mean)
+#farmacs[1,2]<-NA
+tapply(farmacs$resp,farmacs$tract,mean,na.rm=T)
+tapply(farmacs$resp,farmacs$tract,summary)
+by(farmacs[,2],farmacs$tract,summary)
+boxplot(resp~tract,data=farmacs) 
+```
+
+## Comparació de l'eficàcia dels tres fàrmacs
+
+Volem determinar si els tres fàrmacs són igualment eficaços amb un nivell de significació $\alpha$ = 5 %.
+
+Amb les eines que coneixem de primer, acceptant normalitat, i considerant 3 contrastos t de Student per parelles consecutius:
+
+ - fàrmac 1 contra fàrmac 2 ($\alpha$=5%) 
+ 
+ - fàrmac 1 contra fàrmac 3 ($\alpha$=5%)
+ 
+ - fàrmac 2 contra fàrmac 3 ($\alpha$=5%)
+
+aparentment es resol la qüestió plantejada. Però $\ldots$
+
+aquesta forma directa de plantejar el problema comporta un error metodològic: el nivell de significació de las 3 proves juntes és superior a $\alpha$
+
+si plantegem els dos tests següents
+
+- fàrmac 1 contra fàrmac 2 ($\alpha$=5%) 
+ 
+- fàrmac 1 contra fàrmac 3 ($\alpha$=5%)
+
+els contrastos son independents, essent l'error de tipus I global:
+
+$\alpha_G$ = nivell de significació global = $1-(1-0.05)^2 =  0.0975$
+
+si plantegem les 3 a l'hora, en no ser independents, només podem afirmar que $\alpha_G$ està entre 0.0975 i 0.15.
+
+en general, quan més gran sigui el nº de grups, més gran serà $\alpha_G$ **¡acostant-se a 1!**. Cal doncs una tècnica alternativa. 
+
+## Model lineal del ANOVA un factor fix
+
+Debem les tècniques del anàlisi de la variància al estadístic anglés [Ronald A. Fisher](https://en.wikipedia.org/wiki/Ronald_Fisher)
+
+![fisher](fisher.jpg)
+
+El model lineal assumit per les dades es:
+
+$$ Y_{ij} = \mu + \alpha_i + \epsilon_{ij}   \,\,\,\,\,\, i=1,...,a; \,\,\,\, j=1,...,r_i $$
+
+on
+
+- $Y_{ij}$ és l'observació $j$ pel nivell $i$ del factor
+
+- $\mu$ és una mitjana general
+
+- $\alpha_i$ és un paràmetre del model que mesura l'efecte del nivell $i$ del factor
+
+- $\epsilon_{ij}$ és l'error aleatori corresponent a l'observació $i,j$ i dels quals suposem que són independents i idènticament distribuits amb  $E(\epsilon_{ij}) = 0$ i $Var(\epsilon_{ij})=\sigma^2$.
+
+- També suposem que $\sum_{i=1}^a r_i \alpha_i = 0$. ($\sum_{i=1}^a \alpha_i = 0$ si el disseny és balancejat $(r_1=\ldots=r_a=n)$)
+
+Com veurem serà necessari també assumir una distribució normal sobre els errors
+
+$$ \epsilon_{ij} \sim N(0,\sigma)$$
+
+i per tant cada observació experimental
+
+$$ Y_{ij} \sim N(\mu_i,\sigma) $$
+
+on $\mu_i = \mu + \alpha_i$.
+
+
+
+## Contrast d'hipòtesis
+
+L'Anova d'un factor contrasta la hipòtesi que no hi ha efecte dels tractaments. En forma paramètrica, les hipòtesis són:
+
+$$ H_0: \alpha_1 = \alpha_2 = \cdots = \alpha_a = 0 $$
+$$ H_1: \alpha_i \ne  \alpha_{i'} \mbox{ per algun } i \ne i'$$
+
+Si rebutgem la hipòtesi nul·la, el test només indica que existeix una diferència global en els grups, però no concretament entre quins d'ells.
+
+Una forma equivalent d'expressar la hipòtesi nul·la és mitjançant les mitjanes poblacionals de cada grup: 
+
+$$ H_0: \mu_1 = \mu_2 = \cdots = \mu_a $$
+
+## Estimacions dels paràmetres del model
+
+- Definicions
+
+>-- $N=r_1+r_2+\cdots+r_a$
+
+>-- $Y_{i.} = \sum_{j=1}^{r_i} Y_{ij}$
+
+>-- $Y_{..} = \sum_{i=1}^{a} Y_{i.}=\sum_{i=1}^{a} \sum_{j=1}^{r_i} Y_{ij}$
+
+>-- $\bar{Y_{i.}}= \frac{Y_{i.}}{r_i}$
+
+>-- $\bar{Y_{..}}= \frac{Y_{..}}{N}$
+
+- Estimadors puntuals dels paràmetres del model
+
+
+>-- $\hat{\mu} = \bar{Y_{..}}$
+
+
+>-- $\hat{\mu_i} = \bar{Y_{i.}}$
+
+>-- $\hat{\alpha_i} = \bar{Y_{i.}} - \bar{Y_{..}} \,\,\,\, (\alpha_i = \mu - \mu_i)$
+
+**Nota**: en cas d'un disseny balancejat $(r_1=\ldots=r_a=n)$ llavors $N = n \cdot a$.
+
+## Descomposició de la variabilitat
+
+La idea de Fisher va ser **descomposar la variabilitat total** de les dades en una part deguda a la **variabilitat entre tractaments** i una part deguda a la **variabilitat dintre dels tractaments**.
+
+Posteriorment decidim si els tractaments són significatius **comparant aquestes dues darreres variabilitats**.
+
+Es per això que tot i que estem contrastant mitjanes poblacionals la tècnica s'anomena **anàlisi de la variància**.
+
+$$ \begin{eqnarray*}
+SS_T  = & \sum_{i=1}^{a} \sum_{j=1}^{r_i} (Y_{ij}-\bar{Y_{..}} )^2 = \\
+ & = &\sum_{i=1}^{a} r_i (\bar{Y_{i.}}-\bar{Y_{..}} )^2 + \sum_{i=1}^{a} \sum_{j=1}^{r_i} (Y_{ij}-\bar{Y_{i.}} )^2 = \\
+ & = & SS_A + SS_E  \end{eqnarray*} $$
+ 
+ on 
+ 
+ - $SS_T$ recull la variabilitat total de les dades, 
+ 
+ - $SS_A$ recull la variabilitat entre tractaments i
+ 
+ - $SS_E$ recull la variabilitat dintre dels tractaments
+ 
+## Descomposició de la variabilitat en les dades del exemple
+
+```{r}
+SST<-sum((resp-mean(resp))^2)
+aux<-tapply(farmacs$resp,farmacs$tract,mean)
+SSA<-8*sum((aux-mean(resp))^2)
+aux2<-rep(aux,each=8)
+SSE<-sum((resp-aux2)^2)
+c(SST,SSA,SSE)
+```
+
+Com podem arribar a decidir si la variabilitat entre tractaments és prou important com per dir que l'efecte dels tractaments és significatiu?
+
+## Esperances dels quadrats mitjans
+
+Si anomenem $MS_E = \frac{SS_E}{N-a}$ (quadrats mitjans de l'error) pot demostrar-se que $E(MS_E) = \sigma^2$ sempre.
+
+Per una altra banda si anomenem $MS_A = \frac{SS_A}{a-1}$ (quadrats mitjans entre tractaments) pot demostrar-se que $E(MS_A) = \sigma^2 + \frac{\sum_{i=1}^a r_i \alpha_i^2}{a-1}$.
+
+Per tant i si la hipòtesi nul·la es certa ($H_0: \alpha_1 = \alpha_2 = \cdots = \alpha_a = 0) \Rightarrow E(MS_A)=E(MS_E)=\sigma^2$ i per tant si plantegem
+
+$$ F = \frac{MS_A}{MS_E} \approx 1 $$
+
+En canvi si $H_0$ és falsa la tendència ha de ser que $F > 1$.
+
+$$ F = \frac{MS_A}{MS_E} = \frac{\frac{SS_A}{a-1}}{\frac{SS_E}{N-a}} $$
+
+- Si $H_0$ és certa , $F$ tendirà a ser propera a 1.
+
+- Si $H_0$ és falsa , $F$ tendirà a ser més gran que 1.
+
+Per tant un criteri raonable per decidir consisteix en rebutjar $H_0$ si $F$ és prou gran
+
+Si $F \ge c_\alpha \Rightarrow$ rebutgem $H_0$, on $c_\alpha$ és triat de forma que $P_{H_0} (F \ge c_\alpha) = \alpha$.
+
+Per trobar $c_\alpha$ pot demostrar-se que sota la hipòtesi de errors normals i homocedàstics
+
+$$ \epsilon_{ij} \sim N(0,\sigma)$$
+
+$MS_A$ i $MS_E$ segueixen una distribució $\chi^2$ amb $a-1$ i $N-a$ graus de llibertat respectivament i són independents, i com a conseqüència
+
+$$ F = \frac{MS_A}{MS_E} = \frac{\frac{SS_A}{a-1}}{\frac{SS_E}{N-a}} \sim F(a-1,N-a)$$
+
+on $F(a-1,N-a)$ és una distribució $F$ de Fisher amb $a-1$ graus de llibertat en el numerador i $N-a$ graus de llibertat en el denominador.
+
+## Taula de l'Anàlisi de la variància (ANOVA)
+
+Font de variació | Suma de quadrats | Graus de llibertat | Quadrats mitjans | Estadístic F
+----------------- | --------------- | ------------------ |---------| ---------
+Entre tractaments | $SS_A$ | $a-1$ | $MS_A = \frac{SS_A}{a-1}$ | $F = \frac{MS_A}{MS_E}$
+Error (dintre nivells) | $SS_E$ | $N-a$ | $MS_E = \frac{SS_E}{N-a}$ | 
+Total | $SS_T$ | $N-1$ |  |
+
+
+- Criteri de decisió
+
+>-- Calcular el valor del estadístic $F$ de la taula a partir de les dades.
+
+>-- Determinar el valor crític $F_{\alpha} (a-1,N-a)$ per a una distribució $F$ de Fisher amb $a-1$ graus de llibertat en el numerador i $N-a$ graus de llibertat en el denominador d'acord amb $\alpha$.
+
+>-- Si $F \ge F_{\alpha} (a-1,N-a)$ rebutjarem $H_0$ o, equivalentment, si el p-valor és prou petit i obtenim el resultat amb un software estadístic.
+
+## Taula de l'Anàlisi de la variància (ANOVA) (exemple)
+
+Font de variació | Suma de quadrats | Graus de llibertat | Quadrats mitjans | Estadístic F
+----------------- | --------------- | ------------------ |---------| ---------
+Entre tractaments | 114.25 | 2 | 57.125 | $F =$ 22.113
+Error (dintre nivells) | 54.25 | 21 | 2.5833 | 
+Total | 168.50 | 23 |  |
+
+Valor crític $F_{0.05} (2,21) = 3.4668$ .
+
+La decisió és **rebutjar la hipòtesi nul·la** i concloure que **no tots els tractaments són equivalents** per la variable resposta.
+
+## Resolució amb R
+
+```{r}
+# anova
+farmacs.aov<-aov(resp~tract,farmacs)
+anova(farmacs.aov)
+# taules de coefficients i mitjanes
+taula<-model.tables(farmacs.aov,type='mean')
+taula
+```
+- Estimació dels paràmetres del model
+
+>-- $\hat{\mu} =$ `r mean(resp)`
+
+>-- $\hat{\alpha_1}$ = `r mean(resp)` - `r taula$tables$tract[1]` = `r mean(resp)-taula$tables$tract[1]`
+
+>-- $\hat{\alpha_2}$ = `r mean(resp)` - `r taula$tables$tract[2]` = `r mean(resp)-taula$tables$tract[2]`
+
+>-- $\hat{\alpha_3}$ = `r mean(resp)` - `r taula$tables$tract[3]` = `r mean(resp)-taula$tables$tract[3]`
+
+>-- $\hat{\sigma^2}$ = `r anova(farmacs.aov)[2,3]` $\Rightarrow \hat{\sigma}$ = `r sqrt(anova(farmacs.aov)[2,3])`
+
+## Intervals de confiança pels paràmetres del model
+
+A partir del fet que
+
+$$ \hat{\mu_i} = \bar{Y_{i.}} \sim N(\mu_i,\frac{\sigma}{\sqrt{r_i}}) \Rightarrow \frac{ \bar{Y_{i.}}-\mu_i}{\frac{\sigma}{\sqrt{n}}} \sim N(0,1) $$
+
+si substituïm $\sigma^2$ pel seu estimador $MS_E$:
+
+$$ \frac{ \bar{Y_{i.}}-\mu_i}{\sqrt{\frac{MS_E}{r_i}}} \sim t_{N-a}, $$
+
+tenim com a interval de confiança al $(1-\alpha) \cdot 100 \%$ per $\mu_i$:
+
+$$ \bar{Y_{i.}} \pm t_{(\alpha/2,N-a)} \cdot \sqrt{\frac{MS_E}{r_i}} $$
+
+- En el nostre exemple $N-a = 21$ i amb una confiança del 95 % $t_{(0.025,21)}=2.080$, resultant els següents intervals:
+
+-- Per $\mu_1$: `r taula$tables$tract[1]` $\pm$ 2.080 $\sqrt{\frac{2.583}{8}} =$ (`r taula$tables$tract[1] - 2.080*sqrt(2.583/8)` ,  `r taula$tables$tract[1] + 2.080*sqrt(2.583/8)`)
+
+-- Per $\mu_2$: `r taula$tables$tract[2]` $\pm$ 2.080 $\sqrt{\frac{2.583}{8}} =$ (`r taula$tables$tract[2] - 2.080*sqrt(2.583/8)` ,  `r taula$tables$tract[2] + 2.080*sqrt(2.583/8)`)
+
+-- Per $\mu_3$: `r taula$tables$tract[3]` $\pm$ 2.080 $\sqrt{\frac{2.583}{8}} =$ (`r taula$tables$tract[3] - 2.080*sqrt(2.583/8)` ,  `r taula$tables$tract[3] + 2.080*sqrt(2.583/8)`)
+
+### Amb R i les dades del exemple
+
+```{r}
+confint(aov(resp~tract-1,farmacs))
+```
+
+## Verificació de les premisses del ANOVA
+
+Per tal de poder aplicar la teoria dels models linals, es requereixen tres requisits:
+
+- **Homocedasticitat**: igualtat de les variàncies en tots els grups
+
+- **Normalitat** dels residus
+
+- **Independència** de les observacions
+
+El test $F$ del ANOVA pot arribar a ser poc creïble si es fa un estudi amb mides mostrals diferents combinades amb dades no normals de diferent variància.
+
+## Verificació de la homocedasticitat
+
+Es potser la premissa a verificar amb més cura.
+
+En experiments simulats s'ha vist que amb 4 grups de mida 11 i amb una ratio 16:1 de la variància més gran a la més petita la probabilitat d'error de tipus I real era de 0.109 en lloc del nominal 0.05; i pot arribar a 0.275 si les mides dels grups son: 4,10, 16 i 40.
+
+Un disseny balancejat pot esmorteir en part l'impacte que té sobre el nivell de significació real una desviació moderada de la homocedasticitat.
+
+Les proves de Bartlett i Levene són algunes de les més populars per verificar la homocedasticitat. 
+
+En elles la hipòtesi nul·la és la homogeneitat de variàncies.
+
+$$ H_0: \sigma_1^2 = \sigma_2^2 = \cdots = \sigma_a^2 = 0 $$
+$$ H_1: \sigma_i^2 \ne  \sigma_{i'}^2 \mbox{ per algun } i \ne i'$$
+
+El test de Levene és menys sensible a desviacions de la normalitat.
+
+- [Test de Bartlett (Wikipedia)](https://en.wikipedia.org/wiki/Bartlett%27s_test)
+
+- [Test de Levene (Wikipedia)](https://en.wikipedia.org/wiki/Levene%27s_test)
+
+### Test de Bartlett amb R i dades del exemple
+
+```{r}
+bartlett.test(resp~tract,farmacs)
+library(car)
+leveneTest(resp~tract,farmacs)
+```
+
+### Anàlisi gràfic
+
+```{r}
+boxplot(resp~tract,data=farmacs) 
+plot(farmacs.aov,which=1)
+plot(farmacs.aov,which=3)
+```
+
+### Que fer en cas de heterocedasticitat
+
+Si les variàncies són diferents com a possibles solucions tenim la transformació de la variable, si la heterogeneïtat es deguda a una distribució esbiaixada de la variable resposta o alternativament ajustant models lineals generalitzats que permeten ajustar diferents distribucions als errors del model.
+
+## Verificació de la normalitat dels residus
+
+Por fer-se per mitjans gràfics: QQ-plots o histogrames 
+
+```{r}
+plot(farmacs.aov,which=2)
+hist(residuals(farmacs.aov))
+```
+
+o també pot comprovar-se a través de diferents tests de normalitat: Shapiro-Wilks, Kolmogorov-Smirnov-Lilliefors,...
+
+Amb mostres petites és més informatiu utilitzar les tècniques gràfiques.
+
+El test $F$ és robust front a desviacions moderades de la normalitat si els residus tenen una distribució simètrica i sobre tot en el cas de mides mostrals i variàncies similars.
+
+```{r}
+shapiro.test(farmacs.aov$residuals)
+```
+
+### Que fer en cas de no normalitat
+
+Existeixen alternatives no paramètriques en cas de una accentuada no normalitat de les dades.
+
+## Verificació de la independència de les observacions
+
+La millor forma de garantir la independència és amb un model adient de mostratge i amb l'aleatorització prèvia a l'assignació dels tractaments i,  si s'escau, en el moment de la lectura de la variable resposta.
+
+## Comparacions múltiples
+
+- **Un cop que l'ANOVA ha estat significatiu** l'objectiu és decidir quins grups concrets presenten diferències.
+
+ -- No és raonable fer comparacions dos a dos utilitzant la prova t de Student habitual per les consideracions fetes al principi del tema on veiem que es descontrolava la probabilitat de l'error de tipus I. Hem d'assegurar un nivell de significació global $\le \alpha$.
+
+- Els tests de comparacions múltiples es diferencien entre sí per la forma en que garanteixen el nivell de significació global $\alpha_G$ (possible error de tipus I considerant **totes les proves per parelles** en conjunt).
+
+ -- la garantia sobre $\alpha_G$  es tradueix de forma diferent segons la tècnica escollida en el nivell de significació individual de cada prova per parelles.
+
+### Contrastos conservadors i lliberals
+
+- **Test conservador**: per tal de mantenir el nivell de significació global proper (o igual) al nominal, disminueix el valor del nivell de comparació individual.
+
+ -- Conseqüència: tendeix a acceptar en excés $H_0$ (la igualtat de la parella de mitjanes), és poc potent.
+
+- **Test lliberal**: para tal de mantenir el nivell de comparació individual proper al nominal, relaxa el control sobre el nivell de significació global.
+
+ -- Conseqüència: tendeix a rebutjar en excés $H_0$.
+
+## Comparacions múltiples per parelles no planificades (Post hoc)
+
+### Mètode de Bonferroni
+
+Utilitza la *desigualtat de Bonferroni**
+
+$$ P(E_1 \cup E_2 \cup \ldots \cup E_k) \le P(E_1)+P(E_2)+ \cdots + P(E_k) $$
+
+El nivell de significació global $\le \alpha$ queda assegurat si el nivell de significació de cada prova individual es fixa a $\alpha/k$.
+
+Es un mètode molt general però a costa de gran pèrdua de potència.
+
+
+### Diferència mínima significativa de Fisher (FPLSD)
+
+Equival al test t però substituint l'estimació de les variàncies per $MS_E$ obtingut de la taula ANOVA i fa servir com a referència una t de Student de N-a graus de llibertat.
+
+### Prova HSD de Tukey
+
+Basada en la distribució del **rang studentitzat** per un grup de $a$ mitjanes
+
+$$ S_{\bar{Y}} = \sqrt{\frac{MS_e}{n_0}} \,\,\,\, n_0 = \Big\{ \begin{array}{ll}
+n & \mbox{ si } r_1=r_2=...=r_a=n \\
+\frac{a}{\sum_{i=1}^a 1/r_i} & \mbox{ si } r_i \ne r_k \end{array} $$
+
+Totes les diferències $|\bar{Y_i} - \bar{Y_k}|$ es comparen amb un únic valor crític $T=q_\alpha (a,N-a) S_{\bar{Y}}$.
+
+### Prova de Scheffé
+
+Utilitza el valor crític
+
+$$ c_\alpha (i,k) = S_{ik} \sqrt{(a-1)F_\alpha (a-1,N-a)} \,\,\,\, S_{ik}=\sqrt{MS_E (1/r_i+1/r_k)} $$
+
+i rebutja si $|\bar{Y_i} - \bar{Y_k}| \ge c_\alpha (i,k)$
+
+Els intervals de confiança de la forma $\bar{Y_i} - \bar{Y_k} \pm c_\alpha (i,k)$ són intervals de confiança simultanis per les diferències $\mu_i-\mu_k$ amb nivell de confiança com a mínim $1-\alpha$. 
+
+## Classificació dels tests de comparacions múltiples
+
+Mètode | Característica
+------- | --------
+Bonferroni | + Conservador (poca potència)
+Scheffé | Conservador
+Tukey HSD |   **Recomanat**
+Fisher FPLSD  | + Liberal (més potència)
+
+- Poques comparacions prèviament planificades: possiblement preferible més potència encara que nivell de significació alt. Moltes, al contrari. 
+
+- L'investigador ha de valorar les conseqüències de cometre l'error de tipus I o el de tipus II.
+
+### Test de Dunnet per comparar grups vs. control
+
+Es un test específic per quan existeix un grup control i l'objectiu és comparar la resta de grups amb el control i no tots entre ells.
+
+Rebutja la hipòtesi nul·la si $|\bar{Y_i} - \bar{Y_a}| \ge d_\alpha (a-1,N-a) \sqrt{MS_E (1/r_i+1/r_a)}$ on assumim que $a$ és el grup control.
+
+## Comparacions múltiples amb R
+
+```{r}
+TukeyHSD(farmacs.aov)
+library(agricolae)
+HSD.test(farmacs.aov,'tract',console=T)
+LSD.test(farmacs.aov,'tract',console=T)
+scheffe.test(farmacs.aov,'tract',console=T)
+```
+
+## Exemple 2. Comparació nivell de sodi a les cerveses de Catalunya
+
+- Es desitja comparar si el contingut de sodi de les cerveses comercialitzades a Catalunya es homogeni independentment de la marca.
+
+![cervesa](cervesa.png)
+
+- Es **seleccionen a l'atzar quatre marques de cervesa** (genèricament serien quatre tractaments) i es mesura el nivell de sodi en quatre ampolles triades a l'atzar de cada marca.
+
+- El fet important és que el nombre de nivells del factor estudiats (les quatre marques de cervesa) és **inferior al nombre de possibles tractaments** (totes les marques de cervesa) i que la conclusió de l'anàlisi voldríem que fos vàlida pel conjunt de totes les marques.
+
+- En aquest cas diríem que el factor marca de cervesa és un **factor aleatori**.
+
+Els resultats en mg per ampolla han estat els següents
+
+$$ \begin{array}{c|c|c|c|c}
+Ampolla & Marca 1 & Marca 2 & Marca 3 & Marca 4 \\ \hline
+1 & 18 & 11 & 16 & 15\\
+2 & 17 & 10 & 15 & 16 \\
+3 & 19 & 13 & 17 & 19 \\
+4 & 16 & 12 & 15 & 18 \end{array} $$
+
+## Model lineal del ANOVA un factor aleatori
+
+El model lineal assumit per les dades es:
+
+$$ Y_{ij} = \mu + A_i + \epsilon_{ij}   \,\,\,\,\,\, i=1,...,a; \,\,\,\, j=1,...,r_i $$
+
+on
+
+- $Y_{ij}$ és l'observació $j$ pel nivell $i$ del factor
+
+- $\mu$ és una mitjana general
+
+- $A_i$ és una variable aleatòria, no un paràmetre constant. Assumim que $E(A_i)=0$ i que la $Var(A_i)=\sigma^2_A$. 
+
+- $\epsilon_{ij}$ és l'error aleatori corresponent a l'observació $i,j$ i dels quals suposem que són independents i idènticament distribuits amb  $E(\epsilon_{ij}) = 0$ i $Var(\epsilon_{ij})=\sigma^2$.
+
+- També assumim que $A_i$ i $\epsilon_{ij}$ son totes independents, i per tant $var(Y_{ij})=\sigma^2_A+\sigma^2$ i $E(Y_{ij})=\mu$.
+
+
+
+## Contrast d'hipòtesis
+
+L'Anova d'un factor aleatori contrasta la hipòtesi que no hi ha variabilitat de la variable resposta deguda als grups. En forma paramètrica, les hipòtesis són:
+
+$$ H_0: \sigma_A^2 = 0 $$
+$$ H_1: \sigma_A^2 > 0$$
+
+La descomposició de la suma de quadrats continua sent vàlida $SS_T = SS_A + SS_E$ però els quadrats mitjans tenen un altre sentit
+
+$$ E(MS_E) = \sigma^2 \,\,\,\, E(MS_A) = \sigma^2 + n \sigma^2_A $$
+
+Nota: en el cas balancejat $r_1=r_2=...=r_a=n$.
+
+Continua sent vàlida la conclusió sobre l'estadístic de test. Si la hipòtesi nul·la és certa
+
+$$ F = \frac{MS_A}{MS_E} \approx 1 $$
+
+En canvi si $H_0$ és falsa la tendència ha de ser que $F > 1$. I novament sota la hipòtesi de normalitat
+
+$$ A_i \sim N(0,\sigma_A^2) \,\,\,\, , \,\,\, \epsilon_{ij} \sim N(0,\sigma^2) $$
+
+$$ F = \frac{MS_A}{MS_E} = \frac{\frac{SS_A}{a-1}}{\frac{SS_E}{N-a}} \sim F(a-1,N-a)$$
+
+on $F(a-1,N-a)$ és una distribució $F$ de Fisher amb $a-1$ graus de llibertat en el numerador i $N-a$ graus de llibertat en el denominador.
+
+Es a dir la **taula ANOVA**, el p-valor i la conclusió sobre $H_0$ **són idèntics al cas d'un factor fixe**. La interpretació dels resultats, però, és diferent.
+
+Hem de destacar que la coincidència de les taules ANOVA entre el model de factor fixe i el de factor aleatori es produeix en el cas d'un factor, com veurem més endavant **en general això no és cert**.
+
+Font de variació | Suma de quadrats | Graus de llibertat | Quadrats mitjans | Estadístic F
+----------------- | --------------- | ------------------ |---------| ---------
+Entre tractaments | $SS_A$ | $a-1$ | $MS_A = \frac{SS_A}{a-1}$ | $F = \frac{MS_A}{MS_E}$
+Error (dintre nivells) | $SS_E$ | $N-a$ | $MS_E = \frac{SS_E}{N-a}$ | 
+Total | $SS_T$ | $N-1$ |  |
+
+## Resolució del Exemple 2 amb R
+
+```{r}
+resp<-c(18,11,16,15,17,10,15,16,19,13,17,19,16,12,15,18)
+marca<-factor(rep(1:4,times=4),labels=c('Marca 1','Marca 2','Marca 3','Marca 4'))
+beers<-data.frame(marca,resp)
+# anova
+beers.aov<-aov(resp~marca,beers)
+anova(beers.aov)
+```
+
+## Correlació intraclàssica
+
+En un model d'efectes aleatoris les observacions poden ser dependents (el contingut de sodi de les ampolles d'una mateixa marca)
+
+$$ Cov(Y_{ij},Y_{ik}) = Cov(\mu+A_i+\epsilon_{ij},\mu+A_i+\epsilon_{ik})= \\
+Cov(A_i,A_i)+cov(A_i,\epsilon_{ik})+Cov(\epsilon_{ij},A_i)+Cov(\epsilon_{ij},\epsilon_{ik})=\sigma_A^2+0+0+0 = \sigma_A^2 $$
+
+$$ \rho(Y_{ij},Y_{ik})=\frac{Cov(Y_{ij},Y_{ik})}{\sqrt{Var(Y_{ij})Var(Y_{ik})}}=\frac{\sigma_A^2}{\sigma_A^2+\sigma^2} $$
+
+S'interpreta com el percentatge de la variabilitat total degut a la variabilitat introduïda pel factor.
+
+## Estimació dels paràmetres del model
+
+$$ \hat{\sigma^2} = MS_E $$
+
+$$ \hat{\sigma^2_A} = \frac{MS_A-MS_E}{n_0} $$
+on
+$$ n_0 = \Bigg\{ \begin{array}{l} 
+n \mbox{ en el cas balancejat} \\
+\frac{1}{a-1} \Big[ \sum_{i=1}^a r_i - \frac{\sum_{i=1}^a r_i^2}{\sum_{i=1}^a r_i} \Big] \,\,  \mbox{ en el cas no balancejat}  \end{array} $$
+
+Aquesta estimació correspon al mètode dels moments aïllant els paràmetres a partir de les esperances
+
+$$ E(MS_E) = \sigma^2 \,\,\,\, E(MS_A) = \sigma^2 + n \sigma^2_A. $$
+
+Pot donar lloc a valors absurds (negatius) per $\hat{\sigma^2_A}$. En aquest cas els substituiríem per zeros.
+
+A la bibliografia poden trobar-se fòrmules per intervals de confiança de la correlació intraclàssica.
+
+## Estimació de paràmetres a l'exemple 2
+```{r,echo=FALSE}
+taula<-anova(beers.aov)
+taula
+```
+
+- $\hat{\mu} =$ `r mean(resp)`
+
+- $\hat{\sigma^2}$ = `r taula[2,3]` $\Rightarrow \hat{\sigma}$ = `r sqrt(taula[2,3])`
+
+- $\hat{\sigma^2_A}$ = (`r taula[1,3]` - `r taula[2,3]` )/4 = `r (taula[1,3]-taula[2,3])/4` $\Rightarrow \hat{\sigma_A}$ = `r sqrt((taula[1,3]-taula[2,3])/4)`
+
+- La correlació intraclàssica és $r(Y_{ij},Y_{ik}) =$  (`r ((taula[1,3]-taula[2,3])/4)`)/(`r ((taula[1,3]-taula[2,3])/4)`+`r (taula[2,3])`) = `r ((taula[1,3]-taula[2,3])/4)/((((taula[1,3]-taula[2,3])/4)+(taula[2,3])))`
+
+## Resolució alternativa de l'exemple 2 amb el package nlme (opcional)
+
+```{r,warning=FALSE}
+# Resolució alternativa amb lme
+library(nlme)
+res.lme<-lme(resp~1,data=beers,random=~1|marca)
+summary(res.lme)
+intervals(res.lme)
+```
+
+## Calcul de potència i mida mostral
+
+Per tenir en compte la potència del contrast en un ANOVA podem plantejar-nos dues estratègies:
+
+- Calcular la potència a partir de la mida mostral utilitzada
+
+- Calcula la mida mostral necessària per assolir una determinada potència
+
+### Determinació de la potència
+
+Cal calcular el paràmetre de no centralitat $\lambda$, és un paràmetre que determina la distribució de l'estadístic $F$ si la hipòtesi nul·la és falsa.
+
+$$ \lambda = \frac{n \sum_{i=1}^a \alpha_i^2}{\sigma^2} $$
+
+subsitituïnt per les seves estimacions obtingudes de la taula ANOVA.
+
+Un cop obtingut $\lambda$ podem calcular el paràmetre $\Phi^2 = \lambda / a$ i consultar les corbes característiques d'operació (gràfiques que contenen càlculs de potència a partir de diversos valors de l'experiment); o calcular l'anomenada mida de l'efecte $f$ (mesura de les diferències trobades) i que definim seguint Cohen com
+
+$$ f^2 = \frac{\lambda}{n · a} = \frac{\sum_{i=1}^a \alpha_i^2}{a \cdot \sigma^2} $$
+
+i utilitzar el software específicament dissenyat pel càlcul (package pwr de R).
+
+#### Càlcul sobre les dades del exemple 1
+
+```{r,echo=FALSE}
+taula<-anova(farmacs.aov)
+taula
+taula2<-model.tables(farmacs.aov)
+taula2
+lambda<-(taula2$tables$tract[1]^2 + taula2$tables$tract[2]^2 + taula2$tables$tract[3]^2)*8/ taula[2,3]
+f<-sqrt(lambda/24)
+```
+
+$n=8, \hat{\sigma^2}=$ `r taula[2,3]`,  $\sum_{i=1}^a \hat{\alpha_i^2} =$ `r taula2$tables$tract[1]`$^2$ + `r taula2$tables$tract[2]`$^2$ + `r taula2$tables$tract[3]`$^2$ = `r taula2$tables$tract[1]^2 + taula2$tables$tract[2]^2 + taula2$tables$tract[3]^2` $\Rightarrow \hat{\lambda} =$ `r  lambda` $\Rightarrow \hat{f} =$ `r f`
+
+```{r}
+library(pwr)
+pwr.anova.test(k=3, f=f, sig.level=0.05, n<-8)
+```
+
+## Càlcul de la mida mostral per assolir una potència determinada
+
+Suposem que volem detectar efectes que excedeixin $\Delta$ unitats de la mitjana global amb un nivell de significació $\alpha$ i una potència $1-\beta$.
+
+El cas més desfavorable (menor mida del efecte) és $\alpha_1 = \Delta \,\, , \,\, \alpha_2 = -\Delta$ i $\alpha_i = 0 \,\, i=3,...,a$. 
+
+Per tant 
+
+$$ f^2 = \frac{2 \cdot \Delta^2}{a \cdot \sigma^2} $$
+
+Suposem que en el nostre exemple volem detectar efectes que excedixin $\Delta=1.5$ unitats la mitjana global, amb un nivell de significació del 5 % i una potència del 80 %. Sota aquestes condicions
+
+$\hat{f} = \sqrt{\frac{2 \cdot 1.5^2}{3 \cdot MS_E}} =$ `r sqrt((2*1.5^2)/(3*taula[2,3]))`.
+
+A titol indicatiu, Cohen suggereix valors de f de 0.1, 0.25 i 0.4 que representen efectes petits, mitjans i grans respectivament.
+
+Finalment amb el package *pwr*
+
+```{r}
+f<-sqrt((2*1.5^2)/(3*taula[2,3]))
+pwr.anova.test(k=3, f=f, sig.level=0.05, power=0.8)
+pwr.anova.test(k=3, f=f, sig.level=0.05, power=0.9)
+```
+
+## ANOVA no paramétric. Test de Kruskal-Wallis
+
+- Objectiu del test: comprovar si existeixen diferencies significatives entre k grups experimentals.
+
+- Kruskal-Wallis és un test no paramètric que no assumeix normalitat de les dades.
+
+- La hipòtesis nul·la postula que la variable mesurada en els diferents grups presenta la mateixa distribució.  
+
+- Assumeix que les formes de les distribucions són les mateixes en els diferents grups, per tant, Kruskal-Wallis és sensible a situacions amb dades heterocedàstiques.
+
+- Generalitza la prova U de Mann-Whitney per a 3 o més grups.
+
+## Kruskal-Wallis. Procediment
+
+- Procediment
+1. ordenar les dades de tota la mostra de més petit a més gran.
+2. assignar al més petit el rang=1, al segon rang= 2 etc. El rang de la observació i,j el designem amb el símbol $g_{ij}$ 
+
+- l'estadístic és el següent:
+  
+$$ K = \frac{12}{N (N+1)}\sum_{i=1}^a r_i (\bar{g_{i.}}-\bar{g})^2 $$
+
+
+
+- en cas de rangs repetits, hi ha descrita una correcció de l'estadístic 
+
+- K segueix una distribució Chi-quadrat amb a-1 graus de llibertat, sempre que tot $r_i \ge 5$
+
+## Exemple 3. Hollander & Wolfe (1973)
+
+Eficiència mucociliar en la taxa d'eliminació de pols en (1) individus normals, (2) amb malaltia pulmonar obstructiva i (3) amb asbestosi.
+
+- Dades originals
+
+Indiv. | Normal | Obst. | Asbest
+--- | --- | --- | ---
+1 | 2.9 | 3.8 | 2.8
+2 | 3 | 2.7 | 3.4
+3 | 2.5 | 4 | 3.7
+4 | 2.6 | 2.4 | 2.2
+5 | 3.2 | | 2
+
+- Rangs
+
+Indiv. | Normal | Obst. | Asbest
+--- | --- | --- | ---
+1 | 8 | 13 | 7
+2 | 9 | 6 | 11
+3 | 4 | 14 | 12
+4 | 5 | 3 | 2
+5 | 10 | | 1
+
+```{r}
+# Exemple Kruskal-Wallis
+taxa<-c(2.9,3,2.5,2.6,3.2,3.8,2.7,4,2.4,2.8,3.4,3.7,2.2,2)
+fact<-factor(c(rep(1,5),rep(2,4),rep(3,5)),labels=c('Normal','Obst.','Asbest.'))
+dades<-data.frame(fact,taxa)
+# Descriptiva
+boxplot(taxa~fact,dades,col='orange')
+```
+
+El calcul resumit de l'estadístic és
+
+$$ K = \frac{12}{14 \cdot 15} (5(7.2-7.5)^2+4(9-7.5)^2+5(6.6-7.5)^2)=0.7714 $$
+
+```{r}
+# Test de Kruskal-Wallis
+kruskal.test(taxa~fact,dades)
+```
+
+## Kruskal-Wallis com un ANOVA amb els rangs
+
+Si apliquem el test ANOVA ordinari als rangs com a variable resposta en lloc de la variable original obtindriem
+
+$$ F = \frac{\frac{K}{a-1}}{\frac{N-1-K}{N-a}} $$
+
+Per tant aplicar Kruskal-Wallis és equivalent a aplicar un ANOVA ordinari als rangs de les observacions.
+
+```{r}
+# Kruskal-Wallis com un ANOVA amb els rangs
+dades$rang<-rank(dades$taxa)
+anova(aov(rang~fact,dades))
+# F=(K/(a-1))/((N-1-K)/(N-a))  on K és l'estadístic de Kruskal-Wallis
+K<-unname(kruskal.test(taxa~fact,dades)$statistic)
+a<-nlevels(dades$fact)
+N<-length(dades$fact)
+F<-(K/(a-1))/((N-1-K)/(N-a))
+F
+```
+
+## Comparacions múltiples per Kruskal-Wallis
+
+```{r}
+# Comparacions múltiples
+library(agricolae)
+kruskal(dades$taxa,dades$fact,p.adj="bonferroni",console=T)
+```
+
+Una alternativa més lliberal és fer l'adjust dels p-valors per "fdr" en lloc de bonferroni.
+
+Podeu ampliar en el següent enllaç els conceptes de [Comparacions múltiples (*Multiple Testing*)](https://en.wikipedia.org/wiki/Multiple_comparisons_problem)

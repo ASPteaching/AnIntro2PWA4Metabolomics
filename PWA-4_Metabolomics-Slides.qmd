@@ -1,0 +1,343 @@
+---
+title:  "Pathway Analysis for metabolomics"
+author: "Alex Sanchez"
+format:
+  revealjs: 
+    incremental: false  
+    transition: slide
+    background-transition: fade
+    transition-speed: slow
+    scrollable: true
+    menu:
+      side: left
+      width: half
+      numbers: true
+    slide-number: c/t
+    show-slide-number: all
+    progress: true
+    css: "css4CU.css"
+    theme: sky
+knit:
+  quarto:
+    chunk_options:
+      echo: true
+      cache: false
+      prompt: false
+      tidy: true
+      comment: NA
+      message: false
+      warning: false
+    knit_options:
+      width: 75
+#bibliography: "Metabolomics.bib"
+editor_options: 
+  chunk_output_type: console
+---
+
+# Introduction and Objectives
+
+
+## Introducing Ourselves
+
+<br>
+
+![Statistics & Bioinformatics and Nutrition & Metabolomics groups @ UB ](images/PWA-4_Metabolomics-Slides_insertimage_1.png)
+
+## Session objectives
+
+- Overview of Patwhay Analysis for Metabolomics
+
+- Introduce its components and 
+
+- Go through some methods with some detail<br>
+
+- Discuss some limitations and provide recomendations.
+
+- Introduce some tools for Pathway Analysis
+
+- Get a practical grasp of how to apply it.
+
+
+## Session Outline
+
+1. Introducion and objectives
+
+2. Metabolite lists: What do they mean
+
+3. Information sources to support interpretation
+
+4. Methods and Tools to extract information
+  
+5. The limitations of PwA. Some recommendations
+
+6. Software tools for PwA
+
+7. Practical session
+
+
+## Health, Disease and Pathways {.smaller}
+
+- Metabolism is a complex network of chemical reactions within the confines of a cell that can be analyzed in self-contained parts called pathways.
+
+- We often assume that “normal” metabolism is what happens in healthy state or, that disease can be associated with some type of alteration in metabolism.
+
+![Characterization of disease attempted studying how this disrupts pathways](images/images/PWA-4_Metabolomics-Slides_insertimage_.png)
+
+ 
+## So what is Pathway Analysis?  {.smaller}
+
+- ... any analytic technique that benefits from biological pathway or molecular network information to gain insight into a biological system. (Creixell et alt., Nature Methods 2015 (12 (7))
+
+- Pathway Analysis methods rely on high throughput information provided by omics technologies to: 
+  - Contextualize findings to help understand biological processes
+  - Identify fetures associated with a disease
+  - Predict drug targets
+  - Understand how to intervene in disease1
+  - Conduct target literature searches
+  - Integrate diverse biological information
+
+# From samples to *features* lists
+
+## Bioinformatics workflows
+
+![[A Metabolomics Worflow Example](https://doi.org/10.3390/metabo12040357)](images/PWA-4_Metabolomics-Slides_insertimage_8.png){width=110%}
+
+
+## From samples to *features* lists (2)
+
+![Metabolomics Workflows in MetaboAnalyst 5.0](images/PWA-4_Metabolomics-Slides_insertimage_3.png)
+
+## Analysis yield metabolites lists {.smaller}
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+:::{.center}
+
+![An unordered list of metabolite IDs](images/PWA-4_Metabolomics-Slides_insertimage_6.png){width=50%}
+
+<!-- ```{r echo=FALSE} -->
+
+<!-- x <- read.csv("data/cachexia-t_test_all.csv") -->
+<!-- unordered <- data.frame (idx=rownames(x),metab=x[,1]) -->
+
+<!-- head(unordered,15) -->
+<!-- ``` -->
+
+:::
+:::
+
+::: {.column width='60%'}
+![Fold changes and AUC of metabolites whose concentrations were significantly increased in the patients with breast cancer compared to the healthy controls](images/PWA-4_Metabolomics-Slides_insertimage_4.png)
+
+- Metabolites lists are diverse:
+
+  - Truncated vs All the features analyzed
+  - Ordered vs unordered
+  - Only IDs vs IDs with difference measures
+
+:::
+
+::::
+
+## The *where to, now?* question {.smaller}
+
+Once a list of feature is obtained it can be studied on a one-by-one basis
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+  - Select some features for biochemical validation,
+  
+  - Map individual features to specific pathways,
+  
+  - Perform functional assays,
+  
+  - Do a literature search ...
+
+:::
+
+::: {.column width='60%'}
+
+![](images/PWA-4_Metabolomics-Slides_insertimage_10.png)
+
+:::
+
+::::
+
+- This will yield useful information, but
+
+  - It may be slow and resource-consuming
+  - It does not account for **interaction** between features.
+
+## And here comes Pathway Analysis
+
+- Pathway Analysis studies the list as a whole.
+
+- With this aim it combines:
+  - The list of features, with
+  - Pre-existing sources of information related to them
+
+- And, after some processing, it yields 
+    - some type of scores about
+    - groups of features appearing to be significantly related with the process being studied.
+
+
+## How can we interpret these lists?
+
+
+![From Lists to Biology ](images/PWA-4_Metabolomics-Slides_insertimage_11.png)
+
+# Ontologies, Databases and Metabolite Sets
+
+
+
+## The elements of Pathways Analysis
+
+- Loosely speaking, to do Pathway Analysis one needs:
+
+  - A list of features, characterizing a  process.
+
+  - A source of information about these features.
+
+  - An algorithm to highlight relevant information by linking *list* and *source*.
+
+  - A tool implementing the algorithm.
+
+- In this section, we focus on *sources of information* and on *how to provide it to the algorithms*.
+
+
+## Metabolites Databases
+
+![Some common databases in Metabolomics ](images/PWA-4_Metabolomics-Slides_insertimage_14.png)
+
+
+## The  Human Metabolome DB {.smaller}
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+![The  Human Metabolome Database ](images/PWA-4_Metabolomics-Slides_insertimage_15.png)
+
+:::
+
+::: {.column width='60%'}
+
+- Detailed information about human
+metabolites, their structures, pathways,
+origins, concentrations, functions and
+reference spectra
+- HMDB has 248,855 metabolites, 132,335
+pathways, 3.1 million MS and NMR spectra,
+metabolite biomarker data on >600 diseases
+- A resource established to provide reference
+metabolite values for human disease, human
+exposures & population health
+- Captures both targeted and untargeted
+metabolomics (and exposomics) data
+
+:::
+
+::::
+
+
+## The Food Constituent Database {.smaller}
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+![The Food Constituent Database ](images/PWA-4_Metabolomics-Slides_insertimage_16.png)
+
+:::
+
+::: {.column width='60%'}
+
+- Database of 70,000+ compounds
+found in 727 foods and their
+effects on flavour, aroma, colour
+and human health
+- Comprehensive concentration
+information to ID foods that are
+rich in particular micronutrients
+- Links chemistry to food types
+(biological species) to flavour,
+aroma, colour and human health
+- Supports sequence, spectral, structure and text searches
+
+:::
+
+::::
+
+
+## The KEGG DB {.smaller}
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+![Kyoto Encyclopedia of Genes and Genomes ](images/PWA-4_Metabolomics-Slides_insertimage_17.png)
+
+:::
+
+::: {.column width='60%'}
+
+- The “Go-to” Metabolic Pathway Database
+- Has 535 “canonical” pathway diagrams or maps covering 5994 organisms for a total of 604,808
+pathways
+-  ~170 metabolic pathways covering 18,553
+compounds, includes many disease pathways (80), protein signaling (70) pathways, and biological
+process pathways (70)
+-  Metabolic pathways are highly schematized and mostly limited to catabolic and anabolic processes
+
+:::
+
+::::
+
+
+## Small Molecule Pathway Database {.smaller}
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+![The Small Molecule Pathway Database (SMPDB) ](images/PWA-4_Metabolomics-Slides_insertimage_18.png)
+
+:::
+
+::: {.column width='60%'}
+
+- Nearly 48,900 hand-drawn small molecule pathways
+  – 404 drug action pathways
+  – 20,251 metabolic disease pathways
+  – 27,876 metabolic pathways
+  – 160+ signaling and other pathways
+
+- Depicts organs, cell compartments, organelles, protein locations, and protein quaternary structures
+
+- Maps gene chip & metabolomic data
+
+- Converts gene, protein or chemical lists to pathways or disease diagnoses
+:::
+
+::::
+
+## From Databases to Metabolite Sets
+
+![MSEA Workflow ](images/PWA-4_Metabolomics-Slides_insertimage_19.png)
+
+## Metabolites Set libraries
+
+![Overview of MSEA's metabolite set libraries ](images/PWA-4_Metabolomics-Slides_insertimage_20.png)
+
+# Analysis Methods
+
+# Limitations and Recommendations
+
+# Pathway Analysis Tools
+
+# A use case with MetaboAnalyst
+

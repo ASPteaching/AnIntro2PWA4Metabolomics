@@ -1,0 +1,136 @@
+---
+title: "Pathway Analysis in Metabolomics"
+authors:
+- Alex Sanchez
+date: "`r Sys.Date()`"
+format:
+    html: 
+      toc: true
+      toc-depth: 3
+      code-fold: false
+      fig-width: 8
+      fig-height: 6
+    pdf: default
+knit:
+  quarto:
+    chunk_options:
+      echo: true
+      cache: false
+      prompt: false
+      tidy: true
+      comment: NA
+      message: false
+      warning: false
+    knit_options:
+      width: 75
+reference-location: margin
+execute:
+    echo: true
+    message: false
+    warning: false
+    cache: true
+# bibliography: "../StatisticalLearning.bib"
+editor_options: 
+  chunk_output_type: console
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+```{r echo=FALSE}
+options(width=100) 
+if(!require("knitr")) install.packages("knitr")
+library("knitr")
+#getOption("width")
+knitr::opts_chunk$set(comment=NA,echo = TRUE, cache=TRUE)
+```
+
+# Estructura del taller
+
+## Motivació
+
+- En metabolòmica com en altres òmiques també es dona importància al "Pathway Analysis".
+- Ara bé, en aquest camp, aquesta mena d'anàlisi pot interpretar-se de més formes que, per exemple, en genòmica.
+- Això és així perque és, en metabolòmica, on el terme Pathway té tot el sentit.
+
+## Objectius
+
+L'objectiu d'aquest taller és per tant múltiple:
+
+- Presentar-nos com a grup d'anàlisi de dades / bioinformàtica amb expertesa *també en metabolòmica*.
+
+- Apropar-nos a l'*Anàlisi de Pathways (PwAn)* des de la perspectiva de "suport a la interpretació" (que **jo ja conec** de les altres òmiques).
+
+- Mostrar en que es diferent el PWAn en metabolòmica i quines són les seves caracterísiques i les seves limitacions específiques.
+
+- Ilustrar amb casos pràctics les diverses formes de dir-lo a terme.
+
+## Enfoc
+
+Raonablement una xerrada d'aquest tema ha de tractar diversos aspectes.
+
+### En la part teòrica
+
+- El(s) Workflow(s) d'Anàlisi de dades en Bioinformàtica (@Chen:2022).
+  - Aquí cal comentar el que tothom sap, targeted vs untargeted
+
+- El concepte de "Llistes de metabòlits" i perquè es/pot ser diferent del de "llista de gens
+
+- Les bases de dades i les ontologies
+
+- Els tipus d'anàlisis d'enriquiment
+  - Cal  veure quins ofereix MetaboAnalyst i altres
+  - ORA vs MSEA (vs GlobalTest?)
+  - targeted vs untargeted
+  
+  - Per cert *Quin nom li hem de donar*?
+    - Pathway Analysis
+    - Enrichment Analysis
+    - Functional Analysis
+    - Network Analysis (Aquest NO)
+
+- El problema del multiple testing
+
+- Les limitacions d'aquesta mena d'anàlisi
+
+- Les extensions/variants que es troben
+
+- Els programaris d'anàlisi
+
+### La part pràctica
+
+- Ha de mostrar 
+
+  - Què es pot fer
+  
+  - Com es fa
+  
+  - Quines variants i com difereixen/s'assemblen
+
+
+# Esquema general (Slides)
+
+## Presentació d'EstBioinfo i R amb Nutrimetabolomics
+
+-   Cristina Andres'group
+-   Bioinformatics & Biostatistics group link to CA
+    -   Research & Teaching in the field
+    -   Collaboration and Support
+        -   Link to other (Translational) institutions.
+
+## Que NO ha de faltar
+
+- Ciencia oberta
+  - Reproduibilitat (R amb codi), 
+  - FAIR
+  - Data Sharing
+  
+- Una mica de detall sobre la diferència entre ORA i XSEA
+  - Basic: Els inputs son diferents
+  - Més elaborat: Les hipòtesis son diferents
+
+## Referencies i materials per saber-ne mes
+
+
+
+
