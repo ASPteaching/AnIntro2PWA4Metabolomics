@@ -145,10 +145,11 @@ editor_options:
 
 - To be able to do Pathway Analysis, metabolites need to be *mappable* to their sources of information.
 
-  - Must be uniquely identifiable through their names or IDs.
-  -Must be possible to link/relate these names/IDs with the corresponding IDs in the source of information we wish to rely.
+  - Must be uniquely identifiable by  names/IDs.
+  - Must be possible to link/relate these names/IDs with the corresponding IDs in the source of information we wish to rely.
   
-- Nowadays, this is *far from possible* for all metabolites and the task of uniquely and ambiguosly naming the metabolites is a hard one.
+- This is *far from possible* for all metabolites.
+- Uniquely and unambiguosly naming all metabolites is, in the best of cases, "work in progress".
 
 ## The *where to, now?* question {.smaller}
 
@@ -218,10 +219,18 @@ Once a list of feature is obtained it can be studied on a one-by-one basis
 - In this section, we focus on *sources of information* and on *how to provide it to the algorithms*.
 
 
-## Metabolites Databases
+## Sources of information for PWA
 
 ![Some common databases in Metabolomics ](images/PWA-4_Metabolomics-Slides_insertimage_14.png)
 
+## Ontologies, Databases et alt.{.smaller}
+
+Although incomplete s.o.i are multiple and diverse.
+
+- **Ontologies:** Structured vocabularies for categorizing and describing relationships within a domain. [GO](https://geneontology.org/), [ChEBI](https://www.ebi.ac.uk/chebi/)
+- **Pathway Databases:** Detailed information about biological pathways and their the biological context. [KEGG](https://www.genome.jp/kegg/), [Reactome](https://reactome.org/), [SMPDB](https://www.smpdb.ca/).
+- **Compound Databases:** Information on small molecules for identification and characterization of metabolites. [HMDB](https://hmdb.ca/), [PubChem](https://pubchem.ncbi.nlm.nih.gov/), [LipidMaps](https://lipidmaps.org/), and [MassBank](https://massbank.eu/MassBank/)
+- And many more: **Networks DBs**, **Spectral DBs**, ...
 
 ## The  Human Metabolome DB {.smaller}
 
@@ -334,13 +343,32 @@ process pathways (70)
 
 ::::
 
-## From Databases to Metabolite Sets
+## Obtaining Metabolite Sets
 
-![MSEA Workflow ](images/PWA-4_Metabolomics-Slides_insertimage_19.png)
+- As described, PWA matches lists of metabolites with previously defined metabolite sets that characterize a process, a disease or a group.
+
+- Some sources of information (Ontologies, Pathways DBs) directly provide metabolite sets.
+
+- For compound DBs, Metabolite sets have to be built
+  - By manual curation
+  - Automatically (some type of clustering)
+
 
 ## Metabolites Set libraries
 
 ![Overview of MSEA's metabolite set libraries ](images/PWA-4_Metabolomics-Slides_insertimage_20.png)
+
+## Metamap clusters
+
+![](PWA-4_Metabolomics-Slides_insertimage_4.png)
+
+## Chemical similarity clusters
+
+![](PWA-4_Metabolomics-Slides_insertimage_5.png)
+
+## Chemical Ontologies
+
+![](PWA-4_Metabolomics-Slides_insertimage_3.png)
 
 # Analysis Methods
 
