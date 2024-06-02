@@ -141,6 +141,15 @@ editor_options:
 
 ::::
 
+## An open problem: Metabolites IDs
+
+- To be able to do Pathway Analysis, metabolites need to be *mappable* to their sources of information.
+
+  - Must be uniquely identifiable through their names or IDs.
+  -Must be possible to link/relate these names/IDs with the corresponding IDs in the source of information we wish to rely.
+  
+- Nowadays, this is *far from possible* for all metabolites and the task of uniquely and ambiguosly naming the metabolites is a hard one.
+
 ## The *where to, now?* question {.smaller}
 
 Once a list of feature is obtained it can be studied on a one-by-one basis
