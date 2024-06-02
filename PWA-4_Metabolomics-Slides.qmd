@@ -437,7 +437,6 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 ## Example 2: Non-enriched
 
 ![P-value high, odds-ratio around 1: List is not  enriched in Feature Set ](PWA-4_Metabolomics-Slides_insertimage_11.png)
-
 ## Summary: Recipe for ORA
 
 1. Define feature list (e.g. thresholding analyzed list ) and background list,
@@ -455,11 +454,208 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 - Different results at different threshold settings
 - Based on the wrong assumption of independent feature (or feture group) sampling, which increases false positive predictions.
 
+## Functional Class Scoring
 
+- Also known as:
+
+  - *Analysis of ranked lists*
+
+  - *Metabolite Set Enrichment Analysis*
+
+- Rooted in the  *Gene Set Enrichment Analysis* (GSEA) method developed  to overcome ORA limitations.
+
+:::{.center}
+![](PWA-4_Metabolomics-Slides_insertimage_14.png){width=70%}
+:::
+
+## The GSEA Method (1) {.smaller}
+
+- GSEA method compares, for each feature set, the distribution of the test statistic within the set with the overall distribution of those statistics, i.e. the calculated for all genes.
+
+- To do this, test statistics are ranked (from biggest to smallest) and for set gene set a running sum is computed such that 
+  - If a feature is in the  set add a certain quantity ($\sqrt{N_s/(N-N_s)}$)
+  - If a feature is not in the set, substract a (small) quantity ($-\sqrt{(N-N_s)/N_s}$)
+  
+## The GSEA tests {.smaller}
+
+- If the distribution of the *running sum* doesn't differ from a *random walk* then the list can be declared significantly enriched in that set.
+
+- Original test was a Kolmogorov-Smirnov test (K-S test) statistic with P-values  computed by randomization.
+  
+  ![](PWA-4_Metabolomics-Slides_insertimage_15.png)
+  
+## GSEA Extensions/Alternatives {.smaller}
+
+- **Wilcoxon test**:  
+  I uses rank-based methods to assess whether the feature sets are distributed differently across the groups. 
+
+- **Globaltest**: 
+  - It evaluates the association between a predefined set of features and a clinical outcome of interest. 
+  - Instead of testing individual features, it assesses the global effect of the gene set on the outcome. 
+  - This method is beneficial in identifying pathways or feature sets that have a combined influence on a phenotype, rather than relying on individual feature-level analysis.
+
+## PWA for untargeted studies
+
+- What to do when you don’t know what the metabolites ions are?
+
+- Most popular option is Mummichog (li et alt. 2013).
+
+![](PWA-4_Metabolomics-Slides_insertimage_16.png)
+
+## Mummichog pathway mapping {.smaller}
+
+- Ions are dividedvinto significant and non-significant groups.
+  - E.g 1000 ions,150 with p-val <0.05
+- Repeat many times
+  - Randomly take 150 of the remaining non-significant ions and mapped onto known pathways.
+  - This provides an estimate of how likely it is to observe random association of non-significant ions with pathways.
+  
+- The significant ions are now mapped to the pathways and evidence is sought for enhanced associations (Fisher exact test)
+
+## Mummichog change of approach
+
+![ Mummichog redefines the work flow of untargeted metabolomics ](PWA-4_Metabolomics-Slides_insertimage_18.png)
+
+::: {.notes}
+
+1. (A) In the work flow of untargeted metabolomics, the 
+conventional approach requires the metabolites to be identified before pathway/network analysis, while mummichog (blue arrow) predicts
+functional activity bypassing metabolite identification. 
+
+2. (B) Each row of dots represent possible matches of metabolites from one m/z feature, red the
+true metabolite, gray the false matches. The conventional approach first requires the identification of metabolites before mapping them to the
+metabolic network. 
+
+3. (C) mummichog maps all possible metabolite matches to the network and looks for local enrichment, which reflects the true activity because the false matches will distribute randomly
+:::
+
+# Multiple testing problem and adjustments
+
+## Multiple testing
+
+- Whatever approach we use for pathway Analysis there is a common characteristic: 
+*Every test is applied for every feature set in a long collection of sets*
+
+- This leads to a *multiple testing problem*: the Type I error probability of falsely rejecting the null hypothesis increases with the number of tests.
+
+- In order to avoid an artificial inflation of *False positive discoveries* some adjustments are recommended.
+
+## Hypothesis Tests Decision Table
+
+![In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and TYpe II errors)](PWA-4_Metabolomics-Slides_insertimage_19.png)
+
+## Why Multiple testing matters
+
+![](PWA-4_Metabolomics-Slides_insertimage_20.png)
+
+## TYpe I error not useful here
+
+![](PWA-4_Metabolomics-Slides_insertimage_21.png)
+
+## How to deal with this issue?
+
+![](PWA-4_Metabolomics-Slides_insertimage_22.png)
+
+## *Family Wise Error Rate*
+
+- Let $M$ be the number of annotations tested.
+- Given p-value, $p$  compute $p_{adj}=p\times M$, or 
+- Given significance level $\alpha$ compute $\alpha_{adj}=\alpha/M$.
+
+- The adjusted P-value, $p_{adj}$ is  greater than or equal to the probability that **one or more** of the observed enrichments are due to random draws.  
+
+- This adjustment is said to *controling for the Family-Wise Error Rate* (FWER).
+
+- Bonferroni method controls FWER.
+
+
+## Bonferroni Caveats
+
+- This adjustment is very stringent and can “wash away” real enrichments leading to false negatives,
+
+- Often one is willing to accept a less stringent condition, that is accepting some false positives to avoid too many false negatives.
+
+- This is may be done using the “*false discovery rate*” (FDR), which leads to a gentler correction when there are real enrichments.
+
+## False Discovery Rate
+
+- FDR is the expected proportion of "False Positives" that is of the observed enrichments due to chance.
+- Les restrictive than Bonferroni adjustment which is a bound on the probability that **any one** of the observed enrichments could be due to random chance.
+- Typically, FDR adjustments are calculated using the Benjamini-Hochberg procedure.
+- FDR threshold is often called the “q-value”
+
+## An example {.smaller}
+
+```{r echo=FALSE}
+cachexia.t_test <- read.csv("data/cachexia-t_test_all.csv", row.names=1)
+rawPs <- cachexia.t_test$p.value
+names(rawPs) <- row.names(cachexia.t_test)
+bonfP <- p.adjust(rawPs, method= c("bonferroni"))
+bhP <-  p.adjust(rawPs, method= c("BH"))
+pVals <-data.frame(raw = rawPs, Bonferroni=bonfP, FDR = bhP)
+Ordered <-round(pVals[order(pVals$raw),] ,6)
+kableExtra::kable(Ordered)
+```
 
 # Limitations and Recommendations
 
+## Some limitations {.smaller}
+
+- Incomplete Pathway Databases
+
+- Metabolite Misidentification
+
+- Chemical Bias of Assays
+
+- Background Set Selection
+
+- Selection of Compounds of Interest
+
+- Multiple testing issues
+
+
+![](PWA-4_Metabolomics-Slides_insertimage_23.png)
+
+::: {.notes}
+
+### Incomplete Pathway Databases
+
+Limitation: Pathway databases are often incomplete and evolve over time, leading to discrepancies in pathway coverage and definitions.
+Recommendation: Use up-to-date databases and consider integrating multiple databases to improve coverage and accuracy​​.
+
+### Metabolite Misidentification
+
+Limitation: Metabolite misidentification can result in both false-positive and false-negative pathway identifications.
+Recommendation: Utilize stringent identification criteria and multiple identification methods to minimize misidentification rates​​.
+
+### Chemical Bias of Assays
+
+Limitation: Different analytical platforms have biases toward detecting specific types of compounds, affecting pathway accessibility.
+Recommendation: Combine multiple assay types to cover a broader range of metabolites and acknowledge assay-specific biases in the analysis​​.
+
+### Background Set Selection
+
+Limitation: The choice of background set can significantly influence the results of over-representation analysis (ORA).
+Recommendation: Define an assay-specific background set that includes all detectable compounds to reduce false-positive pathways​​.
+
+### Selection of Compounds of Interest
+
+Limitation: The criteria for selecting compounds of interest (e.g., significance thresholds) greatly impact PA results.
+Recommendation: Use appropriate statistical thresholds and apply multiple testing correction methods to ensure robust selection of compounds of interest​​.
+
+### Lack of Ground-Truth Datasets
+
+Limitation: The absence of ground-truth datasets makes it difficult to validate PA methods and results.
+Recommendation: Develop and use simulated or experimental ground-truth datasets to better assess PA methods and improve their accuracy
+
+:::
+
+
 # Pathway Analysis Tools
+
+## PAthway Analysis Tools
+
+![Common pathway analysis tools for metabolomics data.](PWA-4_Metabolomics-Slides_insertimage_24.png)
 
 # A use case with MetaboAnalyst
 

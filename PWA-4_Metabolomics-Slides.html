@@ -704,12 +704,9 @@ Alex Sanchez
 <h2>Example 1: Surprisingly enriched</h2>
 
 <img data-src="PWA-4_Metabolomics-Slides_insertimage_12.png" class="r-stretch quarto-figure-center"><p class="caption">P-value small, odds-ratio high: List is surprisingly enriched in Feature Set</p></section>
-<section id="example-2-non-enriched" class="slide level2">
+<section id="example-2-non-enriched" class="slide level2 scrollable">
 <h2>Example 2: Non-enriched</h2>
-
-<img data-src="PWA-4_Metabolomics-Slides_insertimage_11.png" class="r-stretch quarto-figure-center"><p class="caption">P-value high, odds-ratio around 1: List is not enriched in Feature Set</p></section>
-<section id="summary-recipe-for-ora" class="slide level2 scrollable">
-<h2>Summary: Recipe for ORA</h2>
+<p><img data-src="PWA-4_Metabolomics-Slides_insertimage_11.png" alt="P-value high, odds-ratio around 1: List is not enriched in Feature Set"> ## Summary: Recipe for ORA</p>
 <ol type="1">
 <li>Define feature list (e.g.&nbsp;thresholding analyzed list ) and background list,</li>
 <li>Select feature sets to test for enrichment,</li>
@@ -728,17 +725,607 @@ Alex Sanchez
 <li>Different results at different threshold settings</li>
 <li>Based on the wrong assumption of independent feature (or feture group) sampling, which increases false positive predictions.</li>
 </ul>
+</section>
+<section id="functional-class-scoring" class="slide level2">
+<h2>Functional Class Scoring</h2>
+<ul>
+<li><p>Also known as:</p>
+<ul>
+<li><p><em>Analysis of ranked lists</em></p></li>
+<li><p><em>Metabolite Set Enrichment Analysis</em></p></li>
+</ul></li>
+<li><p>Rooted in the <em>Gene Set Enrichment Analysis</em> (GSEA) method developed to overcome ORA limitations.</p></li>
+</ul>
+<div class="center">
+<p><img data-src="PWA-4_Metabolomics-Slides_insertimage_14.png" style="width:70.0%"></p>
+</div>
+</section>
+<section id="the-gsea-method-1" class="slide level2 smaller">
+<h2>The GSEA Method (1)</h2>
+<ul>
+<li><p>GSEA method compares, for each feature set, the distribution of the test statistic within the set with the overall distribution of those statistics, i.e.&nbsp;the calculated for all genes.</p></li>
+<li><p>To do this, test statistics are ranked (from biggest to smallest) and for set gene set a running sum is computed such that</p>
+<ul>
+<li>If a feature is in the set add a certain quantity (<span class="math inline">\(\sqrt{N_s/(N-N_s)}\)</span>)</li>
+<li>If a feature is not in the set, substract a (small) quantity (<span class="math inline">\(-\sqrt{(N-N_s)/N_s}\)</span>)</li>
+</ul></li>
+</ul>
+</section>
+<section id="the-gsea-tests" class="slide level2 smaller">
+<h2>The GSEA tests</h2>
+<ul>
+<li><p>If the distribution of the <em>running sum</em> doesn’t differ from a <em>random walk</em> then the list can be declared significantly enriched in that set.</p></li>
+<li><p>Original test was a Kolmogorov-Smirnov test (K-S test) statistic with P-values computed by randomization.</p>
+<p><img data-src="PWA-4_Metabolomics-Slides_insertimage_15.png"></p></li>
+</ul>
+</section>
+<section id="gsea-extensionsalternatives" class="slide level2 smaller">
+<h2>GSEA Extensions/Alternatives</h2>
+<ul>
+<li><p><strong>Wilcoxon test</strong>:<br>
+I uses rank-based methods to assess whether the feature sets are distributed differently across the groups.</p></li>
+<li><p><strong>Globaltest</strong>:</p>
+<ul>
+<li>It evaluates the association between a predefined set of features and a clinical outcome of interest.</li>
+<li>Instead of testing individual features, it assesses the global effect of the gene set on the outcome.</li>
+<li>This method is beneficial in identifying pathways or feature sets that have a combined influence on a phenotype, rather than relying on individual feature-level analysis.</li>
+</ul></li>
+</ul>
+</section>
+<section id="pwa-for-untargeted-studies" class="slide level2">
+<h2>PWA for untargeted studies</h2>
+<ul>
+<li><p>What to do when you don’t know what the metabolites ions are?</p></li>
+<li><p>Most popular option is Mummichog (li et alt. 2013).</p></li>
+</ul>
+
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_16.png" class="r-stretch"></section>
+<section id="mummichog-pathway-mapping" class="slide level2 smaller">
+<h2>Mummichog pathway mapping</h2>
+<ul>
+<li>Ions are dividedvinto significant and non-significant groups.
+<ul>
+<li>E.g 1000 ions,150 with p-val &lt;0.05</li>
+</ul></li>
+<li>Repeat many times
+<ul>
+<li>Randomly take 150 of the remaining non-significant ions and mapped onto known pathways.</li>
+<li>This provides an estimate of how likely it is to observe random association of non-significant ions with pathways.</li>
+</ul></li>
+<li>The significant ions are now mapped to the pathways and evidence is sought for enhanced associations (Fisher exact test)</li>
+</ul>
+</section>
+<section id="mummichog-change-of-approach" class="slide level2 scrollable">
+<h2>Mummichog change of approach</h2>
+
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_18.png" class="r-stretch quarto-figure-center"><p class="caption">Mummichog redefines the work flow of untargeted metabolomics</p><aside class="notes">
+<ol type="1">
+<li><ol type="A">
+<li>In the work flow of untargeted metabolomics, the conventional approach requires the metabolites to be identified before pathway/network analysis, while mummichog (blue arrow) predicts functional activity bypassing metabolite identification.</li>
+</ol></li>
+<li><ol start="2" type="A">
+<li>Each row of dots represent possible matches of metabolites from one m/z feature, red the true metabolite, gray the false matches. The conventional approach first requires the identification of metabolites before mapping them to the metabolic network.</li>
+</ol></li>
+<li><ol start="3" type="A">
+<li>mummichog maps all possible metabolite matches to the network and looks for local enrichment, which reflects the true activity because the false matches will distribute randomly</li>
+</ol></li>
+</ol>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section></section>
+<section>
+<section id="multiple-testing-problem-and-adjustments" class="title-slide slide level1 center">
+<h1>Multiple testing problem and adjustments</h1>
+
+</section>
+<section id="multiple-testing" class="slide level2">
+<h2>Multiple testing</h2>
+<ul>
+<li><p>Whatever approach we use for pathway Analysis there is a common characteristic: <em>Every test is applied for every feature set in a long collection of sets</em></p></li>
+<li><p>This leads to a <em>multiple testing problem</em>: the Type I error probability of falsely rejecting the null hypothesis increases with the number of tests.</p></li>
+<li><p>In order to avoid an artificial inflation of <em>False positive discoveries</em> some adjustments are recommended.</p></li>
+</ul>
+</section>
+<section id="hypothesis-tests-decision-table" class="slide level2">
+<h2>Hypothesis Tests Decision Table</h2>
+
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_19.png" class="r-stretch quarto-figure-center"><p class="caption">In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and TYpe II errors)</p></section>
+<section id="why-multiple-testing-matters" class="slide level2">
+<h2>Why Multiple testing matters</h2>
+
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_20.png" class="r-stretch"></section>
+<section id="type-i-error-not-useful-here" class="slide level2">
+<h2>TYpe I error not useful here</h2>
+
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_21.png" class="r-stretch"></section>
+<section id="how-to-deal-with-this-issue" class="slide level2">
+<h2>How to deal with this issue?</h2>
+
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_22.png" class="r-stretch"></section>
+<section id="family-wise-error-rate" class="slide level2">
+<h2><em>Family Wise Error Rate</em></h2>
+<ul>
+<li><p>Let <span class="math inline">\(M\)</span> be the number of annotations tested.</p></li>
+<li><p>Given p-value, <span class="math inline">\(p\)</span> compute <span class="math inline">\(p_{adj}=p\times M\)</span>, or</p></li>
+<li><p>Given significance level <span class="math inline">\(\alpha\)</span> compute <span class="math inline">\(\alpha_{adj}=\alpha/M\)</span>.</p></li>
+<li><p>The adjusted P-value, <span class="math inline">\(p_{adj}\)</span> is greater than or equal to the probability that <strong>one or more</strong> of the observed enrichments are due to random draws.</p></li>
+<li><p>This adjustment is said to <em>controling for the Family-Wise Error Rate</em> (FWER).</p></li>
+<li><p>Bonferroni method controls FWER.</p></li>
+</ul>
+</section>
+<section id="bonferroni-caveats" class="slide level2">
+<h2>Bonferroni Caveats</h2>
+<ul>
+<li><p>This adjustment is very stringent and can “wash away” real enrichments leading to false negatives,</p></li>
+<li><p>Often one is willing to accept a less stringent condition, that is accepting some false positives to avoid too many false negatives.</p></li>
+<li><p>This is may be done using the “<em>false discovery rate</em>” (FDR), which leads to a gentler correction when there are real enrichments.</p></li>
+</ul>
+</section>
+<section id="false-discovery-rate" class="slide level2">
+<h2>False Discovery Rate</h2>
+<ul>
+<li>FDR is the expected proportion of “False Positives” that is of the observed enrichments due to chance.</li>
+<li>Les restrictive than Bonferroni adjustment which is a bound on the probability that <strong>any one</strong> of the observed enrichments could be due to random chance.</li>
+<li>Typically, FDR adjustments are calculated using the Benjamini-Hochberg procedure.</li>
+<li>FDR threshold is often called the “q-value”</li>
+</ul>
+</section>
+<section id="an-example" class="slide level2 smaller">
+<h2>An example</h2>
+<div class="cell">
+<div class="cell-output-display">
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">raw</th>
+<th style="text-align: right;">Bonferroni</th>
+<th style="text-align: right;">FDR</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Quinolinate</td>
+<td style="text-align: right;">0.000003</td>
+<td style="text-align: right;">0.000218</td>
+<td style="text-align: right;">0.000218</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Glucose</td>
+<td style="text-align: right;">0.000016</td>
+<td style="text-align: right;">0.001036</td>
+<td style="text-align: right;">0.000276</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3-Hydroxyisovalerate</td>
+<td style="text-align: right;">0.000019</td>
+<td style="text-align: right;">0.001187</td>
+<td style="text-align: right;">0.000276</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Leucine</td>
+<td style="text-align: right;">0.000020</td>
+<td style="text-align: right;">0.001232</td>
+<td style="text-align: right;">0.000276</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Succinate</td>
+<td style="text-align: right;">0.000029</td>
+<td style="text-align: right;">0.001802</td>
+<td style="text-align: right;">0.000276</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Valine</td>
+<td style="text-align: right;">0.000031</td>
+<td style="text-align: right;">0.001922</td>
+<td style="text-align: right;">0.000276</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">N,N-Dimethylglycine</td>
+<td style="text-align: right;">0.000034</td>
+<td style="text-align: right;">0.002125</td>
+<td style="text-align: right;">0.000276</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Adipate</td>
+<td style="text-align: right;">0.000035</td>
+<td style="text-align: right;">0.002206</td>
+<td style="text-align: right;">0.000276</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">myo-Inositol</td>
+<td style="text-align: right;">0.000040</td>
+<td style="text-align: right;">0.002508</td>
+<td style="text-align: right;">0.000279</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Acetate</td>
+<td style="text-align: right;">0.000069</td>
+<td style="text-align: right;">0.004376</td>
+<td style="text-align: right;">0.000415</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Glutamine</td>
+<td style="text-align: right;">0.000073</td>
+<td style="text-align: right;">0.004616</td>
+<td style="text-align: right;">0.000415</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Creatine</td>
+<td style="text-align: right;">0.000079</td>
+<td style="text-align: right;">0.004978</td>
+<td style="text-align: right;">0.000415</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Alanine</td>
+<td style="text-align: right;">0.000104</td>
+<td style="text-align: right;">0.006570</td>
+<td style="text-align: right;">0.000505</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Betaine</td>
+<td style="text-align: right;">0.000115</td>
+<td style="text-align: right;">0.007265</td>
+<td style="text-align: right;">0.000519</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Methylamine</td>
+<td style="text-align: right;">0.000127</td>
+<td style="text-align: right;">0.008002</td>
+<td style="text-align: right;">0.000533</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Pyroglutamate</td>
+<td style="text-align: right;">0.000172</td>
+<td style="text-align: right;">0.010811</td>
+<td style="text-align: right;">0.000616</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3-Hydroxybutyrate</td>
+<td style="text-align: right;">0.000175</td>
+<td style="text-align: right;">0.010994</td>
+<td style="text-align: right;">0.000616</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cis-Aconitate</td>
+<td style="text-align: right;">0.000183</td>
+<td style="text-align: right;">0.011547</td>
+<td style="text-align: right;">0.000616</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Formate</td>
+<td style="text-align: right;">0.000186</td>
+<td style="text-align: right;">0.011730</td>
+<td style="text-align: right;">0.000616</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Tryptophan</td>
+<td style="text-align: right;">0.000196</td>
+<td style="text-align: right;">0.012323</td>
+<td style="text-align: right;">0.000616</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Dimethylamine</td>
+<td style="text-align: right;">0.000282</td>
+<td style="text-align: right;">0.017772</td>
+<td style="text-align: right;">0.000846</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Creatinine</td>
+<td style="text-align: right;">0.000327</td>
+<td style="text-align: right;">0.020605</td>
+<td style="text-align: right;">0.000937</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Tyrosine</td>
+<td style="text-align: right;">0.000525</td>
+<td style="text-align: right;">0.033090</td>
+<td style="text-align: right;">0.001439</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sucrose</td>
+<td style="text-align: right;">0.000710</td>
+<td style="text-align: right;">0.044700</td>
+<td style="text-align: right;">0.001862</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3-Indoxylsulfate</td>
+<td style="text-align: right;">0.000924</td>
+<td style="text-align: right;">0.058182</td>
+<td style="text-align: right;">0.002327</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Lactate</td>
+<td style="text-align: right;">0.000978</td>
+<td style="text-align: right;">0.061634</td>
+<td style="text-align: right;">0.002371</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Threonine</td>
+<td style="text-align: right;">0.001134</td>
+<td style="text-align: right;">0.071410</td>
+<td style="text-align: right;">0.002645</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Asparagine</td>
+<td style="text-align: right;">0.001204</td>
+<td style="text-align: right;">0.075839</td>
+<td style="text-align: right;">0.002709</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Histidine</td>
+<td style="text-align: right;">0.001272</td>
+<td style="text-align: right;">0.080105</td>
+<td style="text-align: right;">0.002762</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">trans-Aconitate</td>
+<td style="text-align: right;">0.001349</td>
+<td style="text-align: right;">0.084962</td>
+<td style="text-align: right;">0.002832</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Xylose</td>
+<td style="text-align: right;">0.001445</td>
+<td style="text-align: right;">0.091016</td>
+<td style="text-align: right;">0.002915</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Serine</td>
+<td style="text-align: right;">0.001486</td>
+<td style="text-align: right;">0.093637</td>
+<td style="text-align: right;">0.002915</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Pyruvate</td>
+<td style="text-align: right;">0.001527</td>
+<td style="text-align: right;">0.096207</td>
+<td style="text-align: right;">0.002915</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2-Hydroxyisobutyrate</td>
+<td style="text-align: right;">0.001952</td>
+<td style="text-align: right;">0.122970</td>
+<td style="text-align: right;">0.003581</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Lysine</td>
+<td style="text-align: right;">0.001989</td>
+<td style="text-align: right;">0.125320</td>
+<td style="text-align: right;">0.003581</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Fumarate</td>
+<td style="text-align: right;">0.002326</td>
+<td style="text-align: right;">0.146544</td>
+<td style="text-align: right;">0.004071</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2-Aminobutyrate</td>
+<td style="text-align: right;">0.002924</td>
+<td style="text-align: right;">0.184225</td>
+<td style="text-align: right;">0.004979</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Fucose</td>
+<td style="text-align: right;">0.003358</td>
+<td style="text-align: right;">0.211567</td>
+<td style="text-align: right;">0.005568</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Citrate</td>
+<td style="text-align: right;">0.004126</td>
+<td style="text-align: right;">0.259970</td>
+<td style="text-align: right;">0.006666</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tau-Methylhistidine</td>
+<td style="text-align: right;">0.004324</td>
+<td style="text-align: right;">0.272399</td>
+<td style="text-align: right;">0.006810</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Trigonelline</td>
+<td style="text-align: right;">0.005797</td>
+<td style="text-align: right;">0.365230</td>
+<td style="text-align: right;">0.008816</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Hippurate</td>
+<td style="text-align: right;">0.005877</td>
+<td style="text-align: right;">0.370276</td>
+<td style="text-align: right;">0.008816</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Trimethylamine N-oxide</td>
+<td style="text-align: right;">0.006344</td>
+<td style="text-align: right;">0.399666</td>
+<td style="text-align: right;">0.009295</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">O-Acetylcarnitine</td>
+<td style="text-align: right;">0.007151</td>
+<td style="text-align: right;">0.450507</td>
+<td style="text-align: right;">0.010239</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ethanolamine</td>
+<td style="text-align: right;">0.008639</td>
+<td style="text-align: right;">0.544251</td>
+<td style="text-align: right;">0.012094</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Glycine</td>
+<td style="text-align: right;">0.014320</td>
+<td style="text-align: right;">0.902160</td>
+<td style="text-align: right;">0.019612</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Taurine</td>
+<td style="text-align: right;">0.019209</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.025748</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1,6-Anhydro-beta-D-glucose</td>
+<td style="text-align: right;">0.026248</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.034230</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">pi-Methylhistidine</td>
+<td style="text-align: right;">0.026623</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.034230</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Guanidoacetate</td>
+<td style="text-align: right;">0.027876</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.035124</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Glycolate</td>
+<td style="text-align: right;">0.028844</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.035631</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4-Hydroxyphenylacetate</td>
+<td style="text-align: right;">0.031695</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.038400</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Carnitine</td>
+<td style="text-align: right;">0.035584</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.042298</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2-Oxoglutarate</td>
+<td style="text-align: right;">0.044770</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.052232</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Isoleucine</td>
+<td style="text-align: right;">0.051845</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.059386</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1-Methylnicotinamide</td>
+<td style="text-align: right;">0.063494</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.071431</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Hypoxanthine</td>
+<td style="text-align: right;">0.093111</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.102912</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">3-Aminoisobutyrate</td>
+<td style="text-align: right;">0.181820</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.197494</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Tartrate</td>
+<td style="text-align: right;">0.188030</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.200778</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Pantothenate</td>
+<td style="text-align: right;">0.223280</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.234444</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Methylguanidine</td>
+<td style="text-align: right;">0.241610</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.249532</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Uracil</td>
+<td style="text-align: right;">0.295780</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.300551</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Acetone</td>
+<td style="text-align: right;">0.425500</td>
+<td style="text-align: right;">1.000000</td>
+<td style="text-align: right;">0.425500</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section></section>
+<section>
 <section id="limitations-and-recommendations" class="title-slide slide level1 center">
 <h1>Limitations and Recommendations</h1>
 
 </section>
+<section id="some-limitations" class="slide level2 smaller">
+<h2>Some limitations</h2>
+<ul>
+<li><p>Incomplete Pathway Databases</p></li>
+<li><p>Metabolite Misidentification</p></li>
+<li><p>Chemical Bias of Assays</p></li>
+<li><p>Background Set Selection</p></li>
+<li><p>Selection of Compounds of Interest</p></li>
+<li><p>Multiple testing issues</p></li>
+</ul>
 
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_23.png" class="r-stretch"><aside class="notes">
+<h3 id="incomplete-pathway-databases">Incomplete Pathway Databases</h3>
+<p>Limitation: Pathway databases are often incomplete and evolve over time, leading to discrepancies in pathway coverage and definitions. Recommendation: Use up-to-date databases and consider integrating multiple databases to improve coverage and accuracy​​.</p>
+<h3 id="metabolite-misidentification">Metabolite Misidentification</h3>
+<p>Limitation: Metabolite misidentification can result in both false-positive and false-negative pathway identifications. Recommendation: Utilize stringent identification criteria and multiple identification methods to minimize misidentification rates​​.</p>
+<h3 id="chemical-bias-of-assays">Chemical Bias of Assays</h3>
+<p>Limitation: Different analytical platforms have biases toward detecting specific types of compounds, affecting pathway accessibility. Recommendation: Combine multiple assay types to cover a broader range of metabolites and acknowledge assay-specific biases in the analysis​​.</p>
+<h3 id="background-set-selection">Background Set Selection</h3>
+<p>Limitation: The choice of background set can significantly influence the results of over-representation analysis (ORA). Recommendation: Define an assay-specific background set that includes all detectable compounds to reduce false-positive pathways​​.</p>
+<h3 id="selection-of-compounds-of-interest">Selection of Compounds of Interest</h3>
+<p>Limitation: The criteria for selecting compounds of interest (e.g., significance thresholds) greatly impact PA results. Recommendation: Use appropriate statistical thresholds and apply multiple testing correction methods to ensure robust selection of compounds of interest​​.</p>
+<h3 id="lack-of-ground-truth-datasets">Lack of Ground-Truth Datasets</h3>
+<p>Limitation: The absence of ground-truth datasets makes it difficult to validate PA methods and results. Recommendation: Develop and use simulated or experimental ground-truth datasets to better assess PA methods and improve their accuracy</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section></section>
+<section>
 <section id="pathway-analysis-tools" class="title-slide slide level1 center">
 <h1>Pathway Analysis Tools</h1>
 
 </section>
+<section id="pathway-analysis-tools-1" class="slide level2">
+<h2>PAthway Analysis Tools</h2>
 
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_24.png" class="r-stretch quarto-figure-center"><p class="caption">Common pathway analysis tools for metabolomics data.</p></section></section>
 <section id="a-use-case-with-metaboanalyst" class="title-slide slide level1 center">
 <h1>A use case with MetaboAnalyst</h1>
 <div class="quarto-auto-generated-content">
@@ -957,6 +1544,44 @@ Alex Sanchez
         ]
       });
     </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        // dispatch for htmlwidgets
+        function fireSlideEnter() {
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+        }
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+          fireSlideEnter();
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
     <script id="quarto-html-after-body" type="application/javascript">
     window.document.addEventListener("DOMContentLoaded", function (event) {
       const toggleBodyColorMode = (bsSheetEl) => {
