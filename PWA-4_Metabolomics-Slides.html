@@ -638,11 +638,97 @@ Alex Sanchez
 <h2>Chemical Ontologies</h2>
 
 <img data-src="PWA-4_Metabolomics-Slides_insertimage_3.png" class="r-stretch"></section></section>
+<section>
 <section id="analysis-methods" class="title-slide slide level1 center">
 <h1>Analysis Methods</h1>
 
 </section>
+<section id="types-of-pathway-analysis" class="slide level2">
+<h2>Types of Pathway Analysis</h2>
 
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_6.png" class="r-stretch quarto-figure-center"><p class="caption"><a href="https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002375">Khatri et alt. 10 years of Pathway Analysis</a></p></section>
+<section id="over-representation-analysis" class="slide level2">
+<h2>Over-representation Analysis</h2>
+<ul>
+<li><p>Given</p>
+<ul>
+<li>A feature (metabolites) list (from some study).</li>
+<li>A collection of feature (metabolites) sets (…)</li>
+</ul></li>
+<li><p>The goal is finding out if any of the feature sets <em>surprisingly enriched</em> in the feature list?</p>
+<ul>
+<li>Need to define “surprisingly” (statistics)</li>
+<li>Need to deal with test multiplicity?</li>
+</ul></li>
+</ul>
+</section>
+<section id="obtaining-feature-lists" class="slide level2">
+<h2>Obtaining feature lists</h2>
+
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_7.png" class="r-stretch"></section>
+<section id="assessing-surprisingly" class="slide level2 smaller">
+<h2>Assessing “surprisingly”</h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<p>Given a feature list, “fl”, and a feature set, “FS”, check if the % of genes in “fl” annotated in “FS” the same as the % of genes globally annotated in “FS”?</p>
+<ul>
+<li>If both percentages are similar <span class="math inline">\(\rightarrow\)</span> <em>No Enrichment</em>.</li>
+<li>If the % of features in “FS” is greater in “fl” than in the rest of genes <span class="math inline">\(\rightarrow\)</span> <em>“fl” is enriched in “GS”</em>&nbsp;</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<p><img data-src="PWA-4_Metabolomics-Slides_insertimage_8.png"></p>
+</div>
+</div>
+</section>
+<section id="example" class="slide level2">
+<h2>Example</h2>
+
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_9.png" class="r-stretch"></section>
+<section id="assess-significance-fisher-test" class="slide level2">
+<h2>Assess significance: Fisher test</h2>
+<ul>
+<li>The examples shows two cases
+<ul>
+<li>One where percentages are quite different</li>
+<li>Another where percentages are similar.</li>
+</ul></li>
+<li>How can we set a threshold to decide that the difference is “big enough” to call it “Enriched”
+<ul>
+<li>Use Fisher Test or, equivalently,</li>
+<li>a test to compare proportions or</li>
+<li>a hypergeometric test.</li>
+</ul></li>
+</ul>
+</section>
+<section id="example-1-surprisingly-enriched" class="slide level2">
+<h2>Example 1: Surprisingly enriched</h2>
+
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_12.png" class="r-stretch quarto-figure-center"><p class="caption">P-value small, odds-ratio high: List is surprisingly enriched in Feature Set</p></section>
+<section id="example-2-non-enriched" class="slide level2">
+<h2>Example 2: Non-enriched</h2>
+
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_11.png" class="r-stretch quarto-figure-center"><p class="caption">P-value high, odds-ratio around 1: List is not enriched in Feature Set</p></section>
+<section id="summary-recipe-for-ora" class="slide level2 scrollable">
+<h2>Summary: Recipe for ORA</h2>
+<ol type="1">
+<li>Define feature list (e.g.&nbsp;thresholding analyzed list ) and background list,</li>
+<li>Select feature sets to test for enrichment,</li>
+<li>Run enrichment tests and adjust for multiple testing</li>
+<li>Interpret your enrichments</li>
+<li>Publish! ;)</li>
+</ol>
+</section>
+<section id="posible-problems-with-ora" class="slide level2">
+<h2>Posible problems with ORA</h2>
+<ul>
+<li>No “natural” value for the threshold</li>
+<li>Possible loss of statistical power due to thresholding</li>
+<li>No resolution between significant signals with different strengths</li>
+<li>Weak signals neglected</li>
+<li>Different results at different threshold settings</li>
+<li>Based on the wrong assumption of independent feature (or feture group) sampling, which increases false positive predictions.</li>
+</ul>
+</section></section>
 <section id="limitations-and-recommendations" class="title-slide slide level1 center">
 <h1>Limitations and Recommendations</h1>
 

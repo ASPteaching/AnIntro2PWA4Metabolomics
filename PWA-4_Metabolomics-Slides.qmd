@@ -372,6 +372,91 @@ process pathways (70)
 
 # Analysis Methods
 
+## Types of Pathway Analysis
+
+![[Khatri et alt. 10 years of Pathway Analysis](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002375)
+](PWA-4_Metabolomics-Slides_insertimage_6.png)
+
+## Over-representation Analysis
+
+- Given
+  - A feature (metabolites) list (from some study).
+  - A collection of feature (metabolites) sets (...)
+  
+- The goal is finding out if any of the  feature sets *surprisingly enriched* in the feature list?
+
+  - Need to define "surprisingly” (statistics)
+  - Need to deal with test multiplicity?
+
+## Obtaining feature lists
+
+![](PWA-4_Metabolomics-Slides_insertimage_7.png)
+
+## Assessing "surprisingly" {.smaller}
+
+:::: {.columns}
+
+::: {.column width='60%'}
+
+Given a feature list, “fl”, and a feature set, “FS”, check if the % of genes in “fl” annotated in “FS” the same as the % of genes globally annotated in “FS”?
+
+- If both percentages are similar $\rightarrow$ *No Enrichment*.
+- If the % of features in “FS” is greater in “fl” than in the rest of genes $\rightarrow$ *“fl” is enriched in “GS”* 
+
+:::
+
+::: {.column width='40%'}
+
+![](PWA-4_Metabolomics-Slides_insertimage_8.png)
+
+:::
+
+::::
+
+## Example
+
+![](PWA-4_Metabolomics-Slides_insertimage_9.png)
+
+## Assess significance: Fisher test
+
+- The examples shows two cases
+  - One  where percentages are quite different
+  - Another where percentages are similar.
+  
+- How can we set a threshold to decide that the difference is “big enough” to call it “Enriched”
+  - Use Fisher Test or, equivalently,
+  - a test to compare proportions or 
+  - a hypergeometric test.
+
+## Example 1: Surprisingly enriched
+
+
+![P-value small, odds-ratio high: List is surprisingly enriched in Feature Set ](PWA-4_Metabolomics-Slides_insertimage_12.png)
+
+
+## Example 2: Non-enriched
+
+![P-value high, odds-ratio around 1: List is not  enriched in Feature Set ](PWA-4_Metabolomics-Slides_insertimage_11.png)
+
+## Summary: Recipe for ORA
+
+1. Define feature list (e.g. thresholding analyzed list ) and background list,
+2. Select feature sets to test for enrichment,
+3. Run enrichment tests and adjust for multiple testing
+4. Interpret your enrichments
+5. Publish!  ;)
+
+## Posible problems with ORA
+
+- No “natural” value for the threshold
+- Possible loss of statistical power due to thresholding
+- No resolution between significant signals with different strengths
+- Weak signals neglected
+- Different results at different threshold settings
+- Based on the wrong assumption of independent feature (or feture group) sampling, which increases false positive predictions.
+
+
+
 # Limitations and Recommendations
 
 # Pathway Analysis Tools
