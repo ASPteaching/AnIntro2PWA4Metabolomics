@@ -738,6 +738,7 @@ Recommendation: Develop and use simulated or experimental ground-truth datasets 
 - Redundancy of identifiers, Use of chemical class identifiers and Incompleteness of databases sets limit the extent of the analyses and reduce their accuracy. 
 
 - More work in the completeness of metabolite/pathway databases is required to get more accurate and global insights of the metabolome.
+# Summary, and all that
 
 ## Summary
 
@@ -752,5 +753,11 @@ Recommendation: Develop and use simulated or experimental ground-truth datasets 
 
 - Different methods may yield different results.
 <br>Worth checking!
+
+## Acknowledgements
+
+
+
+## References and resources
 
 
