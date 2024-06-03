@@ -1,0 +1,42 @@
+---
+title: "Introduction to MetaboAnalystR"
+subtitle: "Enrichment Analysis"
+author: "Alex Sanchez-Pla"
+date: "`r Sys.Date()`"
+format:
+    html: 
+      toc: true
+      toc-depth: 4
+      number-sections: true
+      embed-resources: true
+    pdf:
+      toc: true
+      toc-depth: 3
+      number-sections: true      
+knit:
+  quarto:
+    chunk_options:
+      echo: true
+      cache: false
+      prompt: false
+      tidy: true
+      comment: NA
+      message: false
+      warning: false
+    knit_options:
+      width: 75
+# reference-location: margin
+editor_options: 
+  chunk_output_type: console
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Introduction to MetaboAnalyst
+
+MetaboAnalystR comes with multiple vignetted ("tutorials") to illustrate how to perform distinct actions and processes.
+
+The document [MetaboAnalystR Package](https://www.metaboanalyst.ca/docs/RTutorial.xhtml) provides an *overview* to the distinct vignettes and links to each of them.
+
+The current document is a short introduction to Enrichment Analysis as can be done by MetaboAnalyst. It uses the results of the comparisons performed in the Statiostical Analyses example.

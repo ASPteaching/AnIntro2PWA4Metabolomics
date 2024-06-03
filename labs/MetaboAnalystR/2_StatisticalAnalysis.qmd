@@ -1,0 +1,147 @@
+---
+title: "Introduction to MetaboAnalystR"
+subtitle: "Basic Statistical Analysis (1Factor)"
+author: "Alex Sanchez-Pla"
+date: "`r Sys.Date()`"
+format:
+    html: 
+      toc: true
+      toc-depth: 4
+      number-sections: true
+      embed-resources: true
+    pdf:
+      toc: true
+      toc-depth: 3
+      number-sections: true      
+knit:
+  quarto:
+    chunk_options:
+      echo: true
+      cache: false
+      prompt: false
+      tidy: true
+      comment: NA
+      message: false
+      warning: false
+    knit_options:
+      width: 75
+# reference-location: margin
+editor_options: 
+  chunk_output_type: console
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Introduction to MetaboAnalyst
+
+MetaboAnalystR comes with multiple vignetted ("tutorials") to illustrate how to perform distinct actions and processes.
+
+The document [MetaboAnalystR Package](https://www.metaboanalyst.ca/docs/RTutorial.xhtml) provides an *overview* to the distinct vignettes and links to each of them.
+
+The corrent document is a short introduction to some statistical analyses that can be done to derive"differential" metabolites, that  is those that show (significantly) distinct concebntrations between conditions.
+
+This has been extracted from the tutorial [2.3. Statistical Analysis (one-factor)](https://www.metaboanalyst.ca/resources/vignettes/Statistical_Analysis_Module.html) which shows how to do it with higher detail.
+
+## Data for the analyses
+
+We use the Cachexia dataset that has benn previously preprocessed in the document "1. Introduction to MetaboAnalystR". The normalized `mSet`object has been saved to a binary file which is recovered here for further use.
+
+```{r loadData}
+rm(list=ls())
+library(MetaboAnalystR)
+load(file="preprocessed_Cachexia.Rda")
+# show(mSet)
+```
+
+# Data Analysis
+
+In this document we will mainly focus on the analyses that yield a list of differential compounds that can be later used for Enrichment Analyses.
+
+However, in order to proceed "reasonably" we start with a multivariate exploration in order to detect if *there seem* to be differrences between the groups.
+
+## PCA visualization
+
+```{r doPCA}
+# Perform PCA analysis
+mSet<-PCA.Anal(mSet)
+
+# Create a 2D PCA score plot
+mSet<-PlotPCA2DScore(mSet, "pca_score2d_0_", format = "png", dpi=72, width=NA, pcx= 1, pcy=2, reg=0, show=1, grey.scale=0)
+
+```
+
+All these plots go to files that can be included or explored apart.
+
+
+```{r showPCA, echo=FALSE, out.width="100%"}
+knitr::include_graphics("pca_score2d_0_dpi72.png")
+```
+
+The second dimension seems to clearly separate the two groups, so we can expect to be able to find significant differences.
+
+
+## Fold change Analysis
+
+The goal of fold-change (FC) analysis is to compare the absolute value of change between two group means. Since column-wise normalization (i.e. log transformation, mean-centering) will significantly alter absolute values, FC is calculated as the ratio between two group means using the data before column-wise normalization was applied.
+
+```{r foldChange}
+# Perform fold-change analysis on uploaded data, unpaired
+mSet<-FC.Anal(mSet, 2.0, 0, FALSE)
+
+# Plot fold-change analysis
+mSet<-PlotFC(mSet, "fc_0_", "png", 72, width=NA)
+
+# To view fold-change 
+mSet$analSet$fc$fc.log
+```
+
+```{r showFC, echo=FALSE, out.width="100%"}
+knitr::include_graphics("fc_0_dpi72.png")
+```
+
+# Significance (t-)tests
+
+MetaboAnalystR supports various options for performing T-test analysis. Users can select the analysis type (paired), the group variance (equal.var), whether the test is parametric or non-parametric (nonpar), and the adjusted p-value (FDR) cut-off (threshp).
+
+```{r ttest}
+# Perform T-test (parametric)
+mSet<-Ttests.Anal(mSet, nonpar=F, threshp=0.05, paired=FALSE, equal.var=TRUE, pvalType = "fdr", all_results=TRUE)
+```
+
+The results of the t-test can be viewed plotting the p-values by indexed or with respct to the fold change.
+
+```{r plotIndex}
+mSet<-PlotTT(mSet, imgName = "tt_0_", format = "png", dpi = 72, width=NA)
+```
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("tt_0_dpi72.png")
+```
+
+```{r volcano}
+mSet<-Volcano.Anal(mSet, FALSE, 2.0, 0, F, 0.1, TRUE, "raw")
+mSet<-PlotVolcano(mSet, "volcano_0_", 1, 0, format ="png", dpi=72, width=NA)
+
+```
+
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics("volcano_0_dpi72.png")
+```
+
+
+## T-test results: Metabolites lists
+
+The result of a comparison test is usually the base for enrichment analysis.
+
+This result has been written in the `t_test_all.csv` or the `t_test.csv` files and can be recovered from there or from the `mSet`object.
+
+In this case, where the number of features is small it can be shown as:
+
+```{r}
+sigMat <- mSet$analSet$tt$sig.mat
+dim(sigMat)
+head(sigMat)
+```
+
+

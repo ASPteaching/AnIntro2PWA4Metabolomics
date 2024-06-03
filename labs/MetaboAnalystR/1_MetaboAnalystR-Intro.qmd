@@ -1,0 +1,287 @@
+---
+title: "1. Introduction to MetaboAnalystR"
+subtitle: "Data acquisition and preprocessing"
+author: "Alex Sanchez-Pla"
+date: "`r Sys.Date()`"
+format:
+    html: 
+      toc: true
+      toc-depth: 4
+      number-sections: true
+      embed-resources: true
+    pdf:
+      toc: true
+      toc-depth: 3
+      number-sections: true      
+knit:
+  quarto:
+    chunk_options:
+      echo: true
+      cache: false
+      prompt: false
+      tidy: true
+      comment: NA
+      message: false
+      warning: false
+    knit_options:
+      width: 75
+# reference-location: margin
+editor_options: 
+  chunk_output_type: console
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Introduction to MetaboAnalyst
+
+MetaboAnalystR comes with multiple vignetted ("tutorials") to illustrate how to perform distinct actions and processes.
+
+The document [MetaboAnalystR Package](https://www.metaboanalyst.ca/docs/RTutorial.xhtml) provides an *overview* to the distinct vignettes and links to each of them.
+
+The corrent document is a short introduction to the basic steps that have to be followed in order to read and preprocess a simple dataset of concentrations.
+
+This has been extracted from the first tutorial [1.1. Introduction to MetaboAnalystR](https://www.metaboanalyst.ca/resources/vignettes/Introductions.html) where, besides showing how to process concentration data, alkso deals with Raw LC-MS/MS and other spectra data.
+
+
+
+# Package installation
+
+Package installation suggested in github repo:
+
+## Step 1.1. Download and install required packages 
+
+Before running the installation process, `Rtools` must have been installed. Download the version corresponding to your installed R version from:
+
+[https://cran.r-project.org/bin/windows/Rtools/](https://cran.r-project.org/bin/windows/Rtools/).
+
+Now run the code chunk below:
+
+```{r eval=FALSE}
+metanr_packages <- function(){
+  metr_pkgs <- c("impute", "pcaMethods", "globaltest", "GlobalAncova", "Rgraphviz", "preprocessCore", "genefilter", "sva", "limma", "KEGGgraph", "siggenes","BiocParallel", "MSnbase", "multtest","RBGL","edgeR","fgsea","devtools","crmn","httr","qs")
+  
+  list_installed <- installed.packages()
+  
+  new_pkgs <- subset(metr_pkgs, !(metr_pkgs %in% list_installed[, "Package"]))
+  
+  if(length(new_pkgs)!=0){
+    
+    if (!requireNamespace("BiocManager", quietly = TRUE))
+        install.packages("BiocManager")
+    BiocManager::install(new_pkgs)
+    print(c(new_pkgs, " packages added..."))
+  }
+  
+  if((length(new_pkgs)<1)){
+    print("No new packages added...")
+  }
+}
+
+metanr_packages ()
+
+```
+
+## Step 1.2. Install the package
+
+
+```{r eval=FALSE}
+if (!require(devtools))  install.packages("devtools")
+devtools::install_github("xia-lab/MetaboAnalystR", build = TRUE, build_vignettes = TRUE, build_manual =T)
+```
+
+
+
+
+```{r}
+# Load MetaboAnalystR
+library(MetaboAnalystR)
+```
+
+## MetaboAnalyst (OOP) Data structures
+
+MetaboAnalysts uses Object oriented programming which means that it uses special data structures to contain and manage data.
+
+The main class is the `mSet` class which has to be initialized before accessing and using it.
+
+## File formats admitted
+
+- **Csv or .txt files**
+
+- **Raw LC-MS/MS spectral data** 
+  - For LC-MS/MS based global (untargeted) metabolomics raw data processing
+  - Only open source formats  (.mzML/.mzXML/.mzData/.cdf).
+  
+- **Zipped files (.zip) for Statistical Analysis**
+  - For NMR/MS peak list files and GC/LC-MS spectra data
+  
+# Acquisition and preprocessing of simple concentration data
+  
+
+## Example data processing basics
+
+Start creating an object of class `mSet` prepared to contain data for Statistical Analysis.
+
+```{r SetAnalysisType}
+mSet<-InitDataObjects(data.type="conc", 
+                      anal.type="stat", 
+                      paired=FALSE);
+```
+
+### Importing a .csv file with concentrations
+
+Download the data. Opening the file shows a text file with some additional informative lines
+
+```{r getData}
+download.file("https://rest.xialab.ca/api/download/metaboanalyst/human_cachexia.csv",destfile = "./human_cachexia.csv")
+```
+
+Read the data into the mSet object previously created. Check the validty of the data.
+
+```{r readData}
+mSet<-Read.TextData(mSetObj = mSet, 
+                    filePath="./human_cachexia.csv",  
+                    format= "rowu", 
+                    lbl.type= "disc")
+# To view messages from the data import and processing
+print(mSet$msgSet$read.msg)
+
+mSet<-SanityCheckData(mSet)
+```
+
+
+### Importing a .csv file with concentrations
+
+Download the data. Opening the file shows a text file with some additional informative lines
+
+```{r getDataPk, eval=FALSE}
+download.file("https://rest.xialab.ca/api/download/metaboanalyst/lcms_table.csv",destfile = "./lcms_table.csv")
+```
+
+Read the data into a different mSet object
+
+```{r eval = FALSE}
+mSetPk <- InitDataObjects("pktable", "stat", FALSE)
+
+mSetPk <- Read.TextData(mSet, "lcms_table.csv", "rowu", "disc")
+
+print(mSetPk[["msgSet"]][["read.msg"]])
+```
+
+
+## Data preprocessing
+
+We stay with concentration data (cachexia concentrations).
+and do a standard preprocessing that includes setting values for values under detected limits and imputing/removing missings.
+
+```{r Replacemin}
+# replace zero/missing values by half of the smallest positive value in the original dataset. 
+mSet<-ReplaceMin(mSetObj= mSet)
+```
+
+In the example below, we will exclude variables with missing values (“exclude”). An example of replacing missing values with KNN imputed values is also included (method = “knn”).
+
+```{r}
+# STEP 1: Remove features containing a user-defined % cut-off of missing values
+mSet <- RemoveMissingPercent(mSet, percent=0.5)
+
+# STEP 2: Remove variables with missing values
+mSet <- ImputeMissingVar(mSet, method="exclude")
+```
+
+
+Alternative to previous step (2) Replace missing values with KNN imputed values.
+
+```{r}
+mSet <- ImputeMissingVar(mSet, method="knn_smp")
+```
+
+`mSet`objects keep track of actions being performed on them in the list `mSet[["msgSet"]]`
+
+```{r}
+names(mSet[["msgSet"]])
+print(mSet[["msgSet"]][["replace.msg"]])
+```
+
+
+## Data normalization
+
+
+```{r normdata}
+# Prepare object for normalization
+mSet<-PreparePrenormData(mSetObj= mSet)
+
+# Perform standard data preprocessing steps
+
+mSet<-Normalization(mSetObj =mSet, 
+                    rowNorm = "NULL", 
+                    transNorm = "LogNorm", 
+                    scaleNorm = "MeanCenter", 
+                    ref = "S10T0", # reference sample
+                    ratio=FALSE,  # only for Biomarker Analysis
+                    ratioNum=20   # only for Biomarker Analysis
+                    )
+```
+
+Now show normalization results. To be exact, more than "show", plts are sent to a pdf or  png file, so, if we wish them to appear in a report they must be inccluded in the markdown file.
+
+```{r plotfeatureNorm}
+# View feature normalization
+mSet<-PlotNormSummary(mSet, "feature_norm", format="png", dpi=72, width=NA)
+# Include recently created plot
+knitr::include_graphics("feature_normdpi72.png")
+```
+
+
+```{r plotSampleNorm}
+# View sample normalization
+mSet<-PlotSampleNormSummary(mSet, "sample_norm", format="png", width=NA)
+# Include recently created plot
+knitr::include_graphics("sample_normdpi72.png")
+```
+
+## Filtering data
+
+Data can be filtered according to distinct criteria to remove noise.
+
+Usually we will apply only one of these.
+
+```{r filterVars}
+# Filter variables based on the median absolute deviation, percentage to filter out is 5 (%). No QS based filteration.
+mSet <- FilterVariable(mSet, "mad", 5, "F", 25, T)
+
+# Filter variables using Non-parametric relative standard deviation (MAD/median) and a QC-based RDS threshold is 25. 
+mSet <- FilterVariable(mSet, "nrsd", 5, "T", 25, T)
+```
+
+## Remove sample variables
+
+Throughout the analysis of metabolomic data, it may be necessary  to remove samples, variables, or even groups from your dataset.
+
+Some examples of removal actions may be (not)
+
+```{r eval=FALSE}
+# Remove a sample from the data set, in this case sample "PIF_178"
+smpl.nm.vec <- c("PIF_178")# used to remove certain samples
+
+# Remove a feature from the data set
+feature.nm.vec <- c("2-Aminobutyrate")# used to remove certain feature, i.e. 2-Aminobutyrate
+
+# Remove a group from the data set, in this case remove the "control" samples
+
+grp.nm.vec <- c("control") # used to retain certain groups
+```
+
+Once the filterings or removals have been applied, update the object to remove empty slots or factor levels.
+
+```{r eval=FALSE}
+mSet <- UpdateData(mSet)
+```
+
+This `mSet`object may be saved to a binary file and recovered later for further analyses without having to repeat all the process.
+
+```{r}
+save(mSet, file="preprocessed_Cachexia.Rda")
+```
+
+
