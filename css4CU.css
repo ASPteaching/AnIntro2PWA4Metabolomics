@@ -76,6 +76,13 @@ body {
   font-size: 4.5em;
 }
 
+h1.title {
+  background-image: logos.png;
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 600px;
+}
+
 .inverse {
   background-color: #336B87;
   text-shadow: none;

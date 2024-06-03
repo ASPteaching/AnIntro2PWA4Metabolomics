@@ -8,7 +8,7 @@
 <link href="PWA-4_Metabolomics-Slides_files/libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="PWA-4_Metabolomics-Slides_files/libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="PWA-4_Metabolomics-Slides_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.3.353">
+  <meta name="generator" content="quarto-1.4.549">
 
   <meta name="author" content="Alex Sanchez">
   <title>Pathway Analysis for metabolomics</title>
@@ -157,7 +157,8 @@
   }
 
   .callout.callout-titled .callout-body > .callout-content > :last-child {
-    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0;
   }
 
   .callout.callout-titled .callout-icon::before {
@@ -343,8 +344,14 @@ Alex Sanchez
 <h1>Introduction and Objectives</h1>
 
 </section>
-<section id="introducing-ourselves" class="slide level2">
-<h2>Introducing Ourselves</h2>
+<section id="introducing-myself" class="slide level2">
+<h2>Introducing myself</h2>
+<div class="center">
+<p><img data-src="PWA-4_Metabolomics-Slides_insertimage_25.png"></p>
+</div>
+</section>
+<section id="introducing-our-groups" class="slide level2">
+<h2>Introducing Our groups</h2>
 <p><br></p>
 
 <img data-src="images/PWA-4_Metabolomics-Slides_insertimage_1.png" class="r-stretch quarto-figure-center"><p class="caption">Statistics &amp; Bioinformatics and Nutrition &amp; Metabolomics groups @ UB</p></section>
@@ -359,7 +366,7 @@ Alex Sanchez
 <li><p>Get a practical grasp of how to apply it.</p></li>
 </ul>
 </section>
-<section id="session-outline" class="slide level2">
+<section id="session-outline" class="slide level2 scrollable">
 <h2>Session Outline</h2>
 <ol type="1">
 <li><p>Introduction and objectives</p></li>
@@ -454,7 +461,7 @@ Alex Sanchez
 <li><p>Uniquely and unambiguosly naming all metabolites is, in the best of cases, “work in progress”.</p></li>
 </ul>
 </section>
-<section id="different-annotation-levels" class="slide level2">
+<section id="different-annotation-levels" class="slide level2 scrollable">
 <h2>Different annotation levels</h2>
 <!-- jo aquí diria que això pot dependre de la precisó del mètode de detecció -->
 <ol type="1">
@@ -767,7 +774,7 @@ Alex Sanchez
 <h2>Example 2: Non-enriched</h2>
 
 <img data-src="PWA-4_Metabolomics-Slides_insertimage_11.png" class="r-stretch quarto-figure-center"><p class="caption">P-value high, odds-ratio around 1: List is not enriched in Feature Set</p></section>
-<section id="summary-recipe-for-ora" class="slide level2">
+<section id="summary-recipe-for-ora" class="slide level2 scrollable">
 <h2>Summary: Recipe for ORA</h2>
 <ol type="1">
 <li>Define feature list (e.g.&nbsp;thresholding analyzed list ) and background list,</li>
@@ -857,7 +864,7 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <li>The significant ions are now mapped to the pathways and evidence is sought for enhanced associations (Fisher exact test)</li>
 </ul>
 </section>
-<section id="mummichog-change-of-approach" class="slide level2">
+<section id="mummichog-change-of-approach" class="slide level2 scrollable">
 <h2>Mummichog change of approach</h2>
 
 <img data-src="PWA-4_Metabolomics-Slides_insertimage_18.png" class="r-stretch quarto-figure-center"><p class="caption">Mummichog redefines the work flow of untargeted metabolomics</p><aside class="notes">
@@ -945,13 +952,13 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <h2>An example</h2>
 <div class="cell">
 <div class="cell-output-display">
-<table data-quarto-postprocess="true">
+<table>
 <thead>
 <tr class="header">
-<th style="text-align: left;" data-quarto-table-cell-role="th"></th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">raw</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">Bonferroni</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">FDR</th>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">raw</th>
+<th style="text-align: right;">Bonferroni</th>
+<th style="text-align: right;">FDR</th>
 </tr>
 </thead>
 <tbody>
@@ -1335,8 +1342,6 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 </tr>
 </tbody>
 </table>
-
-
 </div>
 </div>
 </section></section>
@@ -1388,12 +1393,54 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 </section>
 <section id="pathway-analysis-tools-1" class="slide level2">
 <h2>PAthway Analysis Tools</h2>
+<div class="center">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="PWA-4_Metabolomics-Slides_insertimage_24.png"></p>
+<figcaption>Common pathway analysis tools for metabolomics data.</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="a-comparison-of-tools" class="slide level2">
+<h2>A comparison of tools</h2>
+<div class="center">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="PWA-4_Metabolomics-Slides_insertimage_26.png"></p>
+<figcaption><a href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-2006-0">Evaluation and comparison of bioinformatic tools for the enrichment analysis of metabolomics data</a></figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="the-space-of-tools-in-2017" class="slide level2">
+<h2>The space of tools (in 2017)</h2>
 
-<img data-src="PWA-4_Metabolomics-Slides_insertimage_24.png" class="r-stretch quarto-figure-center"><p class="caption">Common pathway analysis tools for metabolomics data.</p></section></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_27.png" class="r-stretch"></section>
+<section id="not-the-same-not-that-different" class="slide level2">
+<h2>Not the same, not that different</h2>
+<ul>
+<li><p>ORA tools provided consistent results among tools revealing that these analyses are robust and reproducible regardless of their analytic approach.</p></li>
+<li><p>Redundancy of identifiers, Use of chemical class identifiers and Incompleteness of databases sets limit the extent of the analyses and reduce their accuracy.</p></li>
+<li><p>More work in the completeness of metabolite/pathway databases is required to get more accurate and global insights of the metabolome.</p></li>
+</ul>
+</section>
+<section id="summary" class="slide level2">
+<h2>Summary</h2>
+<ul>
+<li><p>Pathway Analysis is a useful approach to help gain biological understanding from omics-based studies.</p></li>
+<li><p>There are many ways, many methods, many tools</p></li>
+<li><p>Guide the choice by a combination of <em>meaning</em>, <em>availability</em>, <em>ease of use</em> and <em>usefulness</em>.</p></li>
+<li><p>Usually obtained from a good understanding of what it does and ow it is done.</p></li>
+<li><p>Different methods may yield different results. <br>Worth checking!</p></li>
+</ul>
+</section></section>
 <section id="a-use-case-with-metaboanalyst" class="title-slide slide level1 center">
 <h1>A use case with MetaboAnalyst</h1>
+<div class="quarto-auto-generated-content">
 <div class="footer footer-default">
 
+</div>
 </div>
 </section>
     </div>
@@ -1422,7 +1469,6 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
       Reveal.initialize({
 'controlsAuto': true,
 'previewLinksAuto': false,
-'smaller': false,
 'pdfSeparateFragments': false,
 'autoAnimateEasing': "ease",
 'autoAnimateDuration': 1,
@@ -1721,10 +1767,9 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
         // clear code selection
         e.clearSelection();
       });
-      function tippyHover(el, contentFn) {
+      function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
         const config = {
           allowHTML: true,
-          content: contentFn,
           maxWidth: 500,
           delay: 100,
           arrow: false,
@@ -1734,8 +1779,17 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
           interactive: true,
           interactiveBorder: 10,
           theme: 'light-border',
-          placement: 'bottom-start'
+          placement: 'bottom-start',
         };
+        if (contentFn) {
+          config.content = contentFn;
+        }
+        if (onTriggerFn) {
+          config.onTrigger = onTriggerFn;
+        }
+        if (onUntriggerFn) {
+          config.onUntrigger = onUntriggerFn;
+        }
           config['offset'] = [0,0];
           config['maxWidth'] = 700;
         window.tippy(el, config); 

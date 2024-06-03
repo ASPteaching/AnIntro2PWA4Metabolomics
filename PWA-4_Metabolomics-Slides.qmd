@@ -36,8 +36,13 @@ editor_options:
 
 # Introduction and Objectives
 
+## Introducing myself
 
-## Introducing Ourselves
+:::{.center}
+![](PWA-4_Metabolomics-Slides_insertimage_25.png)
+:::
+
+## Introducing Our groups
 
 <br>
 
@@ -710,7 +715,43 @@ Recommendation: Develop and use simulated or experimental ground-truth datasets 
 
 ## PAthway Analysis Tools
 
+::: {.center}
+
 ![Common pathway analysis tools for metabolomics data.](PWA-4_Metabolomics-Slides_insertimage_24.png)
 
-# A use case with MetaboAnalyst
+:::
+## A comparison of tools
+
+::: {.center}
+
+![[Evaluation and comparison of bioinformatic tools for the enrichment analysis of metabolomics data](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-2006-0) ](PWA-4_Metabolomics-Slides_insertimage_26.png)
+:::
+
+## The space of tools (in 2017)
+
+![](PWA-4_Metabolomics-Slides_insertimage_27.png)
+
+## Not the same, not that different
+
+
+- ORA tools provided consistent results among tools revealing that these analyses are robust and reproducible regardless of their analytic approach.
+
+- Redundancy of identifiers, Use of chemical class identifiers and Incompleteness of databases sets limit the extent of the analyses and reduce their accuracy. 
+
+- More work in the completeness of metabolite/pathway databases is required to get more accurate and global insights of the metabolome.
+
+## Summary
+
+- Pathway Analysis is a useful approach to help gain biological understanding from omics-based studies.
+
+- There are many ways, many methods, many tools
+
+- Guide the choice by
+ a combination of *meaning*, *availability*, *ease of use* and *usefulness*. 
+
+- Usually obtained from a good understanding of what it does and ow it is done.
+
+- Different methods may yield different results.
+<br>Worth checking!
+
 
