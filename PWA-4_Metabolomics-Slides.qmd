@@ -39,14 +39,14 @@ editor_options:
 ## Introducing myself
 
 :::{.center}
-![](PWA-4_Metabolomics-Slides_insertimage_25.png)
+![](Slides_insertimage_25.png)
 :::
 
 ## Introducing Our groups
 
 <br>
 
-![Statistics & Bioinformatics and Nutrition & Metabolomics groups @ UB ](images/PWA-4_Metabolomics-Slides_insertimage_1.png)
+![Statistics & Bioinformatics and Nutrition & Metabolomics groups @ UB ](images/Slides_insertimage_1.png)
 
 ## Session objectives
 
@@ -86,7 +86,7 @@ editor_options:
 
 - We often assume that “normal” metabolism is what happens in healthy state or, that disease can be associated with some type of alteration in metabolism.
 
-![Characterization of disease attempted studying how this disrupts pathways](images/images/PWA-4_Metabolomics-Slides_insertimage_.png)
+![Characterization of disease attempted studying how this disrupts pathways](images/images/Slides_insertimage_.png)
 
  
 ## So what is Pathway Analysis?  {.smaller}
@@ -105,12 +105,12 @@ editor_options:
 
 ## Bioinformatics workflows
 
-![[A Metabolomics Worflow Example](https://doi.org/10.3390/metabo12040357)](images/PWA-4_Metabolomics-Slides_insertimage_8.png){width=110%}
+![[A Metabolomics Worflow Example](https://doi.org/10.3390/metabo12040357)](images/Slides_insertimage_8.png){width=110%}
 
 
 ## From samples to *features* lists (2)
 
-![Metabolomics Workflows in MetaboAnalyst 5.0](images/PWA-4_Metabolomics-Slides_insertimage_3.png)
+![Metabolomics Workflows in MetaboAnalyst 5.0](images/Slides_insertimage_3.png)
 
 ## Analysis yields metabolites lists {.smaller}
 
@@ -120,7 +120,7 @@ editor_options:
 
 :::{.center}
 
-![An unordered list of metabolite IDs](images/PWA-4_Metabolomics-Slides_insertimage_6.png){width=50%}
+![An unordered list of metabolite IDs](images/Slides_insertimage_6.png){width=50%}
 
 <!-- ```{r echo=FALSE} -->
 
@@ -134,7 +134,7 @@ editor_options:
 :::
 
 ::: {.column width='60%'}
-![Fold changes and AUC of metabolites whose concentrations were significantly increased in the patients with breast cancer compared to the healthy controls](images/PWA-4_Metabolomics-Slides_insertimage_4.png)
+![Fold changes and AUC of metabolites whose concentrations were significantly increased in the patients with breast cancer compared to the healthy controls](images/Slides_insertimage_4.png)
 
 - Metabolites lists are diverse:
 
@@ -230,7 +230,7 @@ Once a list of feature is obtained it can be studied on a one-by-one basis
 
 ::: {.column width='60%'}
 
-![](images/PWA-4_Metabolomics-Slides_insertimage_10.png)
+![](images/Slides_insertimage_10.png)
 
 :::
 
@@ -257,7 +257,7 @@ Once a list of feature is obtained it can be studied on a one-by-one basis
 ## How can we interpret these lists?
 
 
-![From Lists to Biology ](images/PWA-4_Metabolomics-Slides_insertimage_11.png)
+![From Lists to Biology ](images/Slides_insertimage_11.png)
 
 # Ontologies, Databases and Metabolite Sets
 
@@ -280,7 +280,7 @@ Once a list of feature is obtained it can be studied on a one-by-one basis
 
 ## Sources of information for PWA
 
-![Some common databases in Metabolomics ](images/PWA-4_Metabolomics-Slides_insertimage_14.png)
+![Some common databases in Metabolomics ](images/Slides_insertimage_14.png)
 
 ## Ontologies, Databases et alt.{.smaller}
 
@@ -297,7 +297,7 @@ Although incomplete s.o.i are multiple and diverse.
 
 ::: {.column width='40%'}
 
-![The  Human Metabolome Database ](images/PWA-4_Metabolomics-Slides_insertimage_15.png)
+![The  Human Metabolome Database ](images/Slides_insertimage_15.png)
 
 :::
 
@@ -327,7 +327,7 @@ metabolomics (and exposomics) data
 
 ::: {.column width='40%'}
 
-![The Food Constituent Database ](images/PWA-4_Metabolomics-Slides_insertimage_16.png)
+![The Food Constituent Database ](images/Slides_insertimage_16.png)
 
 :::
 
@@ -356,7 +356,7 @@ aroma, colour and human health
 
 ::: {.column width='40%'}
 
-![Kyoto Encyclopedia of Genes and Genomes ](images/PWA-4_Metabolomics-Slides_insertimage_17.png)
+![Kyoto Encyclopedia of Genes and Genomes ](images/Slides_insertimage_17.png)
 
 :::
 
@@ -381,7 +381,7 @@ process pathways (70)
 
 ::: {.column width='40%'}
 
-![The Small Molecule Pathway Database (SMPDB) ](images/PWA-4_Metabolomics-Slides_insertimage_18.png)
+![The Small Molecule Pathway Database (SMPDB) ](images/Slides_insertimage_18.png)
 
 :::
 
@@ -415,26 +415,26 @@ process pathways (70)
 
 ## Metabolites Set libraries
 
-![Overview of MSEA's metabolite set libraries ](images/PWA-4_Metabolomics-Slides_insertimage_20.png)
+![Overview of MSEA's metabolite set libraries ](images/Slides_insertimage_20.png)
 
 ## Metamap clusters
 
-![](PWA-4_Metabolomics-Slides_insertimage_4.png)
+![](Slides_insertimage_4.png)
 
 ## Chemical similarity clusters
 
-![](PWA-4_Metabolomics-Slides_insertimage_5.png)
+![](Slides_insertimage_5.png)
 
 ## Chemical Ontologies
 
-![](PWA-4_Metabolomics-Slides_insertimage_3.png)
+![](Slides_insertimage_3.png)
 
 # Analysis Methods
 
 ## Types of Pathway Analysis
 
 ![[Khatri et alt. 10 years of Pathway Analysis](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002375)
-](PWA-4_Metabolomics-Slides_insertimage_6.png)
+](Slides_insertimage_6.png)
 
 ## Over-representation Analysis
 
@@ -449,7 +449,7 @@ process pathways (70)
 
 ## Obtaining feature lists
 
-![](PWA-4_Metabolomics-Slides_insertimage_7.png)
+![](Slides_insertimage_7.png)
 
 ## Assessing "surprisingly" {.smaller}
 
@@ -466,7 +466,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 ::: {.column width='40%'}
 
-![](PWA-4_Metabolomics-Slides_insertimage_8.png)
+![](Slides_insertimage_8.png)
 
 :::
 
@@ -474,7 +474,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 ## Example
 
-![](PWA-4_Metabolomics-Slides_insertimage_9.png)
+![](Slides_insertimage_9.png)
 
 ## Assess significance: Fisher test
 
@@ -490,12 +490,12 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 ## Example 1: Surprisingly enriched
 
 
-![P-value small, odds-ratio high: List is surprisingly enriched in Feature Set ](PWA-4_Metabolomics-Slides_insertimage_12.png)
+![P-value small, odds-ratio high: List is surprisingly enriched in Feature Set ](Slides_insertimage_12.png)
 
 
 ## Example 2: Non-enriched
 
-![P-value high, odds-ratio around 1: List is not  enriched in Feature Set ](PWA-4_Metabolomics-Slides_insertimage_11.png)
+![P-value high, odds-ratio around 1: List is not  enriched in Feature Set ](Slides_insertimage_11.png)
 
 ## Summary: Recipe for ORA
 
@@ -525,7 +525,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 - Rooted in the  *Gene Set Enrichment Analysis* (GSEA) method developed  to overcome ORA limitations.
 
 :::{.center}
-![](PWA-4_Metabolomics-Slides_insertimage_14.png){width=70%}
+![](Slides_insertimage_14.png){width=70%}
 :::
 
 ## The GSEA Method (1) {.smaller}
@@ -542,7 +542,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 - Original test was a Kolmogorov-Smirnov test (K-S test) statistic with P-values  computed by randomization.
   
-  ![](PWA-4_Metabolomics-Slides_insertimage_15.png)
+  ![](Slides_insertimage_15.png)
   
 ## GSEA Extensions/Alternatives {.smaller}
 
@@ -560,7 +560,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 - Most popular option is Mummichog (Li et al. 2013).
 
-![](PWA-4_Metabolomics-Slides_insertimage_16.png)
+![](Slides_insertimage_16.png)
 
 ## Mummichog pathway mapping {.smaller}
 
@@ -574,7 +574,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 ## Mummichog change of approach
 
-![ Mummichog redefines the work flow of untargeted metabolomics ](PWA-4_Metabolomics-Slides_insertimage_18.png)
+![ Mummichog redefines the work flow of untargeted metabolomics ](Slides_insertimage_18.png)
 
 ::: {.notes}
 
@@ -602,19 +602,19 @@ metabolic network.
 
 ## Hypothesis Tests Decision Table
 
-![In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and Type II errors)](PWA-4_Metabolomics-Slides_insertimage_19.png)
+![In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and Type II errors)](Slides_insertimage_19.png)
 
 ## Why Multiple testing matters
 
-![](PWA-4_Metabolomics-Slides_insertimage_20.png)
+![](Slides_insertimage_20.png)
 
 ## TYpe I error not useful here
 
-![](PWA-4_Metabolomics-Slides_insertimage_21.png)
+![](Slides_insertimage_21.png)
 
 ## How to deal with this issue?
 
-![](PWA-4_Metabolomics-Slides_insertimage_22.png)
+![](Slides_insertimage_22.png)
 
 ## *Family Wise Error Rate*
 
@@ -674,7 +674,7 @@ kableExtra::kable(Ordered)
 - Multiple testing issues
 
 
-![](PWA-4_Metabolomics-Slides_insertimage_23.png)
+![](Slides_insertimage_23.png)
 
 ::: {.notes}
 
@@ -717,19 +717,19 @@ Recommendation: Develop and use simulated or experimental ground-truth datasets 
 
 ::: {.center}
 
-![Common pathway analysis tools for metabolomics data.](PWA-4_Metabolomics-Slides_insertimage_24.png)
+![Common pathway analysis tools for metabolomics data.](Slides_insertimage_24.png)
 
 :::
 ## A comparison of tools
 
 ::: {.center}
 
-![[Evaluation and comparison of bioinformatic tools for the enrichment analysis of metabolomics data](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-2006-0) ](PWA-4_Metabolomics-Slides_insertimage_26.png)
+![[Evaluation and comparison of bioinformatic tools for the enrichment analysis of metabolomics data](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-2006-0) ](Slides_insertimage_26.png)
 :::
 
 ## The space of tools (in 2017)
 
-![](PWA-4_Metabolomics-Slides_insertimage_27.png)
+![](Slides_insertimage_27.png)
 
 ## Not the same, not that different
 
