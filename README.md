@@ -6,11 +6,31 @@ This repository contains materials used in a Workshop introducing Pathway Analys
 
 - [Presentation Slides](https://aspteaching.github.io/AnIntro2PWA4Metabolomics/PWA-4_Metabolomics-Slides.html)
 
+- [Enrichment and Pathway Analysis with MetaboAnalyst]
+
 # Labs
 
 - [A crah introduction to R & RStudio](https://github.com/ASPteaching/RforDataScience/blob/master/R4DataScience-1-Introduction_to_R.pdf) (in case you need it)
 
-## MetaboAnalystR labs
+## MetaboAnalyst web
+
+- MetaboAnalyst Web Site
+- Enrichment Analysis Tutorial
+- Functional Analysis Tutorial
+- PathWay Analysis Tutorial
+
+## MetaboAnalystR
+
+- [MetaboAnalystR tutorials]
+- Introduction to MetaboAnalystR
+- Statistical Analysis with MetaboAnalystR
+- Enrichment Analysis
+
+# References and links
+
+
+
+
 
 
 

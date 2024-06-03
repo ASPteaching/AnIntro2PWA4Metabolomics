@@ -39,4 +39,49 @@ MetaboAnalystR comes with multiple vignetted ("tutorials") to illustrate how to 
 
 The document [MetaboAnalystR Package](https://www.metaboanalyst.ca/docs/RTutorial.xhtml) provides an *overview* to the distinct vignettes and links to each of them.
 
-The current document is a short introduction to Enrichment Analysis as can be done by MetaboAnalyst. It uses the results of the comparisons performed in the Statiostical Analyses example.
+The current document is a short introduction to Enrichment Analysis as can be done by MetaboAnalyst. It uses the results of the comparisons performed in the Statistical Analyses example.
+
+# Enrichment Analysis Workflows
+
+Below we will go over 2 use-cases to perform Enrichment Analysis, the first using as input a list of compounds, and the second as input a concentration table.
+
+## Over representation analysis
+
+### Preparation for ORA
+
+The first step to ORA is to create a vector containing a list of compound names. 
+
+The list will then be cross-referenced (CrossReferencing) against the MetaboAnalyst compound libraries (HMDB, PubChem, KEGG, etc.), and any compounds without a hit will have NA. 
+
+This step may take long due to downloading of libraries if they do not already exist in your working directory.
+
+```{r}
+library(MetaboAnalystR)
+
+## When input is a list
+
+# Create vector consisting of compounds for enrichment analysis 
+tmp.vec <- c("Acetoacetic acid", "Beta-Alanine", "Creatine", "Dimethylglycine", "Fumaric acid", "Glycine", "Homocysteine", "L-Cysteine", "L-Isolucine", "L-Phenylalanine", "L-Serine", "L-Threonine", "L-Tyrosine", "L-Valine", "Phenylpyruvic acid", "Propionic acid", "Pyruvic acid", "Sarcosine", "Arsenic", "Benzene", "Caffeic acid", "Cotinine", "Cadmium", "Lead", "Thiocyanate")
+
+# Create mSetObj
+mSet<-InitDataObjects("conc", "msetora", FALSE)
+```
+
+```{r}
+#Set up mSetObj with the list of compounds
+mSet<-Setup.MapData(mSet, tmp.vec);
+
+# Cross reference list of compounds against libraries (hmdb, pubchem, chebi, kegg, metlin)
+mSet<-CrossReferencing(mSet, "name");
+```
+
+To view the compound name map to identify any compounds within the uploaded list without hits…
+
+```{r}
+mSet$name.map 
+
+```
+
+### Enrichment Analysis
+
+
