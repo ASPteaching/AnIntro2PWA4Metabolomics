@@ -344,17 +344,11 @@ Alex Sanchez
 <h1>Introduction and Objectives</h1>
 
 </section>
-<section id="introducing-myself" class="slide level2">
-<h2>Introducing myself</h2>
-<div class="center">
-<p><img data-src="Slides_insertimage_25.png"></p>
-</div>
-</section>
-<section id="introducing-our-groups" class="slide level2">
-<h2>Introducing Our groups</h2>
+<section id="introducing-ourselves" class="slide level2">
+<h2>Introducing Ourselves</h2>
 <p><br></p>
 
-<img data-src="images/Slides_insertimage_1.png" class="r-stretch quarto-figure-center"><p class="caption">Statistics &amp; Bioinformatics and Nutrition &amp; Metabolomics groups @ UB</p></section>
+<img data-src="images/PWA-4_Metabolomics-Slides_insertimage_1.png" class="r-stretch quarto-figure-center"><p class="caption">Statistics &amp; Bioinformatics and Nutrition &amp; Metabolomics groups @ UB</p></section>
 <section id="session-objectives" class="slide level2">
 <h2>Session objectives</h2>
 <ul>
@@ -369,7 +363,7 @@ Alex Sanchez
 <section id="session-outline" class="slide level2 scrollable">
 <h2>Session Outline</h2>
 <ol type="1">
-<li><p>Introduction and objectives</p></li>
+<li><p>Introducion and objectives</p></li>
 <li><p>Metabolite lists: What do they mean</p></li>
 <li><p>Information sources to support interpretation</p></li>
 <li><p>Methods and Tools to extract information</p></li>
@@ -385,7 +379,7 @@ Alex Sanchez
 <li><p>We often assume that “normal” metabolism is what happens in healthy state or, that disease can be associated with some type of alteration in metabolism.</p></li>
 </ul>
 
-<img data-src="images/images/Slides_insertimage_.png" class="r-stretch quarto-figure-center"><p class="caption">Characterization of disease attempted studying how this disrupts pathways</p></section>
+<img data-src="images/images/PWA-4_Metabolomics-Slides_insertimage_.png" class="r-stretch quarto-figure-center"><p class="caption">Characterization of disease attempted studying how this disrupts pathways</p></section>
 <section id="so-what-is-pathway-analysis" class="slide level2 smaller">
 <h2>So what is Pathway Analysis?</h2>
 <ul>
@@ -395,7 +389,7 @@ Alex Sanchez
 <li>Contextualize findings to help understand biological processes</li>
 <li>Identify fetures associated with a disease</li>
 <li>Predict drug targets</li>
-<li>Understand how to intervene in disease</li>
+<li>Understand how to intervene in disease1</li>
 <li>Conduct target literature searches</li>
 <li>Integrate diverse biological information</li>
 </ul></li>
@@ -409,19 +403,19 @@ Alex Sanchez
 <section id="bioinformatics-workflows" class="slide level2">
 <h2>Bioinformatics workflows</h2>
 
-<img data-src="images/Slides_insertimage_8.png" style="width:110.0%" class="r-stretch quarto-figure-center"><p class="caption"><a href="https://doi.org/10.3390/metabo12040357">A Metabolomics Worflow Example</a></p></section>
+<img data-src="images/PWA-4_Metabolomics-Slides_insertimage_8.png" style="width:110.0%" class="r-stretch quarto-figure-center"><p class="caption"><a href="https://doi.org/10.3390/metabo12040357">A Metabolomics Worflow Example</a></p></section>
 <section id="from-samples-to-features-lists-2" class="slide level2">
 <h2>From samples to <em>features</em> lists (2)</h2>
 
-<img data-src="images/Slides_insertimage_3.png" class="r-stretch quarto-figure-center"><p class="caption">Metabolomics Workflows in MetaboAnalyst 5.0</p></section>
-<section id="analysis-yields-metabolites-lists" class="slide level2 smaller">
-<h2>Analysis yields metabolites lists</h2>
+<img data-src="images/PWA-4_Metabolomics-Slides_insertimage_3.png" class="r-stretch quarto-figure-center"><p class="caption">Metabolomics Workflows in MetaboAnalyst 5.0</p></section>
+<section id="analysis-yield-metabolites-lists" class="slide level2 smaller">
+<h2>Analysis yield metabolites lists</h2>
 <div class="columns">
 <div class="column" style="width:40%;">
 <div class="center">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="images/Slides_insertimage_6.png" style="width:50.0%"></p>
+<p><img data-src="images/PWA-4_Metabolomics-Slides_insertimage_6.png" style="width:50.0%"></p>
 <figcaption>An unordered list of metabolite IDs</figcaption>
 </figure>
 </div>
@@ -434,7 +428,7 @@ Alex Sanchez
 </div><div class="column" style="width:60%;">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="images/Slides_insertimage_4.png"></p>
+<p><img data-src="images/PWA-4_Metabolomics-Slides_insertimage_4.png"></p>
 <figcaption>Fold changes and AUC of metabolites whose concentrations were significantly increased in the patients with breast cancer compared to the healthy controls</figcaption>
 </figure>
 </div>
@@ -461,66 +455,6 @@ Alex Sanchez
 <li><p>Uniquely and unambiguosly naming all metabolites is, in the best of cases, “work in progress”.</p></li>
 </ul>
 </section>
-<section id="different-annotation-levels" class="slide level2 scrollable">
-<h2>Different annotation levels</h2>
-<!-- jo aquí diria que això pot dependre de la precisó del mètode de detecció -->
-<ol type="1">
-<li><strong>Exact structure</strong>, including stereochemistry and bond geometry</li>
-<li><strong>Regiochemistry level</strong> (stereochemistry and bond geometry unknown)</li>
-<li><strong>Molecular species level</strong> (regiochemistry unknown)</li>
-<li><strong>Species level</strong> (no information on structural features)</li>
-</ol>
-</section>
-<section id="many-names-and-descriptors" class="slide level2 smaller">
-<h2>Many names and descriptors</h2>
-<!-- jo aquí diria que els més precisos o inequívocs, els computats, són els que menys es fan servir. I no és d'estranyar, vist la pinta que fan-->
-<ul>
-<li><strong>Computed descriptors</strong>
-<ul>
-<li>IUPAC name</li>
-<li>InChI, InChIKey</li>
-<li>SMILES (canonical or isomeric)</li>
-</ul></li>
-</ul>
-
-<!-- IUPAC Name: (1S,2R,5S,10S,11S,14R,15R)-2,15-dimethyl-14-[(2R)-6-methylheptan-2-yl]tetracyclo[8.7.0.0^{2,7}.0^{11,15}]heptadec-7-en-5-ol -->
-<img data-src="images/chol_descriptors.png" class="r-stretch quarto-figure-center"><p class="caption">Computed descriptors for Cholesterol</p></section>
-<section id="many-names-and-descriptors-1" class="slide level2 smaller">
-<h2>Many names and descriptors</h2>
-<!-- pel que fa als nons-systematic identifiers, hi ha metabòlits que no tenen IDs en alguns sistemes -->
-<!-- també hi ha molts nomes deprecated però que els podem trobar a la literatura, com passa amb el CAS -->
-<ul>
-<li><strong>Non-systematic identifiers</strong>
-<ul>
-<li>Common name</li>
-<li>RefMet Name</li>
-<li>PubChem ID</li>
-<li>HMDB ID</li>
-<li>ChEBI ID</li>
-<li>KEGG ID</li>
-<li>LipidMaps ID</li>
-<li>Drug Bank ID</li>
-<li>Metabolomics Workbench ID</li>
-<li>CAS</li>
-<li>Deprecated CAS</li>
-<li>…</li>
-</ul></li>
-</ul>
-</section>
-<section id="many-synonyms" class="slide level2 smaller">
-<h2>Many synonyms</h2>
-<!-- i que, precisment, els que més es fan servir, tenen un munt de sinònims -->
-
-<img data-src="images/chol_names.png" class="r-stretch quarto-figure-center"><p class="caption">Other names for Cholesterol</p></section>
-<section id="many-solutions" class="slide level2">
-<h2>Many solutions</h2>
-
-<img data-src="images/databases.png" class="r-stretch quarto-figure-center"><p class="caption">Some compund databases</p></section>
-<section id="many-solutions-1" class="slide level2 smaller">
-<h2>Many solutions</h2>
-
-<img data-src="images/PMID38132849.png" class="r-stretch quarto-figure-center"><p class="caption">This study highlights the need for standardized and unified metabolite datasets to enhance the reproducibility and comparability of metabolomics studies.</p><p><a href="https://pubmed.ncbi.nlm.nih.gov/38132849/">https://pubmed.ncbi.nlm.nih.gov/38132849/</a></p>
-</section>
 <section id="the-where-to-now-question" class="slide level2 smaller">
 <h2>The <em>where to, now?</em> question</h2>
 <p>Once a list of feature is obtained it can be studied on a one-by-one basis</p>
@@ -533,7 +467,7 @@ Alex Sanchez
 <li><p>Do a literature search …</p></li>
 </ul>
 </div><div class="column" style="width:60%;">
-<p><img data-src="images/Slides_insertimage_10.png"></p>
+<p><img data-src="images/PWA-4_Metabolomics-Slides_insertimage_10.png"></p>
 </div>
 </div>
 <ul>
@@ -563,7 +497,7 @@ Alex Sanchez
 <section id="how-can-we-interpret-these-lists" class="slide level2">
 <h2>How can we interpret these lists?</h2>
 
-<img data-src="images/Slides_insertimage_11.png" class="r-stretch quarto-figure-center"><p class="caption">From Lists to Biology</p></section></section>
+<img data-src="images/PWA-4_Metabolomics-Slides_insertimage_11.png" class="r-stretch quarto-figure-center"><p class="caption">From Lists to Biology</p></section></section>
 <section>
 <section id="ontologies-databases-and-metabolite-sets" class="title-slide slide level1 center">
 <h1>Ontologies, Databases and Metabolite Sets</h1>
@@ -585,7 +519,7 @@ Alex Sanchez
 <section id="sources-of-information-for-pwa" class="slide level2">
 <h2>Sources of information for PWA</h2>
 
-<img data-src="images/Slides_insertimage_14.png" class="r-stretch quarto-figure-center"><p class="caption">Some common databases in Metabolomics</p></section>
+<img data-src="images/PWA-4_Metabolomics-Slides_insertimage_14.png" class="r-stretch quarto-figure-center"><p class="caption">Some common databases in Metabolomics</p></section>
 <section id="ontologies-databases-et-alt." class="slide level2 smaller">
 <h2>Ontologies, Databases et alt.</h2>
 <p>Although incomplete s.o.i are multiple and diverse.</p>
@@ -602,7 +536,7 @@ Alex Sanchez
 <div class="column" style="width:40%;">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="images/Slides_insertimage_15.png"></p>
+<p><img data-src="images/PWA-4_Metabolomics-Slides_insertimage_15.png"></p>
 <figcaption>The Human Metabolome Database</figcaption>
 </figure>
 </div>
@@ -622,7 +556,7 @@ Alex Sanchez
 <div class="column" style="width:40%;">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="images/Slides_insertimage_16.png"></p>
+<p><img data-src="images/PWA-4_Metabolomics-Slides_insertimage_16.png"></p>
 <figcaption>The Food Constituent Database</figcaption>
 </figure>
 </div>
@@ -642,7 +576,7 @@ Alex Sanchez
 <div class="column" style="width:40%;">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="images/Slides_insertimage_17.png"></p>
+<p><img data-src="images/PWA-4_Metabolomics-Slides_insertimage_17.png"></p>
 <figcaption>Kyoto Encyclopedia of Genes and Genomes</figcaption>
 </figure>
 </div>
@@ -662,7 +596,7 @@ Alex Sanchez
 <div class="column" style="width:40%;">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="images/Slides_insertimage_18.png"></p>
+<p><img data-src="images/PWA-4_Metabolomics-Slides_insertimage_18.png"></p>
 <figcaption>The Small Molecule Pathway Database (SMPDB)</figcaption>
 </figure>
 </div>
@@ -679,7 +613,7 @@ Alex Sanchez
 <section id="obtaining-metabolite-sets" class="slide level2">
 <h2>Obtaining Metabolite Sets</h2>
 <ul>
-<li><p>As described, PwA matches lists of metabolites with previously defined metabolite sets that characterize a process, a disease or a group.</p></li>
+<li><p>As described, PWA matches lists of metabolites with previously defined metabolite sets that characterize a process, a disease or a group.</p></li>
 <li><p>Some sources of information (Ontologies, Pathways DBs) directly provide metabolite sets.</p></li>
 <li><p>For compound DBs, Metabolite sets have to be built</p>
 <ul>
@@ -691,19 +625,19 @@ Alex Sanchez
 <section id="metabolites-set-libraries" class="slide level2">
 <h2>Metabolites Set libraries</h2>
 
-<img data-src="images/Slides_insertimage_20.png" class="r-stretch quarto-figure-center"><p class="caption">Overview of MSEA’s metabolite set libraries</p></section>
+<img data-src="images/PWA-4_Metabolomics-Slides_insertimage_20.png" class="r-stretch quarto-figure-center"><p class="caption">Overview of MSEA’s metabolite set libraries</p></section>
 <section id="metamap-clusters" class="slide level2">
 <h2>Metamap clusters</h2>
 
-<img data-src="Slides_insertimage_4.png" class="r-stretch"></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_4.png" class="r-stretch"></section>
 <section id="chemical-similarity-clusters" class="slide level2">
 <h2>Chemical similarity clusters</h2>
 
-<img data-src="Slides_insertimage_5.png" class="r-stretch"></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_5.png" class="r-stretch"></section>
 <section id="chemical-ontologies" class="slide level2">
 <h2>Chemical Ontologies</h2>
 
-<img data-src="Slides_insertimage_3.png" class="r-stretch"></section></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_3.png" class="r-stretch"></section></section>
 <section>
 <section id="analysis-methods" class="title-slide slide level1 center">
 <h1>Analysis Methods</h1>
@@ -712,7 +646,7 @@ Alex Sanchez
 <section id="types-of-pathway-analysis" class="slide level2">
 <h2>Types of Pathway Analysis</h2>
 
-<img data-src="Slides_insertimage_6.png" class="r-stretch quarto-figure-center"><p class="caption"><a href="https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002375">Khatri et alt. 10 years of Pathway Analysis</a></p></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_6.png" class="r-stretch quarto-figure-center"><p class="caption"><a href="https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002375">Khatri et alt. 10 years of Pathway Analysis</a></p></section>
 <section id="over-representation-analysis" class="slide level2">
 <h2>Over-representation Analysis</h2>
 <ul>
@@ -731,7 +665,7 @@ Alex Sanchez
 <section id="obtaining-feature-lists" class="slide level2">
 <h2>Obtaining feature lists</h2>
 
-<img data-src="Slides_insertimage_7.png" class="r-stretch"></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_7.png" class="r-stretch"></section>
 <section id="assessing-surprisingly" class="slide level2 smaller">
 <h2>Assessing “surprisingly”</h2>
 <div class="columns">
@@ -742,18 +676,18 @@ Alex Sanchez
 <li>If the % of features in “FS” is greater in “fl” than in the rest of genes <span class="math inline">\(\rightarrow\)</span> <em>“fl” is enriched in “GS”</em>&nbsp;</li>
 </ul>
 </div><div class="column" style="width:40%;">
-<p><img data-src="Slides_insertimage_8.png"></p>
+<p><img data-src="PWA-4_Metabolomics-Slides_insertimage_8.png"></p>
 </div>
 </div>
 </section>
 <section id="example" class="slide level2">
 <h2>Example</h2>
 
-<img data-src="Slides_insertimage_9.png" class="r-stretch"></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_9.png" class="r-stretch"></section>
 <section id="assess-significance-fisher-test" class="slide level2">
 <h2>Assess significance: Fisher test</h2>
 <ul>
-<li>The example shows two cases
+<li>The examples shows two cases
 <ul>
 <li>One where percentages are quite different</li>
 <li>Another where percentages are similar.</li>
@@ -769,13 +703,10 @@ Alex Sanchez
 <section id="example-1-surprisingly-enriched" class="slide level2">
 <h2>Example 1: Surprisingly enriched</h2>
 
-<img data-src="Slides_insertimage_12.png" class="r-stretch quarto-figure-center"><p class="caption">P-value small, odds-ratio high: List is surprisingly enriched in Feature Set</p></section>
-<section id="example-2-non-enriched" class="slide level2">
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_12.png" class="r-stretch quarto-figure-center"><p class="caption">P-value small, odds-ratio high: List is surprisingly enriched in Feature Set</p></section>
+<section id="example-2-non-enriched" class="slide level2 scrollable">
 <h2>Example 2: Non-enriched</h2>
-
-<img data-src="Slides_insertimage_11.png" class="r-stretch quarto-figure-center"><p class="caption">P-value high, odds-ratio around 1: List is not enriched in Feature Set</p></section>
-<section id="summary-recipe-for-ora" class="slide level2 scrollable">
-<h2>Summary: Recipe for ORA</h2>
+<p><img data-src="PWA-4_Metabolomics-Slides_insertimage_11.png" alt="P-value high, odds-ratio around 1: List is not enriched in Feature Set"> ## Summary: Recipe for ORA</p>
 <ol type="1">
 <li>Define feature list (e.g.&nbsp;thresholding analyzed list ) and background list,</li>
 <li>Select feature sets to test for enrichment,</li>
@@ -792,7 +723,7 @@ Alex Sanchez
 <li>No resolution between significant signals with different strengths</li>
 <li>Weak signals neglected</li>
 <li>Different results at different threshold settings</li>
-<li>Based on the wrong assumption of independent feature (or feature group) sampling, which increases false positive predictions.</li>
+<li>Based on the wrong assumption of independent feature (or feture group) sampling, which increases false positive predictions.</li>
 </ul>
 </section>
 <section id="functional-class-scoring" class="slide level2">
@@ -806,14 +737,14 @@ Alex Sanchez
 <li><p>Rooted in the <em>Gene Set Enrichment Analysis</em> (GSEA) method developed to overcome ORA limitations.</p></li>
 </ul>
 <div class="center">
-<p><img data-src="Slides_insertimage_14.png" style="width:70.0%"></p>
+<p><img data-src="PWA-4_Metabolomics-Slides_insertimage_14.png" style="width:70.0%"></p>
 </div>
 </section>
 <section id="the-gsea-method-1" class="slide level2 smaller">
 <h2>The GSEA Method (1)</h2>
 <ul>
 <li><p>GSEA method compares, for each feature set, the distribution of the test statistic within the set with the overall distribution of those statistics, i.e.&nbsp;the calculated for all genes.</p></li>
-<li><p>To do this, test statistics are ranked (from biggest to smallest) and for gene set a running sum is computed such that</p>
+<li><p>To do this, test statistics are ranked (from biggest to smallest) and for set gene set a running sum is computed such that</p>
 <ul>
 <li>If a feature is in the set add a certain quantity (<span class="math inline">\(\sqrt{N_s/(N-N_s)}\)</span>)</li>
 <li>If a feature is not in the set, substract a (small) quantity (<span class="math inline">\(-\sqrt{(N-N_s)/N_s}\)</span>)</li>
@@ -825,7 +756,7 @@ Alex Sanchez
 <ul>
 <li><p>If the distribution of the <em>running sum</em> doesn’t differ from a <em>random walk</em> then the list can be declared significantly enriched in that set.</p></li>
 <li><p>Original test was a Kolmogorov-Smirnov test (K-S test) statistic with P-values computed by randomization.</p>
-<p><img data-src="Slides_insertimage_15.png"></p></li>
+<p><img data-src="PWA-4_Metabolomics-Slides_insertimage_15.png"></p></li>
 </ul>
 </section>
 <section id="gsea-extensionsalternatives" class="slide level2 smaller">
@@ -845,14 +776,14 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <h2>PWA for untargeted studies</h2>
 <ul>
 <li><p>What to do when you don’t know what the metabolites ions are?</p></li>
-<li><p>Most popular option is Mummichog (Li et al.&nbsp;2013).</p></li>
+<li><p>Most popular option is Mummichog (li et alt. 2013).</p></li>
 </ul>
 
-<img data-src="Slides_insertimage_16.png" class="r-stretch"></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_16.png" class="r-stretch"></section>
 <section id="mummichog-pathway-mapping" class="slide level2 smaller">
 <h2>Mummichog pathway mapping</h2>
 <ul>
-<li>Ions are divided into significant and non-significant groups.
+<li>Ions are dividedvinto significant and non-significant groups.
 <ul>
 <li>E.g 1000 ions,150 with p-val &lt;0.05</li>
 </ul></li>
@@ -867,7 +798,7 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <section id="mummichog-change-of-approach" class="slide level2 scrollable">
 <h2>Mummichog change of approach</h2>
 
-<img data-src="Slides_insertimage_18.png" class="r-stretch quarto-figure-center"><p class="caption">Mummichog redefines the work flow of untargeted metabolomics</p><aside class="notes">
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_18.png" class="r-stretch quarto-figure-center"><p class="caption">Mummichog redefines the work flow of untargeted metabolomics</p><aside class="notes">
 <ol type="1">
 <li><ol type="A">
 <li>In the work flow of untargeted metabolomics, the conventional approach requires the metabolites to be identified before pathway/network analysis, while mummichog (blue arrow) predicts functional activity bypassing metabolite identification.</li>
@@ -907,19 +838,19 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <section id="hypothesis-tests-decision-table" class="slide level2">
 <h2>Hypothesis Tests Decision Table</h2>
 
-<img data-src="Slides_insertimage_19.png" class="r-stretch quarto-figure-center"><p class="caption">In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and Type II errors)</p></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_19.png" class="r-stretch quarto-figure-center"><p class="caption">In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and TYpe II errors)</p></section>
 <section id="why-multiple-testing-matters" class="slide level2">
 <h2>Why Multiple testing matters</h2>
 
-<img data-src="Slides_insertimage_20.png" class="r-stretch"></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_20.png" class="r-stretch"></section>
 <section id="type-i-error-not-useful-here" class="slide level2">
 <h2>TYpe I error not useful here</h2>
 
-<img data-src="Slides_insertimage_21.png" class="r-stretch"></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_21.png" class="r-stretch"></section>
 <section id="how-to-deal-with-this-issue" class="slide level2">
 <h2>How to deal with this issue?</h2>
 
-<img data-src="Slides_insertimage_22.png" class="r-stretch"></section>
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_22.png" class="r-stretch"></section>
 <section id="family-wise-error-rate" class="slide level2">
 <h2><em>Family Wise Error Rate</em></h2>
 <ul>
@@ -943,7 +874,7 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <h2>False Discovery Rate</h2>
 <ul>
 <li>FDR is the expected proportion of “False Positives” that is of the observed enrichments due to chance.</li>
-<li>Less restrictive than Bonferroni adjustment which is a bound on the probability that <strong>any one</strong> of the observed enrichments could be due to random chance.</li>
+<li>Les restrictive than Bonferroni adjustment which is a bound on the probability that <strong>any one</strong> of the observed enrichments could be due to random chance.</li>
 <li>Typically, FDR adjustments are calculated using the Benjamini-Hochberg procedure.</li>
 <li>FDR threshold is often called the “q-value”</li>
 </ul>
@@ -1350,7 +1281,7 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <h1>Limitations and Recommendations</h1>
 
 </section>
-<section id="some-limitations" class="slide level2 smaller">
+<section id="some-limitations" class="slide level2">
 <h2>Some limitations</h2>
 <ul>
 <li><p>Incomplete Pathway Databases</p></li>
@@ -1361,7 +1292,7 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
 <li><p>Multiple testing issues</p></li>
 </ul>
 
-<img data-src="Slides_insertimage_23.png" class="r-stretch"><aside class="notes">
+<img data-src="PWA-4_Metabolomics-Slides_insertimage_23.png" class="r-stretch"><aside class="notes">
 <h3 id="incomplete-pathway-databases">Incomplete Pathway Databases</h3>
 <p>Limitation: Pathway databases are often incomplete and evolve over time, leading to discrepancies in pathway coverage and definitions. Recommendation: Use up-to-date databases and consider integrating multiple databases to improve coverage and accuracy​​.</p>
 <h3 id="metabolite-misidentification">Metabolite Misidentification</h3>
@@ -1386,60 +1317,19 @@ I uses rank-based methods to assess whether the feature sets are distributed dif
           display:block!important;
       }</style></aside>
 </section></section>
-<section>
 <section id="pathway-analysis-tools" class="title-slide slide level1 center">
 <h1>Pathway Analysis Tools</h1>
 
 </section>
-<section id="pathway-analysis-tools-1" class="slide level2">
-<h2>PAthway Analysis Tools</h2>
-<div class="center">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="Slides_insertimage_24.png"></p>
-<figcaption>Common pathway analysis tools for metabolomics data.</figcaption>
-</figure>
-</div>
-</div>
-</section>
-<section id="a-comparison-of-tools" class="slide level2">
-<h2>A comparison of tools</h2>
-<div class="center">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="Slides_insertimage_26.png"></p>
-<figcaption><a href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-2006-0">Evaluation and comparison of bioinformatic tools for the enrichment analysis of metabolomics data</a></figcaption>
-</figure>
-</div>
-</div>
-</section>
-<section id="the-space-of-tools-in-2017" class="slide level2">
-<h2>The space of tools (in 2017)</h2>
 
-<img data-src="Slides_insertimage_27.png" class="r-stretch"></section>
-<section id="not-the-same-not-that-different" class="slide level2">
-<h2>Not the same, not that different</h2>
-<ul>
-<li><p>ORA tools provided consistent results among tools revealing that these analyses are robust and reproducible regardless of their analytic approach.</p></li>
-<li><p>Redundancy of identifiers, Use of chemical class identifiers and Incompleteness of databases sets limit the extent of the analyses and reduce their accuracy.</p></li>
-<li><p>More work in the completeness of metabolite/pathway databases is required to get more accurate and global insights of the metabolome.</p></li>
-</ul>
-</section>
-<section id="summary" class="slide level2">
-<h2>Summary</h2>
-<ul>
-<li><p>Pathway Analysis is a useful approach to help gain biological understanding from omics-based studies.</p></li>
-<li><p>There are many ways, many methods, many tools</p></li>
-<li><p>Guide the choice by a combination of <em>meaning</em>, <em>availability</em>, <em>ease of use</em> and <em>usefulness</em>.</p></li>
-<li><p>Usually obtained from a good understanding of what it does and ow it is done.</p></li>
-<li><p>Different methods may yield different results. <br>Worth checking!</p></li>
-</ul>
+<section id="a-use-case-with-metaboanalyst" class="title-slide slide level1 center">
+<h1>A use case with MetaboAnalyst</h1>
 <div class="quarto-auto-generated-content">
 <div class="footer footer-default">
 
 </div>
 </div>
-</section></section>
+</section>
     </div>
   </div>
 
