@@ -39,7 +39,7 @@ editor_options:
 ## Introducing myself
 
 :::{.center}
-![](PWA-4_Metabolomics-Slides_insertimage_25.png){width=80%}
+![](images/PWA-4_Metabolomics-Slides_insertimage2_25.png){width=80%}
 :::
 
 ## Introducing Our groups
@@ -417,22 +417,22 @@ process pathways (70)
 
 ## Metamap clusters
 
-![](PWA-4_Metabolomics-Slides_insertimage_4.png)
+![](images/PWA-4_Metabolomics-Slides_insertimage2_4.png)
 
 ## Chemical similarity clusters
 
-![](PWA-4_Metabolomics-Slides_insertimage_5.png)
+![](images/PWA-4_Metabolomics-Slides_insertimage2_5.png)
 
 ## Chemical Ontologies
 
-![](PWA-4_Metabolomics-Slides_insertimage_3.png)
+![](images/PWA-4_Metabolomics-Slides_insertimage2_3.png)
 
 # Analysis Methods
 
 ## Types of Pathway Analysis
 
 ![[Khatri et alt. 10 years of Pathway Analysis](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002375)
-](PWA-4_Metabolomics-Slides_insertimage_6.png)
+](images/PWA-4_Metabolomics-Slides_insertimage2_6.png)
 
 ## Over-representation Analysis
 
@@ -447,7 +447,7 @@ process pathways (70)
 
 ## Obtaining feature lists
 
-![](PWA-4_Metabolomics-Slides_insertimage_7.png)
+![](images/PWA-4_Metabolomics-Slides_insertimage2_7.png)
 
 ## Assessing "surprisingly" {.smaller}
 
@@ -464,7 +464,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 ::: {.column width='40%'}
 
-![](PWA-4_Metabolomics-Slides_insertimage_8.png)
+![](images/PWA-4_Metabolomics-Slides_insertimage2_8.png)
 
 :::
 
@@ -472,7 +472,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 ## Example
 
-![](PWA-4_Metabolomics-Slides_insertimage_9.png)
+![](images/PWA-4_Metabolomics-Slides_insertimage2_9.png)
 
 ## Assess significance: Fisher test
 
@@ -488,12 +488,12 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 ## Example 1: Surprisingly enriched
 
 
-![P-value small, odds-ratio high: List is surprisingly enriched in Feature Set ](PWA-4_Metabolomics-Slides_insertimage_12.png)
+![P-value small, odds-ratio high: List is surprisingly enriched in Feature Set ](images/PWA-4_Metabolomics-Slides_insertimage2_12.png)
 
 
 ## Example 2: Non-enriched
 
-![P-value high, odds-ratio around 1: List is not  enriched in Feature Set ](PWA-4_Metabolomics-Slides_insertimage_11.png)
+![P-value high, odds-ratio around 1: List is not  enriched in Feature Set ](images/PWA-4_Metabolomics-Slides_insertimage2_11.png)
 
 
 ## Summary: Recipe for ORA
@@ -524,7 +524,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 - Rooted in the  *Gene Set Enrichment Analysis* (GSEA) method developed  to overcome ORA limitations.
 
 :::{.center}
-![](PWA-4_Metabolomics-Slides_insertimage_14.png){width=70%}
+![](images/PWA-4_Metabolomics-Slides_insertimage2_14.png){width=70%}
 :::
 
 ## The GSEA Method (1) {.smaller}
@@ -541,7 +541,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 - Original test was a Kolmogorov-Smirnov test (K-S test) statistic with P-values  computed by randomization.
   
-  ![](PWA-4_Metabolomics-Slides_insertimage_15.png)
+  ![](images/PWA-4_Metabolomics-Slides_insertimage2_15.png)
   
 ## GSEA Extensions/Alternatives {.smaller}
 
@@ -559,7 +559,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 - Most popular option is Mummichog (Li et al. 2013).
 
-![](PWA-4_Metabolomics-Slides_insertimage_16.png)
+![](images/PWA-4_Metabolomics-Slides_insertimage2_16.png)
 
 ## Mummichog pathway mapping {.smaller}
 
@@ -573,7 +573,7 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 
 ## Mummichog change of approach
 
-![ Mummichog redefines the work flow of untargeted metabolomics ](PWA-4_Metabolomics-Slides_insertimage_18.png)
+![ Mummichog redefines the work flow of untargeted metabolomics ](images/PWA-4_Metabolomics-Slides_insertimage2_18.png)
 
 ::: {.notes}
 
@@ -601,19 +601,19 @@ metabolic network.
 
 ## Hypothesis Tests Decision Table
 
-![In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and Type II errors)](PWA-4_Metabolomics-Slides_insertimage_19.png)
+![In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and Type II errors)](images/PWA-4_Metabolomics-Slides_insertimage2_19.png)
 
 ## Why Multiple testing matters
 
-![](PWA-4_Metabolomics-Slides_insertimage_20.png)
+![](images/PWA-4_Metabolomics-Slides_insertimage2_20.png)
 
 ## TYpe I error not useful here
 
-![](PWA-4_Metabolomics-Slides_insertimage_21.png)
+![](images/PWA-4_Metabolomics-Slides_insertimage2_21.png)
 
 ## How to deal with this issue?
 
-![](PWA-4_Metabolomics-Slides_insertimage_22.png)
+![](images/PWA-4_Metabolomics-Slides_insertimage2_22.png)
 
 ## *Family Wise Error Rate*
 
@@ -673,7 +673,7 @@ kableExtra::kable(Ordered)
 - Multiple testing issues
 
 
-![](PWA-4_Metabolomics-Slides_insertimage_23.png)
+![](images/PWA-4_Metabolomics-Slides_insertimage2_23.png)
 
 ::: {.notes}
 
@@ -716,19 +716,19 @@ Recommendation: Develop and use simulated or experimental ground-truth datasets 
 
 ::: {.center}
 
-![Common pathway analysis tools for metabolomics data.](PWA-4_Metabolomics-Slides_insertimage_24.png)
+![Common pathway analysis tools for metabolomics data.](images/PWA-4_Metabolomics-Slides_insertimage2_24.png)
 
 :::
 ## A comparison of tools
 
 ::: {.center}
 
-![[Evaluation and comparison of bioinformatic tools for the enrichment analysis of metabolomics data](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-2006-0) ](PWA-4_Metabolomics-Slides_insertimage_26.png)
+![[Evaluation and comparison of bioinformatic tools for the enrichment analysis of metabolomics data](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-2006-0) ](images/PWA-4_Metabolomics-Slides_insertimage2_26.png)
 :::
 
 ## The space of tools (in 2017)
 
-![](PWA-4_Metabolomics-Slides_insertimage_27.png)
+![](images/PWA-4_Metabolomics-Slides_insertimage2_27.png)
 
 ## Not the same, not that different
 
