@@ -1,0 +1,803 @@
+---
+title:  "Pathway Analysis for metabolomics"
+author: "Alex Sanchez"
+format:
+  revealjs: 
+    incremental: false  
+    transition: slide
+    background-transition: fade
+    transition-speed: slow
+    scrollable: true
+    menu:
+      side: left
+      width: half
+      numbers: true
+    slide-number: c/t
+    show-slide-number: all
+    progress: true
+    css: "css4CU.css"
+    theme: sky
+    embed-resources: true
+knit:
+  quarto:
+    chunk_options:
+      echo: true
+      cache: false
+      prompt: false
+      tidy: true
+      comment: NA
+      message: false
+      warning: false
+    knit_options:
+      width: 75
+#bibliography: "Metabolomics.bib"
+editor_options: 
+  chunk_output_type: console
+---
+
+# Introduction and Objectives
+
+## Introducing myself
+
+:::{.center}
+![](images/PWA-4_Metabolomics-Slides_insertimage2_25.png){width=80%}
+:::
+
+## Introducing Our groups
+
+<br>
+
+![Statistics & Bioinformatics and Nutrition & Metabolomics groups @ UB ](images/PWA-4_Metabolomics-Slides_insertimage_1.png)
+
+## Session objectives
+
+- Overview of Patwhay Analysis for Metabolomics
+
+- Introduce its components and 
+
+- Go through some methods with some detail<br>
+
+- Discuss some limitations and provide recomendations.
+
+- Introduce some tools for Pathway Analysis
+
+- Get a practical grasp of how to apply it.
+
+
+## Session Outline
+
+1. Introduction and objectives
+
+2. Metabolite lists: What do they mean
+
+3. Information sources to support interpretation
+
+4. Methods and Tools to extract information
+  
+5. The limitations of PwA. Some recommendations
+
+6. Software tools for PwA
+
+7. Practical session
+
+
+## Health, Disease and Pathways {.smaller}
+
+- Metabolism is a complex network of chemical reactions within the confines of a cell that can be analyzed in self-contained parts called pathways.
+
+- We often assume that “normal” metabolism is what happens in healthy state or, that disease can be associated with some type of alteration in metabolism.
+
+![Characterization of disease attempted studying how ths disrupts pathways](images/PWA-4_Metabolomics-Slides_insertimage_9.png)
+
+ 
+## So what is Pathway Analysis?  {.smaller}
+
+- ... any analytic technique that benefits from biological pathway or molecular network information to gain insight into a biological system. (Creixell et alt., Nature Methods 2015 (12 (7))
+
+- Pathway Analysis methods rely on high throughput information provided by omics technologies to: 
+  - Contextualize findings to help understand biological processes
+  - Identify fetures associated with a disease
+  - Predict drug targets
+  - Understand how to intervene in disease
+  - Conduct target literature searches
+  - Integrate diverse biological information
+
+# From samples to *features* lists
+
+## Bioinformatics workflows
+
+
+```{r, fig.width=100, fig.align='center', fig.cap='[A Metabolomics Worflow Example](https://doi.org/10.3390/metabo12040357)'}
+#knitr::include_graphics("images/PWA-4_Metabolomics-Slides_insertimage_8.png")
+```
+
+![[Metabolomics Worflow Example](https://doi.org/10.3390/metabo12040357)](images/PWA-4_Metabolomics-Slides_insertimage_8.png){width=120%}
+
+
+## From samples to *features* lists (2)
+
+![Metabolomics Workflows in MetaboAnalyst 5.0](images/PWA-4_Metabolomics-Slides_insertimage_3.png)
+
+## Analysis yields metabolites lists {.smaller}
+
+- A typical analysis can result in diverse types of metabolite lists:
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+:::{.center}
+
+<!-- ![An unordered list of metabolite IDs](images/PWA-4_Metabolomics-Slides_insertimage_6.png){width=50%} -->
+
+```{r echo=FALSE}
+library(dplyr)
+x <- read.csv("data/cachexia-t_test_all.csv") %>% 
+  dplyr::arrange(p.value) %>%
+  dplyr::select(X) %>% rename("Metabolites"=X)
+head(x,12)
+```
+*Top 10 most different metabolites in the Cachexia dataset*
+
+- Truncated
+- Unordered
+- Only has metabolite IDs
+
+:::
+:::
+
+::: {.column width='60%'}
+![Fold changes and AUC of metabolites whose concentrations were significantly increased in the patients with breast cancer compared to the healthy controls](images/PWA-4_Metabolomics-Slides_insertimage_4.png)
+
+- All the features analyzed
+- Ordered or *ranked*
+- IDs and *effect size* measures
+
+:::
+
+::::
+
+# Interlude: The names of metabolites
+
+## An open problem: Metabolites IDs
+
+- To be able to do Pathway Analysis, metabolites need to be *mappable* to their sources of information.
+
+  - Must be uniquely identifiable by  names/IDs.
+  - Must be possible to link/relate these names/IDs with the corresponding IDs in the source of information we wish to rely.
+  
+- This is *far from possible* for all metabolites.
+- Uniquely and unambiguosly naming all metabolites is, in the best of cases, "work in progress".
+
+## Different annotation levels
+
+<!-- jo aquí diria que això pot dependre de la precisó del mètode de detecció -->
+1. **Exact structure**, including stereochemistry and bond geometry
+2. **Regiochemistry level** (stereochemistry and bond geometry unknown)
+3. **Molecular species level** (regiochemistry unknown)
+4. **Species level** (no information on structural features)
+
+## Many sources for names
+![Some compund databases](images/databases.png)
+
+## Many names and descriptors {.smaller}
+
+<!-- jo aquí diria que els més precisos o inequívocs, els computats, són els que menys es fan servir. I no és d'estranyar, vist la pinta que fan-->
+
+- **Common names**
+  - E.g. *Cholesterol*. Useful for chemists. 
+  - Difficult to track (any small change makes it another name).
+- **Identifiers from _popular_ databases**
+
+  - More precise than common names but 
+  - With possible discordances among databases.
+  
+```{r echo=FALSE}
+library(metaboliteIDmapping)
+cholest <- filter(metabolitesMapping, Name=="Cholesterol")
+head(cholest[,4:10])
+
+```
+
+- **Computed descriptors**
+  - IUPAC name, InChI, InChIKey,   - SMILES (canonical or isomeric)
+  - Informative but hard to manage
+
+## Computed descriptors for Cholesterol
+
+![Computed descriptors for Cholesterol](images/chol_descriptors.png)
+
+<!-- IUPAC Name: (1S,2R,5S,10S,11S,14R,15R)-2,15-dimethyl-14-[(2R)-6-methylheptan-2-yl]tetracyclo[8.7.0.0^{2,7}.0^{11,15}]heptadec-7-en-5-ol -->
+  
+
+
+## Many synonyms {.smaller}
+<!-- i que, precisment, els que més es fan servir, tenen un munt de sinònims -->
+![Other names for Cholesterol](images/chol_names.png)
+
+
+
+<!-- ## Many solutions {.smaller} -->
+<!-- ![This study highlights the need for standardized and unified metabolite datasets to enhance the reproducibility and comparability of metabolomics studies.](images/PMID38132849.png) -->
+
+<!-- [https://pubmed.ncbi.nlm.nih.gov/38132849/](https://pubmed.ncbi.nlm.nih.gov/38132849/) -->
+
+## What to do in practice ("real life")
+
+- Try to name your metabolites using standard ids **from the very beginning**
+
+- Locate a dictionary or some id-converter that allows translating from one type of IDs to another *when needed*
+
+- Keep in mind that many translations can end up in missing correspondence so decreasing your list size.
+
+## An example dictionary
+
+::::{.small}
+```{r, echo=FALSE}
+MW_ST000291__map <- read.csv("./data/MW_ST000291__map.csv")
+kableExtra::kable(MW_ST000291__map[1:10,1:6]) %>% kableExtra::kable_styling()
+```
+
+- A list of 1358 PubChem identifiers from study [ST000291](https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Study&StudyID=ST000291) downloaded from [Metabolomics Workbench](https://www.metabolomicsworkbench.org/) was translated with `MetaboAnalyst ID converter`.
+- **Only 623 (646) metabolites had a match in HMDB (KEGG)**.
+::::
+
+# Back to Pathway Analysis
+
+## The *where to, now?* question {.smaller}
+
+Once a list of feature is obtained it can be studied on a one-by-one basis
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+  - Select some features for biochemical validation,
+  
+  - Map individual features to specific pathways,
+  
+  - Perform functional assays,
+  
+  - Do a literature search ...
+
+:::
+
+::: {.column width='60%'}
+
+![](images/PWA-4_Metabolomics-Slides_insertimage_10.png)
+
+:::
+
+::::
+
+- This will yield useful information, but
+
+  - It may be slow and resource-consuming
+  - It does not account for **interaction** between features.
+
+## And here comes Pathway Analysis
+
+- Pathway Analysis studies the list as a whole.
+
+- With this aim it combines:
+  - The list of features, with
+  - Pre-existing sources of information related to them
+
+- And, after some processing, it yields 
+    - some type of scores about
+    - groups of features appearing to be significantly related with the process being studied.
+
+
+## How can we interpret these lists?
+
+
+![From Lists to Biology ](images/PWA-4_Metabolomics-Slides_insertimage_11.png)
+
+# Ontologies, Databases and Metabolite Sets
+
+## The elements of Pathways Analysis
+
+- Loosely speaking, to do Pathway Analysis one needs:
+
+  - A list of features, characterizing a  process.
+
+  - A source of information about these features.
+
+  - An algorithm to highlight relevant information by linking *list* and *source*.
+
+  - A tool implementing the algorithm.
+
+- In this section, we focus on *sources of information* and on *how to provide it to the algorithms*.
+
+
+## Sources of information for PWA
+
+![Some common databases in Metabolomics ](images/PWA-4_Metabolomics-Slides_insertimage_14.png)
+
+## Ontologies, Databases et alt.{.smaller}
+
+Although incomplete s.o.i are multiple and diverse.
+
+- **Ontologies:** Structured vocabularies for categorizing and describing relationships within a domain. [GO](https://geneontology.org/), [ChEBI](https://www.ebi.ac.uk/chebi/)
+- **Pathway Databases:** Detailed information about biological pathways and their the biological context. [KEGG](https://www.genome.jp/kegg/), [Reactome](https://reactome.org/), [SMPDB](https://www.smpdb.ca/).
+- **Compound Databases:** Information on small molecules for identification and characterization of metabolites. [HMDB](https://hmdb.ca/), [PubChem](https://pubchem.ncbi.nlm.nih.gov/), [LipidMaps](https://lipidmaps.org/), and [MassBank](https://massbank.eu/MassBank/)
+- And many more: **Networks DBs**, **Spectral DBs**, ...
+
+## The  Human Metabolome DB {.smaller}
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+![The  Human Metabolome Database ](images/PWA-4_Metabolomics-Slides_insertimage_15.png)
+
+:::
+
+::: {.column width='60%'}
+
+- Detailed information about human
+metabolites, their structures, pathways,
+origins, concentrations, functions and
+reference spectra
+- HMDB has 248,855 metabolites, 132,335
+pathways, 3.1 million MS and NMR spectra,
+metabolite biomarker data on >600 diseases
+- A resource established to provide reference
+metabolite values for human disease, human
+exposures & population health
+- Captures both targeted and untargeted
+metabolomics (and exposomics) data
+
+:::
+
+::::
+
+
+## The Food Constituent Database {.smaller}
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+![The Food Constituent Database ](images/PWA-4_Metabolomics-Slides_insertimage_16.png)
+
+:::
+
+::: {.column width='60%'}
+
+- Database of 70,000+ compounds
+found in 727 foods and their
+effects on flavour, aroma, colour
+and human health
+- Comprehensive concentration
+information to ID foods that are
+rich in particular micronutrients
+- Links chemistry to food types
+(biological species) to flavour,
+aroma, colour and human health
+- Supports sequence, spectral, structure and text searches
+
+:::
+
+::::
+
+
+## The KEGG DB {.smaller}
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+![Kyoto Encyclopedia of Genes and Genomes ](images/PWA-4_Metabolomics-Slides_insertimage_17.png)
+
+:::
+
+::: {.column width='60%'}
+
+- The “Go-to” Metabolic Pathway Database
+- Has 535 “canonical” pathway diagrams or maps covering 5994 organisms for a total of 604,808
+pathways
+-  ~170 metabolic pathways covering 18,553
+compounds, includes many disease pathways (80), protein signaling (70) pathways, and biological
+process pathways (70)
+-  Metabolic pathways are highly schematized and mostly limited to catabolic and anabolic processes
+
+:::
+
+::::
+
+
+## Small Molecule Pathway Database {.smaller}
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+![The Small Molecule Pathway Database (SMPDB) ](images/PWA-4_Metabolomics-Slides_insertimage_18.png)
+
+:::
+
+::: {.column width='60%'}
+
+- Nearly 48,900 hand-drawn small molecule pathways
+  – 404 drug action pathways
+  – 20,251 metabolic disease pathways
+  – 27,876 metabolic pathways
+  – 160+ signaling and other pathways
+
+- Depicts organs, cell compartments, organelles, protein locations, and protein quaternary structures
+
+- Maps gene chip & metabolomic data
+
+- Converts gene, protein or chemical lists to pathways or disease diagnoses
+:::
+
+::::
+
+# Obtaining Metabolite Sets
+
+## PWA and Metabolite Sets
+
+![](images/MetaboliteSets01.png)
+
+## Sources of Metabolite Sets
+
+- Some sources of information directly provide metabolite sets. E.g: **Chemical Ontologies**, **The KEGG Pathway Database**
+
+- For compound DBs, Metabolite sets may be built
+  - By **manual curation**
+  - Automatically, eg. using clustering approaches such as **MetaMap** or **Chemical Similarity clustering**
+    
+
+## Chemical Ontologies 
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_3.png)
+
+
+## Metabolites Set libraries
+
+![Overview of MSEA's metabolite set libraries ](images/PWA-4_Metabolomics-Slides_insertimage_20.png)
+
+## Metamap clusters
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_4.png)
+
+## Chemical similarity clusters
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_5.png)
+
+
+# Analysis Methods
+
+## Types of Pathway Analysis
+
+![[Khatri et alt. 10 years of Pathway Analysis](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002375)
+](images/PWA-4_Metabolomics-Slides_insertimage2_6.png)
+
+## Over-representation Analysis
+
+- Given
+  - A feature (metabolites) list (from some study).
+  - A collection of feature (metabolites) sets (...)
+  
+- The goal is finding out if any of the  feature sets *surprisingly enriched* in the feature list?
+
+  - Need to define "surprisingly” (statistics)
+  - Need to deal with test multiplicity?
+
+## Obtaining feature lists
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_7.png)
+
+## Assessing "surprisingly" {.smaller}
+
+:::: {.columns}
+
+::: {.column width='60%'}
+
+Given a feature list, “fl”, and a feature set, “FS”, check if the % of genes in “fl” annotated in “FS” the same as the % of genes globally annotated in “FS”?
+
+- If both percentages are similar $\rightarrow$ *No Enrichment*.
+- If the % of features in “FS” is greater in “fl” than in the rest of genes $\rightarrow$ *“fl” is enriched in “GS”* 
+
+:::
+
+::: {.column width='40%'}
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_8.png)
+
+:::
+
+::::
+
+## Example
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_9.png)
+
+## Assess significance: Fisher test
+
+- The example shows two cases
+  - One  where percentages are quite different
+  - Another where percentages are similar.
+  
+- How can we set a threshold to decide that the difference is “big enough” to call it “Enriched”
+  - Use Fisher Test or, equivalently,
+  - a test to compare proportions or 
+  - a hypergeometric test.
+
+## Example 1: Surprisingly enriched
+
+
+![P-value small, odds-ratio high: List is surprisingly enriched in Feature Set ](images/PWA-4_Metabolomics-Slides_insertimage2_12.png)
+
+
+## Example 2: Non-enriched
+
+![P-value high, odds-ratio around 1: List is not  enriched in Feature Set ](images/PWA-4_Metabolomics-Slides_insertimage2_11.png)
+
+
+## Summary: Recipe for ORA
+
+1. Define feature list (e.g. thresholding analyzed list ) and background list,
+2. Select feature sets to test for enrichment,
+3. Run enrichment tests and adjust for multiple testing
+4. Interpret your enrichments
+5. Publish!  ;)
+
+## Posible problems with ORA
+
+- No “natural” value for the threshold
+- Possible loss of statistical power due to thresholding
+- No resolution between significant signals with different strengths
+- Weak signals neglected
+- Different results at different threshold settings
+- Based on the wrong assumption of independent feature (or feature group) sampling, which increases false positive predictions.
+
+## Functional Class Scoring
+
+- Also known as:
+
+  - *Analysis of ranked lists*
+
+  - *Metabolite Set Enrichment Analysis*
+
+- Rooted in the  *Gene Set Enrichment Analysis* (GSEA) method developed  to overcome ORA limitations.
+
+:::{.center}
+![](images/PWA-4_Metabolomics-Slides_insertimage2_14.png){width=70%}
+:::
+
+## The GSEA Method (1) {.smaller}
+
+- GSEA method compares, for each feature set, the distribution of the test statistic within the set with the overall distribution of those statistics, i.e. the calculated for all genes.
+
+- To do this, test statistics are ranked (from biggest to smallest) and for gene set a running sum is computed such that 
+  - If a feature is in the  set *add* a certain quantity ($\sqrt{(N-N_s)/N_s}$) 
+  - If a feature is not in the set, *substract* a (small) quantity ($\sqrt{N_s/(N-N_s)}$)
+  
+## The GSEA tests {.smaller}
+
+- If the distribution of the *running sum* doesn't differ from a *random walk* then the list can be declared significantly enriched in that set.
+
+- Original test was a Kolmogorov-Smirnov test (K-S test) statistic with P-values  computed by randomization.
+  
+  ![](images/PWA-4_Metabolomics-Slides_insertimage2_15.png)
+  
+## GSEA Extensions/Alternatives {.smaller}
+
+- **Wilcoxon test**:  
+  I uses rank-based methods to assess whether the feature sets are distributed differently across the groups. 
+
+- **Globaltest**: 
+  - It evaluates the association between a predefined set of features and a clinical outcome of interest. 
+  - Instead of testing individual features, it assesses the global effect of the gene set on the outcome. 
+  - This method is beneficial in identifying pathways or feature sets that have a combined influence on a phenotype, rather than relying on individual feature-level analysis.
+
+## PWA for untargeted studies
+
+- What to do when you don’t know what the metabolites ions are?
+
+- Most popular option is Mummichog (Li et al. 2013).
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_16.png)
+
+## Mummichog pathway mapping {.smaller}
+
+- Ions are divided into significant and non-significant groups.
+  - E.g 1000 ions,150 with p-val <0.05
+- Repeat many times
+  - Randomly take 150 of the remaining non-significant ions and mapped onto known pathways.
+  - This provides an estimate of how likely it is to observe random association of non-significant ions with pathways.
+  
+- The significant ions are now mapped to the pathways and evidence is sought for enhanced associations (Fisher exact test)
+
+## Mummichog change of approach
+
+![ Mummichog redefines the work flow of untargeted metabolomics ](images/PWA-4_Metabolomics-Slides_insertimage2_18.png)
+
+::: {.notes}
+
+1. (A) In the work flow of untargeted metabolomics, the 
+conventional approach requires the metabolites to be identified before pathway/network analysis, while mummichog (blue arrow) predicts
+functional activity bypassing metabolite identification. 
+
+2. (B) Each row of dots represent possible matches of metabolites from one m/z feature, red the
+true metabolite, gray the false matches. The conventional approach first requires the identification of metabolites before mapping them to the
+metabolic network. 
+
+3. (C) mummichog maps all possible metabolite matches to the network and looks for local enrichment, which reflects the true activity because the false matches will distribute randomly
+:::
+
+# Multiple testing problem and adjustments
+
+## Multiple testing
+
+- Whatever approach we use for pathway Analysis there is a common characteristic: 
+*Every test is applied for every feature set in a long collection of sets*
+
+- This leads to a *multiple testing problem*: the Type I error probability of falsely rejecting the null hypothesis increases with the number of tests.
+
+- In order to avoid an artificial inflation of *False positive discoveries* some adjustments are recommended.
+
+## Hypothesis Tests Decision Table
+
+![In a test with a null and an alternative hypothesis there are 2 possible right decisions and two possible incorrect ones (Type I and Type II errors)](images/PWA-4_Metabolomics-Slides_insertimage2_19.png)
+
+## Why Multiple testing matters
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_20.png)
+
+## TYpe I error not useful here
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_21.png)
+
+## How to deal with this issue?
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_22.png)
+
+## *Family Wise Error Rate*
+
+- Let $M$ be the number of annotations tested.
+- Given p-value, $p$  compute $p_{adj}=p\times M$, or 
+- Given significance level $\alpha$ compute $\alpha_{adj}=\alpha/M$.
+
+- The adjusted P-value, $p_{adj}$ is  greater than or equal to the probability that **one or more** of the observed enrichments are due to random draws.  
+
+- This adjustment is said to *controling for the Family-Wise Error Rate* (FWER).
+
+- Bonferroni method controls FWER.
+
+
+## Bonferroni Caveats
+
+- This adjustment is very stringent and can “wash away” real enrichments leading to false negatives,
+
+- Often one is willing to accept a less stringent condition, that is accepting some false positives to avoid too many false negatives.
+
+- This is may be done using the “*false discovery rate*” (FDR), which leads to a gentler correction when there are real enrichments.
+
+## False Discovery Rate
+
+- FDR is the expected proportion of "False Positives" that is of the observed enrichments due to chance.
+- Less restrictive than Bonferroni adjustment which is a bound on the probability that **any one** of the observed enrichments could be due to random chance.
+- Typically, FDR adjustments are calculated using the Benjamini-Hochberg procedure.
+- FDR threshold is often called the “q-value”
+
+## An example {.smaller}
+
+```{r echo=FALSE}
+cachexia.t_test <- read.csv("data/cachexia-t_test_all.csv", row.names=1)
+rawPs <- cachexia.t_test$p.value
+names(rawPs) <- row.names(cachexia.t_test)
+bonfP <- p.adjust(rawPs, method= c("bonferroni"))
+bhP <-  p.adjust(rawPs, method= c("BH"))
+pVals <-data.frame(raw = rawPs, Bonferroni=bonfP, FDR = bhP)
+Ordered <-round(pVals[order(pVals$raw),] ,6)
+kableExtra::kable(Ordered)
+```
+
+# Limitations and Recommendations
+
+## Some limitations {.smaller}
+
+- Incomplete Pathway Databases
+
+- Metabolite Misidentification
+
+- Chemical Bias of Assays
+
+- Background Set Selection
+
+- Selection of Compounds of Interest
+
+- Multiple testing issues
+
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_23.png)
+
+::: {.notes}
+
+### Incomplete Pathway Databases
+
+Limitation: Pathway databases are often incomplete and evolve over time, leading to discrepancies in pathway coverage and definitions.
+Recommendation: Use up-to-date databases and consider integrating multiple databases to improve coverage and accuracy​​.
+
+### Metabolite Misidentification
+
+Limitation: Metabolite misidentification can result in both false-positive and false-negative pathway identifications.
+Recommendation: Utilize stringent identification criteria and multiple identification methods to minimize misidentification rates​​.
+
+### Chemical Bias of Assays
+
+Limitation: Different analytical platforms have biases toward detecting specific types of compounds, affecting pathway accessibility.
+Recommendation: Combine multiple assay types to cover a broader range of metabolites and acknowledge assay-specific biases in the analysis​​.
+
+### Background Set Selection
+
+Limitation: The choice of background set can significantly influence the results of over-representation analysis (ORA).
+Recommendation: Define an assay-specific background set that includes all detectable compounds to reduce false-positive pathways​​.
+
+### Selection of Compounds of Interest
+
+Limitation: The criteria for selecting compounds of interest (e.g., significance thresholds) greatly impact PA results.
+Recommendation: Use appropriate statistical thresholds and apply multiple testing correction methods to ensure robust selection of compounds of interest​​.
+
+### Lack of Ground-Truth Datasets
+
+Limitation: The absence of ground-truth datasets makes it difficult to validate PA methods and results.
+Recommendation: Develop and use simulated or experimental ground-truth datasets to better assess PA methods and improve their accuracy
+
+:::
+
+
+# Pathway Analysis Tools
+
+## PAthway Analysis Tools
+
+::: {.center}
+
+![Common pathway analysis tools for metabolomics data.](images/PWA-4_Metabolomics-Slides_insertimage2_24.png)
+
+:::
+## A comparison of tools
+
+::: {.center}
+
+![[Evaluation and comparison of bioinformatic tools for the enrichment analysis of metabolomics data](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-2006-0) ](images/PWA-4_Metabolomics-Slides_insertimage2_26.png)
+:::
+
+## The space of tools (in 2017)
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_27.png)
+
+## Not the same, not that different
+
+
+- ORA tools provided consistent results among tools revealing that these analyses are robust and reproducible regardless of their analytic approach.
+
+- Redundancy of identifiers, Use of chemical class identifiers and Incompleteness of databases sets limit the extent of the analyses and reduce their accuracy. 
+
+- More work in the completeness of metabolite/pathway databases is required to get more accurate and global insights of the metabolome.
+# Summary, and all that
+
+## Summary
+
+- Pathway Analysis is a useful approach to help gain biological understanding from omics-based studies.
+
+- There are many ways, many methods, many tools
+
+- Guide the choice by
+ a combination of *meaning*, *availability*, *ease of use* and *usefulness*. 
+
+- Usually obtained from a good understanding of what it does and ow it is done.
+
+- Different methods may yield different results.
+<br>Worth checking!
+
+## Acknowledgements
+
+
+
+## References and resources
+
+

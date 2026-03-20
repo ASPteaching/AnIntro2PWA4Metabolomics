@@ -1,0 +1,1419 @@
+---
+title: "Metabolite Set Enrichment Analysis"
+subtitle: "ORA and MSEA for metabolomics"
+author: "Alex Sanchez"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    code_folding: hide
+    self_contained: true
+    number_sections: true
+    theme: readable
+  pdf_document:
+    toc: true
+    toc_depth: '3'  
+knitr:
+  opts_chunk:
+    echo: true
+    cache: false
+    prompt: false
+    tidy: true
+    comment: NA
+    message: false
+    warning: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+if (!require("enrichmet", quietly = TRUE))
+  devtools::install_git("https://github.com/biodatalab/enrichmet.git")
+  # BiocManager::install("enrichmet")
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(stringr)
+  library(readr)
+  library(localEnrichment)
+})
+
+print_tbl <- function(x, n = 6) {
+  print(dplyr::as_tibble(x), n = n)
+}
+```
+
+# Introduction
+
+Enrichment analysis aims to facilitate the biological interpretation of omics results by relating lists of features (genes, proteins, metabolites) to prior biological knowledge stored in databases (pathways, ontologies, chemical classes, etc.).
+
+In genomics, ORA and GSEA workflows are relatively well standardized,  and code-based (`clusterProfiler` or graphical-interface (`g-profiler` or `Reactome`) are well established tools. 
+
+In metabolomics, however, the scenario is more-fragmented and available tools take more heterogeneorus approaches and rely on different
+identifier systems and pathway databases.
+
+The goals of this document are:
+
+1. **Quick-start:** show how to run basic over-representation analysis (ORA)  and metabolite set enrichment analysis (MSEA/GSEA-like) with several tools.
+2. **Naïve benchmarking:** compare the results of these tools on the same datasets.
+
+We will focus on:
+
+- `enrichmet` (pathway enrichment, GSEA, centrality, plots)
+- `localEnrichment` (our own infrastructure for metabolite sets and ORA/MSEA)
+- `ChemRich` (https://raw.githubusercontent.com/barupal/ChemRICH/refs/heads/master/chemrich_minimum_analysis.R) 
+- `MetaboAnalystR`, has become very hard to make it work so the examples will be run from its web site and downloaded.
+
+Rather than exhaustively exploring each tool, we restrict ourselves to a reproducible workflow:
+
+1. We have selected a few public metabolite datasets.
+The selection has been based on "popularity" and availability, but the workflow should be *easily adaptable to new datasets*.
+
+2. We have prepared an  **ad-hoc collection of metabolite sets**, that is, Metabolite sets that have been programatically prepared, as data.frames and `EnrichmentSet` (an S4 class created to store Metabolite Sets Collections), from the `Lheuristic` package, to be used for these analyses.
+
+3. For each dataset we have prepared:
+   - A list of **significant metabolites** (*signature*),
+   - A **background** tailored to that signature created either ad-hoc or from the original 
+   - An **effect size** table with summary statistics that can be used for MSEA tests.
+   
+4. Given these components we will run enrichment analysis on them (ORA and MSEA when possible) with the different tools on the same sets.
+
+5. As more analyses are avilable we will increase comparisons among results to check which analyses are related and which lead different results because they are indeed different analyses.
+
+
+# Data and metabolite sets
+
+Any pathway analysis requires, at least, two inputs:
+
+- A list of features usually associated with a phenotype (e.g. metabolites differentially quantified between two groups). 
+
+- A source of annotations for these features, that can be generically described as *Feature sets* or, as in this case *Metabolite Sets*.
+
+## The datasets
+
+We use three datasets that have been preprocessed elsewhere (see file: [PrepareData-4-EnrichmentAnalysis.Rmd](PrepareData-4-EnrichmentAnalysis.Rmd)) and 
+
+1. The **ia** dataset. This is a popular example used by `MetaboAnalyst`, where a comparison between affected and control patients is performed. It has the drawback that only  *differential*  metabolites are provided, which makes it only partially interesting for some types of analyses. We keep it for its popularity.
+
+2. The **ST000291** dataset, downloaded from Metabolomics Workbench, and used in a `fobitools` use case. This is obtained by a nutritional intervention study where a comparion among consumption of Apple, Cranberries and Baseline has been performed. In this case we have the full dataset and the results of comparing the groups using `limma` whih leads to around 20 differential metabolites. Here, we focus only on the *Cranberry vs Baseline* comparison, although lists from other comparisons are also available and may be used when a compare-comparisons approach is considered. This study seems to have been made using a cross-over design that the authors have later omitted when providing the samples. Because it is only for instructional purposes, this flaw will be ignored.
+
+3.  The *KrasG12D mutation dataset*, a list of cancer related metabolites used by the `Enrichmet` package in one of its tutorial.
+
+
+### Loading datasets
+
+The data for this use case has been prepared elsewhere and is available in the `data` directory.
+
+For each dataset we have the list of metabolites, the analysis results in the form of a topTable and a mapping performed with MetaboAnalyst between the metabolite ids and several databases as shown below.
+
+#### Cachexia dataset
+
+```{r loadCachexia}
+# Cachexia: topTable + ID mapping
+cachexia_map_path  <- "data/Cachexia_map.csv"
+cachexia_tt_path   <- "data/Cachexia_topTable.Rda"
+
+Cachexia_map <- read.csv(cachexia_map_path, stringsAsFactors = FALSE)
+load(cachexia_tt_path)  # loads 'topCachexia'
+
+cat("Cachexia_map:\n")
+print_tbl(head(Cachexia_map))
+cat("\ntopCachexia:\n")
+print_tbl(head(topCachexia))
+```
+
+#### Metabolomics Workbench ST000291 dataset
+
+```{r loadST291}
+# ST000291: Cranberry vs Baseline topTable + ID mapping
+st291_map_path   <- "data/MW_ST000291__map.csv"
+st291_tt_path    <- "data/MW_ST000291-limma_res.Rda"
+
+MS_ST000291_map <- read.csv(st291_map_path, stringsAsFactors = FALSE)
+load(st291_tt_path)  # loads 'topCranVSBase'
+topCranVSBase<- limma_resCB; rm(limma_resCB)
+topCranVSBase_HMDB<- limma_HMDB_CB; rm(limma_HMDB_CB)
+
+cat("\nMS_ST000291_map:\n")
+print_tbl(head(MS_ST000291_map))
+cat("\ntopCranVSBase:\n")
+print_tbl(head(topCranVSBase))
+cat("\ntopCranVSBase (HMDB):\n")
+print_tbl(head(topCranVSBase_HMDB))
+ 
+```
+
+#### `enrichmet` package example dataset
+
+
+```{r loadEnrichMetData}
+enrichmet_path <- "data/enrichmet_example.Rda"
+load(enrichmet_path)  # loads 'topCranVSBase'
+cat("\nEM_summaryStats:\n")
+print_tbl(head(EM_summaryStats))
+# cat("\nEM_mapping_df:\n")
+# print_tbl(head(EM_mapping_df))
+# cat("\nEM_kegg_lookup:\n")
+# print_tbl(head(EM_kegg_lookup))
+# cat("\nEM_PathwayVsMetabolites:\n")
+# print_tbl(head(EM_PathwayVsMetabolites))
+# cat("\nKEGGset_KEGG:\n")
+# show(KEGGset_KEGG)
+
+```
+
+## Metabolite Sets
+
+We also use a **unified collection of metabolite sets**, previously constructed and saved as:
+
+- `KEGGset_HMDB`, `KEGGset_HMDB_df`
+- `KEGGset_PubChem`, `KEGGset_PubChem_df`
+- `ChemicalClassSet`, `ChemicalClassSet_df`
+- `SMPDBset`, `SMPDBset_df`
+
+All sets collections, but `KEGGset_PubChem` use **HMDB IDs** as feature identifiers. `KEGGset_PubChem` uses **PubChemIDs**.
+
+### Load Metabolite Sets
+
+Metabolite sets have been prepared elsewhere and saved as `EnrichmentSet` objects of the class defined in the `localEnrichment` package.
+
+```{r load-data}
+# Metabolite sets (EnrichmentSet collection)
+# mets_collection_path <- "databases/MetaboliteSets_Collection.Rda"
+# load(mets_collection_path)
+
+load("../Metabolites_Sets/results/MetaboliteSets_Collection.Rda")
+
+### Parche. Pendent de netejar-ho al script  que ho crea
+KEGGset_HMDB_df <- df_HMDB
+KEGGset_PubChem_df <- df_PubChem
+
+###
+
+cat("\nEnrichmentSet objects loaded:\n")
+summary(KEGGset_HMDB);      cat("\n")
+summary(KEGGset_PubChem);      cat("\n")
+summary(ChemicalClassSet);    cat("\n")
+summary(SMPDBset);            cat("\n")
+
+cat("\nKEGGset_HMDB_df:\n")
+print_tbl(head(KEGGset_HMDB_df))
+
+cat("\nKEGGset_PubChem_df:\n")
+print_tbl(head(KEGGset_PubChem_df))
+
+cat("\nChemicalClassSet_df:\n")
+print_tbl(head(ChemicalClassSet_df))
+
+cat("\nSMPDBset_df:\n")
+print_tbl(head(SMPDBset_df))
+
+```
+
+The Metabolite sets for the `Enrichmet` package example data have been loaded when loading the example data but are shown here fore consistency.
+
+They consist of a `data.frame` and an `EnrichmentSet` object that has been preprare dfrom this 
+
+```{r}
+cat("\nEM_PathwayVsMetabolites:\n")
+print_tbl(head(EM_PathwayVsMetabolites))
+cat("\nKEGGset_KEGG:\n")
+show(KEGGset_KEGG)
+print_tbl(head(KEGGset_KEGG@data))
+KEGGset_KEGG_df <- as.MetaboliteSetDataFrame(KEGGset_KEGG, "both")
+```
+
+Notice that Metabolite identifiers for this example data are neither HMDB, nor PubChem but KEGG ids!
+
+
+
+
+# Building signatures and backgrounds
+
+Our aim is to derive **signatures** and **backgrounds** that are compatible with the `EnrichmentSet` objects, which use **HMDB IDs**.
+
+We therefore:
+
+1. Map each topTable to HMDB IDs.
+2. Construct a vector of significant HMDB IDs (signature).
+3. Use `filterEnrichmentSet(Eset, ids)` to restrict the metabolite sets to those  that contain at least one of the signature metabolites.
+4. Build a **background** as the union of all metabolites in the filtered sets.
+
+## Cachexia: HMDB mapping and signature
+
+```{r cachexia-hmdb}
+library(tibble)
+
+# Convert topCachexia to tibble with metabolite name
+cachexia_tt <- topCachexia %>%
+  rownames_to_column(var = "Metabolite") %>%
+  left_join(Cachexia_map, by = c("Metabolite" = "Query"))
+
+cat("Cachexia limma table with mapping:\n")
+dim(cachexia_tt)
+print_tbl(cachexia_tt)
+tail(cachexia_tt)
+
+# p-value column and threshold
+p_col_cachexia <- "adj.P.Val"
+alpha_cachexia <- 0.05
+
+# Signature: HMDB IDs of significant metabolites
+cachexia_sig <- cachexia_tt %>%
+  filter(!is.na(HMDB),
+         !!rlang::sym(p_col_cachexia) < alpha_cachexia) %>%
+  pull(HMDB) %>%
+  unique()
+
+length(cachexia_sig)
+cachexia_sig
+```
+
+Note that in this Cachexia dataset we have mostly (> 50%) *differential* metabolites, although it is hard to say if this is due to the fact that the researches only quantified those metabolites or they only reported those.
+A realistic background based purely on the data is therefore. Instead, we derive a *functional background* from the metabolite-set collection.
+
+The background will be constructed artifically by taking all sets in the `KEGGset_HMDB` collection and, from there the HMDB ids of each set.
+
+```{r cachexia-background}
+# Extract background as the union of all HMDB IDs in the filtered sets
+
+cachexia_background <- unique(unlist(KEGGset_HMDB@data$feature_list))
+length(cachexia_background)
+
+intersect(cachexia_sig, cachexia_background) |> length()
+```
+
+We now have all we need to do the Enrichment Analysis on the Cachexia dataset.
+
+- The list of *significant* metabolites: `cachexia_sig`
+```{r}
+str(cachexia_sig)
+```
+
+- The *background* associated with this list: `cachexia_background`
+```{r}
+str(cachexia_background)
+```
+
+- The collections of metabolite sets to do the enrichment Analysis: `KEGGset_HMDB`.
+```{r}
+show(KEGGset_HMDB)
+```
+
+- We can also use `SMPDBset` and `ChemicalClassSet` because these are sets made of HMDB ids.
+```{r}
+show(SMPDBset)
+show(ChemicalClassSet)
+```
+
+## ST000291: PubChem and HMDB mappings and signatures
+
+## ST000291 with PubChem identifiers
+
+The original ST000291 dataset is annotated with `PubChem` identifiers, so we are restricted to work with Metabolite Sets created with PubChem identifiers.
+
+The code below shows how to prepare a list of selected metabolites and background straight from the available information. 
+
+To define the signature we select metabolites with an adjusted p-value of at most 0.33
+
+```{r st291-Pbchem}
+## ST000291: signature (PubChem) and background
+
+# top table from limma
+st291_tt <- topCranVSBase   # ja carregat anteriorment
+
+# signature (adj.P.Val < 0.05)
+ST291_sig <- st291_tt %>%
+  filter(adj_pvalue  < 0.33) %>%
+  pull(PubChemCID) %>%
+  unique()
+
+# background = ALL tested metabolites
+ST291_background <- st291_tt %>%
+  pull(PubChemCID) %>%
+  unique()
+
+cat("Signature size:", length(ST291_sig), "\n")
+cat("Background size:", length(ST291_background), "\n")
+
+```
+
+## ST000291 with HMDB identifiers
+
+Given that many programs can only work with HMDB or KEGG identifiers we have prepared and analyzed a subset of metabolites made only by those that have such ids.
+
+```{r st291-HMDB}
+## ST000291: signature (HMDB) and background
+
+# top table from limma
+st291_tt_HMDB <- topCranVSBase_HMDB   # ja carregat anteriorment
+
+# signature (adj.P.Val < 0.05)
+ST291_HMDB_sig <- st291_tt_HMDB %>%
+  filter(pvalue  < 0.05) %>%
+  pull(feature) %>%
+  unique()
+
+# background = ALL tested metabolites
+ST291_HMDB_background <- st291_tt_HMDB %>%
+  pull(feature) %>%
+  unique()
+
+cat("Signature size:", length(ST291_HMDB_sig), "\n")
+cat("Background size:", length(ST291_HMDB_background), "\n")
+
+```
+
+
+
+## Enrichmet Example: KEGG mappings and signature
+
+The object loaded already contains the signature as `EM_inputMetabolites`. The background can be obtained from the `EM_summaryStats` object.
+
+```{r}
+EM_sig <- EM_inputMetabolites
+EM_background <- EM_summaryStats$met_id
+cat("Signature size:", length(EM_sig), "\n")
+cat("Background size:", length(EM_background), "\n")
+```
+
+
+# Enrichment analysis of the `Cachexia` data
+
+## Over Representation Analysis (ORA)
+
+### ORA with `localEnrichment` and KEGGsets_HMDB
+
+We start doing ORA using KEGG metabolite sets with HMDB identifiers
+
+First perform Fisher test for all sets and select the enriched ones.
+
+```{r}
+library(localEnrichment)
+
+# ORA per Cachexia vs KEGG (HMDB)
+
+ORA_cachexia_KEGG_LE <- ora_test(
+  eset       = KEGGset_HMDB,
+  selected   = cachexia_sig,
+  background = cachexia_background,
+  test       = "fisher",
+  p_adjust   = "BH",
+  min_set_size = 3,
+  max_set_size = 500
+)
+
+# veure com és el resultat
+dplyr::glimpse(ORA_cachexia_KEGG_LE)
+head(ORA_cachexia_KEGG_LE)
+
+```
+
+```{r}
+ORA_cachexia_KEGG_LE_sig <- ORA_cachexia_KEGG_LE %>%
+  dplyr::filter(p_adj < 0.05) %>%
+  dplyr::arrange(p_adj)
+
+nrow(ORA_cachexia_KEGG_LE_sig)
+
+head(ORA_cachexia_KEGG_LE_sig[,1:6], 10)
+
+```
+
+This can be visualized by different approaches.
+
+First clean the Pathway names
+
+```{r}
+clean_pathway_name <- function(x) {
+  return(x)
+}
+
+ORA_cachexia_KEGG_LE_sig <- ORA_cachexia_KEGG_LE_sig %>%
+  dplyr::mutate(set_name_clean = clean_pathway_name(set_name))
+
+top20 <- ORA_cachexia_KEGG_LE_sig %>%  arrange(p_adj) 
+  # %>% dplyr::slice(1:20)
+
+
+# IMPORTANT: nivells únics per ordenar el gràfic
+top20$set_name_clean <- factor(
+  top20$set_name_clean,
+  levels = rev(unique(top20$set_name_clean))
+)
+```
+
+
+```{r}
+localEnrichment::plot_enrichment(
+  results =top20 ,
+  type = c("bar", "dot"),
+  top = 20,
+  x_measure = "-log10(p_adj)",
+  color_by = "p_adj",
+  title = NULL
+)
+```
+
+### ORA with `enrichmet` and KEGGsets_HMDB
+
+`enrichment` cannot work with EnrichmentSets objects -which are defined in `localEnrichment`.
+Instead it uses a data.frame with two columns, "Pathways" and "Metabolites" where metabolites are comma separated IDs.
+
+Such data.frame can be extracted from the EnrichmentSet as:
+
+```{r}
+library(dplyr)
+
+PwVSMet_HMDB <- as.MetaboliteSetDataFrame(
+  KEGGset_HMDB,
+  id_type = "name",
+  id_sep  = ","
+) %>%
+  dplyr::transmute(
+    Pathway = set_name,
+    Metabolites = Metabolites
+  )
+
+```
+
+
+Now we con proceed with the `enrichmet` wrapper function:
+
+```{r}
+ORA_cachexia_KEGG_EM<- perform_enrichment_analysis(
+  inputMetabolites= cachexia_sig,
+  PathwayVsMetabolites= PwVSMet_HMDB,
+  top_n = 100,
+  p_value_cutoff = .25
+)
+```
+
+```{r}
+plot <- create_enrichment_plot(ORA_cachexia_KEGG_EM)
+plot
+```
+
+## Metabolite Set Enrichment Analysis
+
+To run MSEA we will use the whole dataset, not only significant metabolites and, additionally, a measure of effect size.
+
+### MSEA with `localEnrichment` and KEGGsets_HMDB
+
+MSEA in `localEnrichment` has been written to match MetaboAnalyst function so it is also called `qea_test`.
+
+The test requires all the metabolites with an effect size measure.
+
+```{r}
+cachexia_scores<- cachexia_tt$t
+names(cachexia_scores) <- cachexia_tt$HMDB
+```
+
+The test can now be run as:
+
+```{r}
+QEA_cachexia_KEGG_LE<- qea_test(
+  eset       = KEGGset_HMDB,
+  scores = cachexia_scores,
+  nperm = 1000,
+  p_adjust = "BH",
+  min_set_size = 3,
+  max_set_size = 500,
+  return_profiles = FALSE,
+  quiet = TRUE
+)
+
+```
+
+### MSEA with `enrichmet` and KEGGsets_HMDB
+
+In this case we have to provide a more rigid data structure that can be extracted from cachegia_tt.
+
+```{r eval=FALSE}
+data4gsea <- cachexia_tt[,c("HMDB", "P.Value", "logFC")]
+colnames(data4gsea) <- c("met_id", "pval", "log2fc")
+```
+
+
+```{r eval=FALSE}
+head(PwVSMet_HMDB, n=10)
+head(data4gsea, n=12)
+```
+
+```{r eval=FALSE}
+GSEA_cachexia_KEGG_EM<- perform_gsea_analysis(
+  example_data =data4gsea ,
+  PathwayVsMetabolites= PwVSMet_HMDB
+)
+head(GSEA_cachexia_KEGG_EM)
+```
+
+
+### MSEA with `enrichmet` and KEGGsets_KEGG
+
+In this case we must provide a more rigid data structure. 
+Moreover, in some recent versions of `enrichmet` the  `perform_gsea_analysis()` function expects KEGG-like identifiers in the `met_id` column, so for this step we use the KEGG annotation instead of HMDB.
+
+First, we build the summary statistics table required by `enrichmet`:
+
+```{r}
+data4gsea_KEGG <- cachexia_tt %>%
+  dplyr::select(KEGG, P.Value, logFC) %>%
+  dplyr::rename(
+    met_id = KEGG,
+    pval   = P.Value,
+    log2fc = logFC
+  ) %>%
+  dplyr::filter(!is.na(met_id), met_id != "") %>%
+  dplyr::distinct(met_id, .keep_all = TRUE)
+
+head(data4gsea_KEGG, 10)
+```
+
+We also need a pathway-to-metabolite table using KEGG identifiers:
+
+```{r}
+PwVSMet_KEGG <- as.MetaboliteSetDataFrame(
+  KEGGset_KEGG,
+  id_type = "name",
+  id_sep = ","
+) %>%
+  dplyr::transmute(
+    Pathway = set_name,
+    Metabolites = Metabolites
+  )
+
+head(PwVSMet_KEGG, 10)
+```
+
+Now we can run the enrichmet GSEA-like function:
+
+```{r}
+GSEA_cachexia_KEGG_EM <- perform_gsea_analysis(
+  example_data = data4gsea_KEGG,
+  PathwayVsMetabolites = PwVSMet_KEGG
+)
+
+head(GSEA_cachexia_KEGG_EM)
+```
+
+
+### Comparison of results
+
+In any case the results of both tests are relatively similat even if not significant.
+
+```{r}
+head(QEA_cachexia_KEGG_LE$table[1:10,c(1,2,6,7)],10)
+head(GSEA_cachexia_KEGG_EM[,1:3],10)
+```
+
+<!-- # Enrichment Analysis for the EnrichMet Example -->
+
+<!-- ## ORA for the EnrichMet Example -->
+
+<!-- ```{r} -->
+<!-- ## ------------------------------- -->
+<!-- ## 1) ORA (Over-Representation Analysis) -->
+<!-- ## ------------------------------- -->
+
+<!-- ORA_EMex_KEGG <- ora_test( -->
+<!--   eset         = KEGGset_KEGG, -->
+<!--   selected     = EM_sig, -->
+<!--   background   = EM_background, -->
+<!--   test         = "fisher", -->
+<!--   p_adjust     = "none", -->
+<!--   min_set_size = 1, -->
+<!--   max_set_size = 500, -->
+<!--   quiet        = TRUE -->
+<!-- ) -->
+
+<!-- # Resultats ordenats i amb nom net -->
+
+<!-- ORA_EMex_KEGG_sig <- ORA_EMex_KEGG %>% -->
+<!--   filter(p_value < 0.05) %>% -->
+<!--   arrange(p_adj) %>% -->
+<!--   mutate(set_name_clean = clean_pathway_name(set_name)) -->
+
+<!-- # Vista ràpida dels top 10 -->
+<!-- head(ORA_EMex_KEGG_sig, 10) -->
+
+<!-- ## Barplot ORA – Top 20 pathways -->
+<!-- top_ora <- ORA_EMex_KEGG_sig %>% -->
+<!--   dplyr::slice(1:20) %>% -->
+<!--   mutate(set_name_clean = factor(set_name_clean, levels = rev(set_name_clean))) -->
+
+<!-- ggplot(top_ora, aes(x = set_name_clean, y = -log10(p_adj))) + -->
+<!--   geom_col(fill = "#3B82F6") + -->
+<!--   coord_flip() + -->
+<!--   labs( -->
+<!--     title = "EnrichMet Exaple – KEGG ORA (Top 20 pathways)", -->
+<!--     x     = "KEGG pathway", -->
+<!--     y     = "-log10(FDR)" -->
+<!--   ) + -->
+<!--   theme_minimal(base_size = 12) -->
+
+<!-- ## Bubble plot ORA – Top 30 -->
+<!-- top_ora <- ORA_EMex_KEGG_sig %>% -->
+<!--   dplyr::slice(1:30) -->
+
+<!-- ggplot(top_ora, aes( -->
+<!--   x = fold_enrichment, -->
+<!--   y = -log10(p_adj), -->
+<!--   size = n_selected_in_set, -->
+<!--   color = -log10(p_adj) -->
+<!-- )) + -->
+<!--   geom_point(alpha = 0.8) + -->
+<!--   scale_color_gradient(low = "#8B5CF6", high = "#1E40AF") + -->
+<!--   labs( -->
+<!--     title = "EnrichMet Example – KEGG ORA (Bubble plot, Top 30)", -->
+<!--     x     = "Fold enrichment", -->
+<!--     y     = "-log10(FDR)", -->
+<!--     size  = "# hits" -->
+<!--   ) + -->
+<!--   theme_minimal(base_size = 12) -->
+<!-- ``` -->
+
+<!-- ### MSEA for the EnrichMet Example -->
+
+<!-- First we build a "scores" vector with the effect sizes, named by the Metabolites names -->
+
+<!-- ```{r} -->
+<!-- head(EM_summaryStats) -->
+<!-- EM_scores <- EM_summaryStats$log2fc -->
+<!-- names(EM_scores) <- EM_summaryStats$met_id -->
+<!-- head(EM_scores) -->
+<!-- ``` -->
+
+<!-- This vector is passed to the MSEA function -->
+
+
+<!-- ```{r} -->
+<!-- # Comprovar estructura -->
+<!-- QEA_EMex_KEGG <- qea_test( -->
+<!--   eset            = KEGGset_KEGG, -->
+<!--   scores          = EM_scores, -->
+<!--   nperm           = 1000, -->
+<!--   p_adjust        = "BH", -->
+<!--   min_set_size    = 3, -->
+<!--   max_set_size    = 500, -->
+<!--   return_profiles = FALSE, -->
+<!--   quiet           = TRUE -->
+<!-- ) -->
+
+<!-- QEA_EMex_table <- QEA_EMex_KEGG$table %>% -->
+<!--   filter(!is.na(p_value)) %>% -->
+<!--   arrange(p_adj) %>% -->
+<!--   mutate(set_name_clean = clean_pathway_name(set_name)) -->
+
+<!-- # Vista ràpida dels top 10 (QEA) -->
+<!-- head(QEA_EMex_table, 10) -->
+<!-- ``` -->
+
+
+<!-- # Enrichment Analysis for the ST000291 dataset -->
+
+<!-- ### ORA for the ST000291 dataset -->
+
+<!-- #### ORA Based on PubChem annotated results -->
+
+<!-- ```{r} -->
+<!-- ## ------------------------------- -->
+<!-- ## 1) ORA (Over-Representation Analysis) -->
+<!-- ## ------------------------------- -->
+
+<!-- ORA_ST291_KEGG <- ora_test( -->
+<!--   eset         = KEGGset_PubChem, -->
+<!--   selected     = ST291_sig, -->
+<!--   background   = ST291_background, -->
+<!--   test         = "fisher", -->
+<!--   p_adjust     = "none", -->
+<!--   min_set_size = 1, -->
+<!--   max_set_size = 500, -->
+<!--   quiet        = TRUE -->
+<!-- ) -->
+
+<!-- # Resultats ordenats i amb nom net -->
+
+<!-- ORA_ST291_KEGG_sig <- ORA_ST291_KEGG %>% -->
+<!--   filter(p_value < 0.05) %>% -->
+<!--   arrange(p_adj) %>% -->
+<!--   mutate(set_name_clean = clean_pathway_name(set_name)) -->
+
+<!-- # Vista ràpida dels top 10 -->
+<!-- head(ORA_ST291_KEGG_sig, 10) -->
+
+<!-- ## Barplot ORA – Top 20 pathways -->
+<!-- top_ora <- ORA_ST291_KEGG_sig %>% -->
+<!--   dplyr::slice(1:20) %>% -->
+<!--   mutate(set_name_clean = factor(set_name_clean, levels = rev(set_name_clean))) -->
+
+<!-- ggplot(top_ora, aes(x = set_name_clean, y = -log10(p_adj))) + -->
+<!--   geom_col(fill = "#3B82F6") + -->
+<!--   coord_flip() + -->
+<!--   labs( -->
+<!--     title = "ST000291 – KEGG ORA (Top 20 pathways)", -->
+<!--     x     = "KEGG pathway", -->
+<!--     y     = "-log10(FDR)" -->
+<!--   ) + -->
+<!--   theme_minimal(base_size = 12) -->
+
+<!-- ## Bubble plot ORA – Top 30 -->
+<!-- top_ora <- ORA_ST291_KEGG_sig %>% -->
+<!--   dplyr::slice(1:30) -->
+
+<!-- ggplot(top_ora, aes( -->
+<!--   x = fold_enrichment, -->
+<!--   y = -log10(p_adj), -->
+<!--   size = n_selected_in_set, -->
+<!--   color = -log10(p_adj) -->
+<!-- )) + -->
+<!--   geom_point(alpha = 0.8) + -->
+<!--   scale_color_gradient(low = "#8B5CF6", high = "#1E40AF") + -->
+<!--   labs( -->
+<!--     title = "ST000291 – KEGG ORA (Bubble plot, Top 30)", -->
+<!--     x     = "Fold enrichment", -->
+<!--     y     = "-log10(FDR)", -->
+<!--     size  = "# hits" -->
+<!--   ) + -->
+<!--   theme_minimal(base_size = 12) -->
+<!-- ``` -->
+
+<!-- #### ORA based on HMDB annotated results -->
+
+<!-- ```{r} -->
+<!-- ## ------------------------------- -->
+<!-- ## 1) ORA (Over-Representation Analysis) -->
+<!-- ## ------------------------------- -->
+
+<!-- ORA_ST291_HMDB_KEGG <- ora_test( -->
+<!--   eset         = KEGGset_HMDB, -->
+<!--   selected     = ST291_HMDB_sig, -->
+<!--   background   = ST291_HMDB_background, -->
+<!--   test         = "fisher", -->
+<!--   p_adjust     = "none", -->
+<!--   min_set_size = 1, -->
+<!--   max_set_size = 500, -->
+<!--   quiet        = TRUE -->
+<!-- ) -->
+
+<!-- # Resultats ordenats i amb nom net -->
+
+<!-- ORA_ST291_HMDB_KEGG_sig <- ORA_ST291_HMDB_KEGG %>% -->
+<!--   filter(p_value < 0.05) %>% -->
+<!--   arrange(p_adj) %>% -->
+<!--   mutate(set_name_clean = clean_pathway_name(set_name)) -->
+
+<!-- # Vista ràpida dels top 10 -->
+<!-- head(ORA_ST291_HMDB_KEGG_sig, 10) -->
+
+<!-- ## Barplot ORA – Top 20 pathways -->
+<!-- top_ora <- ORA_ST291_HMDB_KEGG_sig %>% -->
+<!--   dplyr::slice(1:20) %>% -->
+<!--   mutate(set_name_clean = factor(set_name_clean, levels = rev(set_name_clean))) -->
+
+<!-- ggplot(top_ora, aes(x = set_name_clean, y = -log10(p_adj))) + -->
+<!--   geom_col(fill = "#3B82F6") + -->
+<!--   coord_flip() + -->
+<!--   labs( -->
+<!--     title = "ST000291 – KEGG ORA (Top 20 pathways)", -->
+<!--     x     = "KEGG pathway", -->
+<!--     y     = "-log10(FDR)" -->
+<!--   ) + -->
+<!--   theme_minimal(base_size = 12) -->
+
+<!-- ## Bubble plot ORA – Top 30 -->
+<!-- top_ora <- ORA_ST291_HMDB_KEGG_sig %>% -->
+<!--   dplyr::slice(1:30) -->
+
+<!-- ggplot(top_ora, aes( -->
+<!--   x = fold_enrichment, -->
+<!--   y = -log10(p_adj), -->
+<!--   size = n_selected_in_set, -->
+<!--   color = -log10(p_adj) -->
+<!-- )) + -->
+<!--   geom_point(alpha = 0.8) + -->
+<!--   scale_color_gradient(low = "#8B5CF6", high = "#1E40AF") + -->
+<!--   labs( -->
+<!--     title = "ST000291 – KEGG ORA (Bubble plot, Top 30)", -->
+<!--     x     = "Fold enrichment", -->
+<!--     y     = "-log10(FDR)", -->
+<!--     size  = "# hits" -->
+<!--   ) + -->
+<!--   theme_minimal(base_size = 12) -->
+<!-- ``` -->
+
+
+<!-- ### MSEA for the ST000291 dataset -->
+
+<!-- MSEA, requires more information than Enrichment Analysis and indeed it also returns different results, even if performed on the same collection of sets. -->
+
+<!-- The idea behind MSEA is that, even when we cannot find *Enriched sets* in a given list iot may be possible to observe some tendency among features belonging to a given sets to show similar behavior, this meaning that they tend to show a positive (or a negative) effect at the same time or even to show the same positive or negative correlation. When this is the case we describe thses sets as *differentially enriched (Metabolite) sets*. -->
+
+<!-- The test to decide if a certain set is differentially enriched is based on observing if the scores of the metabolites in this set tend to vary at random or, instead they tend to be consistently high (consistently low). -->
+
+<!-- Although the first versions oF MSEA based the decision on the distribution of the p-values, later methods have realized that it can alo be based on some effect size measure such as the t-statistic. the log-fold change or even the correlation. -->
+
+<!-- ```{r} -->
+<!-- ## ------------------------------- -->
+<!-- ## 2) MSEA / QEA (Quantitative Enrichment Analysis) -->
+<!-- ## ------------------------------- -->
+<!-- ## ST291_scores ha de ser un vector numèric amb noms = PubChem IDs. -->
+<!-- ## Exemple d’estructura (NO s’executa): -->
+<!-- ##   ST291_scores <- setNames(topTable$logFC, topTable$PubChemCID) -->
+
+<!-- # QEA/MSEA -->
+
+<!-- ## ============================ -->
+<!-- ## Construir ST291_scores -->
+<!-- ## ============================ -->
+
+<!-- # Comprovem que PubChemCID és caracter i no factor -->
+<!-- topCranVSBase <- topCranVSBase %>% -->
+<!--   dplyr::mutate(PubChemCID = as.character(PubChemCID)) -->
+
+<!-- # Vector numeric amb noms = PubChem -->
+<!-- ST291_scores <- setNames(topCranVSBase$log2FC, topCranVSBase$PubChemCID) -->
+<!-- ST291_scores <- ST291_scores[!is.na(ST291_scores)] -->
+<!-- str(ST291_scores) -->
+<!-- head(ST291_scores) -->
+
+<!-- stopifnot(is.numeric(ST291_scores)) -->
+<!-- stopifnot(length(ST291_scores) == length(names(ST291_scores))) -->
+<!-- stopifnot(sum(is.na(ST291_scores)) == 0) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- # Comprovar estructura -->
+<!-- QEA_ST291_KEGG <- qea_test( -->
+<!--   eset            = KEGGset_PubChem, -->
+<!--   scores          = ST291_scores, -->
+<!--   nperm           = 1000, -->
+<!--   p_adjust        = "BH", -->
+<!--   min_set_size    = 3, -->
+<!--   max_set_size    = 500, -->
+<!--   return_profiles = FALSE, -->
+<!--   quiet           = TRUE -->
+<!-- ) -->
+
+<!-- QEA_ST291_table <- QEA_ST291_KEGG$table %>% -->
+<!--   filter(!is.na(p_value)) %>% -->
+<!--   arrange(p_adj) %>% -->
+<!--   mutate(set_name_clean = clean_pathway_name(set_name)) -->
+
+<!-- # Vista ràpida dels top 10 (QEA) -->
+<!-- head(QEA_ST291_table, 10) -->
+
+<!-- ## Barplot QEA – Top 20 pathways -->
+<!-- top20_qea <- QEA_ST291_table %>% -->
+<!--   dplyr::slice(1:20) %>% -->
+<!--   mutate(set_name_clean = factor(set_name_clean, levels = rev(set_name_clean))) -->
+
+<!-- ggplot(top20_qea, aes(x = set_name_clean, y = -log10(p_adj))) + -->
+<!--   geom_col(fill = "#EF4444") + -->
+<!--   coord_flip() + -->
+<!--   labs( -->
+<!--     title = "ST000291 – KEGG QEA/MSEA (Top 20 pathways)", -->
+<!--     x     = "KEGG pathway", -->
+<!--     y     = "-log10(FDR)" -->
+<!--   ) + -->
+<!--   theme_minimal(base_size = 12) -->
+
+<!-- ## Bubble plot QEA – Top 30 (ES vs -log10(FDR)) -->
+<!-- top30_qea <- QEA_ST291_table %>% -->
+<!--   dplyr::slice(1:30) -->
+
+<!-- ggplot(top30_qea, aes( -->
+<!--   x = ES, -->
+<!--   y = -log10(p_adj), -->
+<!--   size = n_in_set, -->
+<!--   color = direction -->
+<!-- )) + -->
+<!--   geom_point(alpha = 0.8) + -->
+<!--   scale_color_manual(values = c(positive = "#22C55E", negative = "#F97316")) + -->
+<!--   labs( -->
+<!--     title = "ST000291 – KEGG QEA/MSEA (Bubble plot, Top 30)", -->
+<!--     x     = "Enrichment score (ES)", -->
+<!--     y     = "-log10(FDR)", -->
+<!--     size  = "Set size", -->
+<!--     color = "Direction" -->
+<!--   ) + -->
+<!--   theme_minimal(base_size = 12) -->
+
+<!-- ``` -->
+
+
+
+<!-- # Enrichmet (*skipped by now*)-->
+
+<!-- ## ORA for the Enrichmet Example data -->
+
+<!-- `enrichmet` provides a wrapper function to run all analysis in one step: -->
+
+<!-- ```{r} -->
+<!-- enrichmetResults <- enrichmet( -->
+<!--   inputMetabolites = EM_inputMetabolites, -->
+<!--   PathwayVsMetabolites = EM_PathwayVsMetabolites, -->
+<!--   example_data =EM_summaryStats,  -->
+<!--   kegg_lookup = EM_kegg_lookup, -->
+<!--   top_n = 100, -->
+<!--   p_value_cutoff = 1 -->
+<!-- ) -->
+<!-- names(enrichmetResults) -->
+
+<!-- ORAEM_EMex_KEGG <- enrichmetResults$pathway_enrichment_results -->
+<!-- MSEAEMex_KEGG <- enrichmetResults$gsea_results -->
+<!-- ``` -->
+
+
+<!-- # ChemRich (*skipped by now*) -->
+
+<!-- ChemRich performs enrichment based on **chemical similarity clusters**, not -->
+<!-- predefined pathways. It typically requires: -->
+
+<!-- - effect size (e.g. log2FC), -->
+<!-- - p-values, -->
+<!-- - a structural identifier (InChIKey, SMILES, etc.). -->
+
+<!-- Since ChemRich is provided as a web tool, the usual workflow is: -->
+
+<!-- 1. Prepare a CSV with at least ID, log2FC and p-value. -->
+<!-- 2. Upload to ChemRich web. -->
+<!-- 3. Export the results table. -->
+<!-- 4. Re-import into R for comparison. -->
+
+
+
+<!-- # MetaboAnalyst Web (outline) -->
+
+<!-- MetaboAnalyst Web is used here as a practical reference point (“gold -->
+<!-- standard”). The workflow is: -->
+
+<!-- 1. Prepare an input table in the expected format (ID + intensities or statistics). -->
+<!-- 2. Upload and run: -->
+<!--    - ORA (e.g. KEGG pathways), -->
+<!--    - MSEA (for full tables such as ST000291). -->
+<!-- 3. Export results as CSV and save under `results/MetaboAnalyst/`. -->
+
+
+<!-- # Comparison of results -->
+
+<!-- ## ORA Comparison -->
+
+<!-- It is straightforward to realize that even with the same input, the results of the different pacakges differ: -->
+
+<!-- We use as inputs: -->
+
+<!-- ```{r} -->
+<!-- show(EM_inputMetabolites) -->
+<!-- show(EM_background) -->
+<!-- extended_background <- unique(unlist(KEGGset_KEGG@data$feature_list)) -->
+<!-- length(extended_background) -->
+<!-- dim(EM_PathwayVsMetabolites) -->
+<!-- dim(KEGGset_KEGG@data) -->
+<!-- ``` -->
+
+
+<!-- For instance, when ORA is performed with `localEnrichment`: -->
+
+<!-- ```{r} -->
+
+<!-- ORA_EMex_KEGG <- ora_test( -->
+<!--   eset         = KEGGset_KEGG, -->
+<!--   selected     = EM_inputMetabolites, -->
+<!--   background   = extended_background, -->
+<!--   test         = "fisher", -->
+<!--   p_adjust     = "none", -->
+<!--   min_set_size = 1, -->
+<!--   max_set_size = 500, -->
+<!--   quiet        = TRUE -->
+<!-- ) -->
+
+<!-- head(ORA_EMex_KEGG, 10) -->
+
+<!-- ``` -->
+
+
+<!-- And when it is done with `enrichmet`: -->
+
+
+<!-- ```{r} -->
+<!-- ORAEM_EMex_KEGG <- perform_enrichment_analysis( -->
+<!--   EM_inputMetabolites, -->
+<!--   EM_PathwayVsMetabolites, -->
+<!--   top_n = 100, -->
+<!--   p_value_cutoff = 1 -->
+<!-- ) -->
+
+<!-- head(ORAEM_EMex_KEGG,20) -->
+<!-- ``` -->
+
+
+<!-- ## MSEA comparison -->
+
+<!-- Similarly we have -->
+
+<!-- - From `localEnrichment` -->
+
+<!-- ```{r} -->
+<!-- head(QEA_EMex_table, 20) -->
+<!-- ``` -->
+
+<!-- - From `enrichmet` -->
+
+<!-- ```{r} -->
+<!-- MSEAEMex_KEGG -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- intersect(QEA_EMex_table$set_name, MSEAEMex_KEGG$pathway) -->
+<!-- ``` -->
+
+# Enrichment analysis of the enrichmet example data (KRASG12D)
+
+The `enrichmet` package includes a small example dataset derived from a metabolomics comparison involving KRAS G12D mutation. Unlike the Cachexia example, these data are already distributed in a format very close to what enrichment tools require:
+
+- a list of significant metabolites (`EM_inputMetabolites`)
+- a summary statistics table (`EM_summaryStats`)
+- a pathway-to-metabolite mapping table (`EM_PathwayVsMetabolites`)
+- an `EnrichmentSet` object built from the same KEGG-based pathway mapping (`KEGGset_KEGG`)
+
+
+## ORA with localEnrichment and KEGGset_KEGG
+
+We begin by defining the signature and the corresponding background.
+
+```{r kras-ora-setup}
+EM_sig <- unique(EM_inputMetabolites)
+EM_background <- unique(EM_summaryStats$met_id)
+
+cat("Signature size:", length(EM_sig), "\n")
+cat("Background size:", length(EM_background), "\n")
+
+intersect(EM_sig, EM_background) |> length()
+```
+
+The ORA can now be carried out with localEnrichment::ora_test() using the KEGG-based EnrichmentSet.
+
+```{r}
+library(localEnrichment)
+library(dplyr)
+
+ORA_EM_KEGG_LE <- ora_test(
+  eset = KEGGset_KEGG,
+  selected = EM_sig,
+  background = EM_background,
+  test = "fisher",
+  p_adjust = "BH",
+  min_set_size = 3,
+  max_set_size = 500
+)
+
+dplyr::glimpse(ORA_EM_KEGG_LE)
+head(ORA_EM_KEGG_LE)
+```
+
+We may restrict attention to the pathways that remain significant after multiple testing correction.
+
+```{r}
+ORA_EM_KEGG_LE_sig <- ORA_EM_KEGG_LE %>%
+  dplyr::filter(p_adj < 0.25) %>%
+  dplyr::arrange(p_adj)
+
+nrow(ORA_EM_KEGG_LE_sig)
+head(ORA_EM_KEGG_LE_sig[, 1:6], 10)
+```
+
+The enrichment results can be visualized with the standard plotting functions from localEnrichment.
+
+```{r}
+top_kras_ora <- ORA_EM_KEGG_LE %>%
+  dplyr::arrange(p_adj) %>%
+  dplyr::slice(1:20)
+
+top_kras_ora$set_name <- factor(
+  top_kras_ora$set_name,
+  levels = rev(unique(top_kras_ora$set_name))
+)
+
+localEnrichment::plot_enrichment(
+  results = top_kras_ora,
+  type = c("bar", "dot"),
+  top = 20,
+  x_measure = "-log10(p_adj)",
+  color_by = "p_adj",
+  title = "KRASG12D example: ORA with localEnrichment"
+)
+```
+
+## ORA with `enrichmet` and EM_PathwayVsMetabolites
+
+The same ORA-like analysis can be repeated with enrichmet, using directly the pathway mapping table provided with the example data.
+
+```{r}
+ORA_EM_KEGG_EM <- perform_enrichment_analysis(
+  inputMetabolites = EM_sig,
+  PathwayVsMetabolites = EM_PathwayVsMetabolites,
+  top_n = 100,
+  p_value_cutoff = 0.25
+)
+
+head(ORA_EM_KEGG_EM)
+```
+And visualized with the plotting function supplied by enrichmet.
+
+```{r}
+plot <- create_enrichment_plot(ORA_EM_KEGG_EM)
+plot
+```
+Because both analyses use the same KEGG identifiers and a pathway mapping derived from the same source, this example is particularly convenient to compare the behaviour of the two implementations.
+
+
+## MSEA / QEA with localEnrichment and KEGGset_KEGG
+
+To run a quantitative enrichment analysis with localEnrichment, we need a numeric score for all metabolites in the ranked list. Here we will use the log2fc column from EM_summaryStats.
+
+```{r}
+EM_scores <- EM_summaryStats$log2fc
+names(EM_scores) <- EM_summaryStats$met_id
+
+summary(EM_scores)
+head(EM_scores)
+```
+
+The GSEA-like quantitative enrichment analysis can then be run with qea_test().
+
+```{r}
+QEA_EM_KEGG_LE <- qea_test(
+  eset = KEGGset_KEGG,
+  scores = EM_scores,
+  nperm = 1000,
+  p_adjust = "BH",
+  min_set_size = 3,
+  max_set_size = 500,
+  return_profiles = FALSE,
+  quiet = TRUE
+)
+
+head(QEA_EM_KEGG_LE$table[, c("set_id", "set_name", "p_value", "p_adj")], 10)
+```
+
+If desired, we can inspect only the most significant pathways.
+
+```{r}
+QEA_EM_KEGG_LE_sig <- QEA_EM_KEGG_LE$table %>%
+  dplyr::filter(p_adj < 0.25) %>%
+  dplyr::arrange(p_adj)
+
+nrow(QEA_EM_KEGG_LE_sig)
+head(QEA_EM_KEGG_LE_sig[, c("set_id", "set_name", "p_value", "p_adj")], 10)
+```
+
+## MSEA / GSEA with enrichmet
+
+The enrichmet package already provides a function to perform a GSEA-like analysis from the summary statistics table.
+
+```{r}
+GSEA_EM_KEGG_EM <- perform_gsea_analysis(
+  example_data = EM_summaryStats,
+  PathwayVsMetabolites = EM_PathwayVsMetabolites
+)
+
+head(GSEA_EM_KEGG_EM[, 1:3], 10)
+```
+
+This allows a direct comparison with the localEnrichment implementation, since both analyses are now based on the same ranked metabolite list and the same KEGG pathway definitions.
+
+## Quick comparison of the top pathways
+
+A simple way to compare both implementations is to inspect the top ranked pathways side by side.
+
+```{r}
+top_qea_le <- QEA_EM_KEGG_LE$table %>%
+  dplyr::arrange(p_adj) %>%
+  dplyr::select(set_name, p_value, p_adj) %>%
+  dplyr::slice(1:10) %>%
+  dplyr::rename(
+    pathway = set_name,
+    p_value_LE = p_value,
+    p_adj_LE = p_adj
+  )
+
+top_gsea_em <- GSEA_EM_KEGG_EM %>%
+  as_tibble() %>%
+  dplyr::arrange(padj) %>%
+  dplyr::select(pathway, pval, padj) %>%
+  dplyr::slice(1:10) %>%
+  dplyr::rename(
+    p_value_EM = pval,
+    p_adj_EM = padj
+  )
+
+top_qea_le
+top_gsea_em
+```
+
+In this KRASG12D example the compatibility between both tools is cleaner than in the Cachexia case, because:
+
+the identifiers are already KEGG compound identifiers,
+
+the pathway mapping used by enrichmet is directly available,
+
+the EnrichmentSet object used by localEnrichment has been built from the same source.
+
+This makes the example particularly useful as a controlled use case to compare the behaviour of the two packages under nearly identical inputs.
+
+# Apendix I Methods and packages explained
+
+## Over-Representation Analysis (ORA)
+
+### Concept
+
+**Over-Representation Analysis (ORA)** is a classical approach used to identify biological sets (such as pathways, chemical classes, or ontological categories) that are statistically *enriched* in a predefined list of significant features, typically metabolites or genes.
+
+The key idea is to test whether a particular set contains **more significant features than expected by chance**, given a specified background.
+
+For each set, a contingency table is constructed: 
+
+|               | In Set | Not in Set | Total |
+|----------------|--------|-------------|--------|
+| Selected (hits) |  k   |  K - k       |   K    |
+| Not selected   | m - k | N - m - K + k| N - K  |
+
+where:
+- **N** = total number of features in the background 
+- **K** = number of selected (significant) features  
+- **m** = number of features in the given set  
+- **k** = number of selected features that belong to that set
+
+A statistical test (typically **Fisher’s exact test** or the **hypergeometric test**) is then applied to compute the probability of observing at least *k* selected features in the set under a random sampling model.
+
+The resulting *p*-values are adjusted for multiple testing (e.g., Benjamini–Hochberg FDR correction), and the **fold enrichment** is often reported as:
+
+\[
+\text{Fold Enrichment} =
+\frac{k/K}{m/N}
+\]
+
+indicating how much more represented the set is among selected features than expected by chance.
+
+### Implementation in `localEnrichment`
+
+The function `ora_test()` implements this classical ORA workflow in a flexible and reproducible way using the `EnrichmentSet` object as input. It can be applied to any type of feature-to-set mapping, including pathways, metabolite classes, or ontological categories.
+
+### Implementation in `EnrichMet`
+
+`EnrichMet` follows the same classical ORA framework, specifically applied to KEGG pathways. For each pathway, it constructs a 2×2 contingency table comparing detected metabolites versus a background set, and applies **Fisher’s exact test** to evaluate enrichment. :contentReference[oaicite:0]{index=0}
+
+Key characteristics:
+
+- Uses a **user-provided list of significant metabolites** together with a predefined KEGG-based background.
+- Computes enrichment **independently for each pathway**.
+- Adjusts *p*-values using **Benjamini–Hochberg correction** and reports q-values.
+- Outputs ranked pathways together with significance metrics, typically visualized using −log10(*p*) plots.
+
+Conceptually, this implementation is equivalent to standard ORA, with the main specificity being the direct integration of curated KEGG pathway mappings and a streamlined one-step workflow.
+
+
+## Quantitative Enrichment Analysis (QEA / MSEA)
+
+### Concept
+
+Quantitative Enrichment Analysis (QEA), also known as **Metabolite Set Enrichment Analysis (MSEA)**, is the analogue of GSEA for metabolomics and other continuous-valued omics data. 
+
+Instead of dichotomizing features into
+“significant/non-significant,” QEA uses **the entire ranked list** of features, each with an associated score such as:
+
+- log fold change  
+- t-statistic  
+- correlation coefficient  
+- loading from PCA/MFA/PLS  
+- any quantity that defines an ordering of features
+
+For each metabolite set, QEA tests whether its members tend to appear **towards the top or bottom** of the ranked list more often than expected by chance.
+
+This avoids arbitrary cutoffs and provides sensitivity to subtle but consistent
+shifts across a pathway or chemical class.
+
+### MSEA variant implemented in `localEnrichment`
+
+There are several variants of MSEA/QEA in the literature:
+
+1. **ORA-like MSEA** (MetaboAnalyst’s early implementation):  uses Fisher tests on selected metabolites → *not what we use here*.
+
+2. **SSPA / Mean/median tests** (subset-based statistics):  
+   compares mean scores inside vs. outside a set → *not used here*.
+
+3. **Correlation-based global tests** (e.g., GlobalTest):  
+   model score–membership associations → *not used here*.
+
+4. **GSEA-style running-sum statistic** (Subramanian et al., PNAS 2005):  
+   uses an enrichment score based on a weighted random walk and permutation testing: **this is the method implemented in `qea_test()`**.
+
+`localEnrichment` implements a *GSEA-style running-score MSEA*, adapted to metabolomics.
+
+Specifically:
+
+- The ranked list is used **without thresholding**.  
+- For each set, a **running enrichment profile** is computed:
+  - hits contribute `+1/Nh`
+  - misses contribute `-1/(N - Nh)`
+- The Enrichment Score (**ES**) is the maximum (positive enrichment) or minimum
+  (negative enrichment) deviation from zero.
+- Significance is evaluated by **permuting feature positions**, exactly as in classical GSEA.
+
+This is the most statistically robust form of QEA/MSEA and is the same approach used in modern tools such as **fgsea**, **clusterProfiler::GSEA()**, and the updated **MetaboAnalyst 5.0 “QEA” module**.
+
+### Implementation in `EnrichMet` (MetSEA)
+
+`EnrichMet` implements MSEA (referred to as **MetSEA**) using the **fgsea algorithm**, which corresponds to a fast implementation of the GSEA running-sum statistic.
+
+Main elements:
+
+- Metabolites are **ranked using continuous statistics** (typically log2 fold change and/or p-values).
+- Pathways are formatted as gene/metabolite sets (GMT format) and evaluated using fgsea.
+- A **running enrichment score (ES)** is computed along the ranked list:
+  - increased when a metabolite belongs to the set  
+  - decreased otherwise
+- The **maximum deviation from zero** defines the ES.
+- Significance is assessed via **permutation**, and results are reported as:
+  - ES  
+  - **Normalized Enrichment Score (NES)**  
+  - adjusted *p*-values
+
+In practice, this implementation is methodologically equivalent to the GSEA-style approach described above, with two practical differences:
+
+- it leverages **fgsea for computational efficiency**, enabling fast analysis of large datasets  
+- it is tightly integrated with KEGG pathway definitions and the ORA workflow within the same pipeline
+
+Overall, both `localEnrichment` and `EnrichMet` implement conceptually the same class of QEA/MSEA methods (GSEA-like), differing mainly in computational backend and workflow integration rather than in statistical principles.
+# Resources and references
+
+## Resources
+
+- [The tidymass project](https://www.tidymass.org/)
+
+- [MetaboAnalyst](https://www.metaboanalyst.ca/home.xhtml)
+
+- [Data Analysis in Metabolomics](https://xbiomeanalysis.github.io/Metabolomics_Aanlysis/)
+
+
+
+## References
+
+# Session information
+
+```{r}
+devtools::session_info()
+```
+
+
+
+
+

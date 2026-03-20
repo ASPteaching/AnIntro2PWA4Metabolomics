@@ -1,0 +1,434 @@
+---
+title: "ST000291 – POMA pipeline with HMDB subset"
+author: "Alex Sánchez"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(readr)
+library(janitor)
+library(limma)
+library(POMA)
+library(SummarizedExperiment)
+library(rvest)
+library(xml2)
+```
+
+# Introduction
+
+This document contains a **clean, POMA-based preprocessing and analysis pipeline** for the Metabolomics Workbench dataset **ST000291**.
+
+The goals are:
+
+1. To obtain a **normalized, imputed feature matrix** using POMA.
+2. To perform a **limma-based differential analysis** (Baseline vs Cranberry).
+3. To construct **enrichment analysis inputs** (top table, selected list, background).
+4. To build a **subset restricted to metabolites with HMDB IDs**, using the mapping file  
+   `data/MW_ST000291__map.csv`.
+5. To compare the full POMA-based analysis with the HMDB-only analysis.
+
+We deliberately **avoid manual MWTab parsing** and rely instead on the higher-level
+SummarizedExperiment objects returned by POMA, which ensures consistency with
+previous analyses and facilitates comparison with MetaboAnalyst.
+
+> **IMPORTANT**
+>
+> The original study followed a 2×2 crossover design, but the public ST000291
+> dataset does **not** include subject identifiers. Therefore, we must treat
+> samples as **independent** (unpaired) in the statistical analysis.  
+> This increases variance and is conservative: it inflates the risk of false
+> negatives rather than false positives.
+
+# Data acquisition via POMA / Metabolomics Workbench API
+
+We first obtain **SummarizedExperiment** objects for the negative and positive
+modes using the `do_query()` function (provided by the Metabolomics Workbench
+API client used in the original POMA-based workflow).
+
+```{r get-sumexp}
+# Negative mode
+data_negative_mode <- do_query(
+  context     = "study",
+  input_item  = "analysis_id",
+  input_value = "AN000465",
+  output_item = "SummarizedExperiment"
+)
+
+# Positive mode
+data_positive_mode <- do_query(
+  context     = "study",
+  input_item  = "analysis_id",
+  input_value = "AN000464",
+  output_item = "SummarizedExperiment"
+)
+```
+
+Each SummarizedExperiment contains:
+
+- an **assay matrix** (features × samples),
+- **rowData** (feature annotations),
+- **colData** (sample metadata, including treatment).
+
+# Metabolite names and PubChem IDs
+
+The metabolite identifiers are retrieved from Metabolomics Workbench as an HTML
+table and then converted into a clean data frame with **Metabolite Name**,
+**PubChem** and **KEGG** IDs. PubChem IDs will be used as **feature IDs**.
+
+```{r metabolite-names}
+metaboliteNamesURL <- "https://www.metabolomicsworkbench.org/data/show_metabolites_by_study.php?STUDY_ID=ST000291&SEARCH_TYPE=KNOWN&STUDY_TYPE=MS&RESULT_TYPE=1"
+
+metaboliteNames_html <- metaboliteNamesURL %>%
+  read_html() %>%
+  html_nodes(".datatable")
+
+metaboliteNames_negative <- metaboliteNames_html %>%
+  .[[1]] %>%
+  html_table() %>%
+  dplyr::select(`Metabolite Name`, PubChemCompound_ID, `Kegg Id`)
+
+metaboliteNames_positive <- metaboliteNames_html %>%
+  .[[2]] %>%
+  html_table() %>%
+  dplyr::select(`Metabolite Name`, PubChemCompound_ID, `Kegg Id`)
+
+metaboliteNames <- bind_rows(metaboliteNames_negative, metaboliteNames_positive) %>%
+  dplyr::rename(
+    names  = `Metabolite Name`,
+    PubChem = PubChemCompound_ID,
+    KEGG    = `Kegg Id`
+  ) %>%
+  mutate(
+    KEGG    = ifelse(KEGG == "-", "UNKNOWN", KEGG),
+    PubChem = ifelse(PubChem == "-", "UNKNOWN", PubChem)
+  ) %>%
+  filter(!duplicated(PubChem))
+
+head(metaboliteNames)
+```
+
+# Build feature matrix and metadata
+
+We construct a single feature matrix combining negative and positive mode,
+then assign **PubChem IDs** as rownames.
+
+```{r build-features}
+## Negative mode features 
+features_negative <- assay(data_negative_mode) %>%
+  dplyr::slice(-n())  # remove last row if it corresponds to a non-feature
+
+rownames(features_negative) <- rowData(data_negative_mode)$metabolite[1:(length(rowData(data_negative_mode)$metabolite)-1)]
+
+## Positive mode features
+features_positive <- assay(data_positive_mode) %>%
+  dplyr::slice(-n())
+
+rownames(features_positive) <- rowData(data_positive_mode)$metabolite[1:(length(rowData(data_positive_mode)$metabolite)-1)]
+
+## Combine positive and negative mode and set PubChem IDs as feature names
+features <- bind_rows(features_negative, features_positive) %>%
+  tibble::rownames_to_column("names") %>%
+  right_join(metaboliteNames, by = "names") %>%
+  select(-names, -KEGG) %>%
+  tibble::column_to_rownames("PubChem")
+
+dim(features)
+head(features[, 1:5])
+```
+
+Now we build the **sample metadata** (`pdata`) and ensure that the treatment
+factor has the desired levels.
+
+```{r metadata}
+pdata <- colData(data_negative_mode) %>%   # or data_positive_mode; metadata are equal
+  as.data.frame() %>%
+  tibble::rownames_to_column("ID") %>%
+  mutate(
+    Treatment = case_when(
+      Treatment == "Baseline urine"                        ~ "Baseline",
+      Treatment == "Urine after drinking apple juice"      ~ "Apple",
+      Treatment == "Urine after drinking cranberry juice"  ~ "Cranberry",
+      TRUE ~ as.character(Treatment)
+    )
+  )
+
+pdata$Treatment <- factor(pdata$Treatment,
+                          levels = c("Baseline", "Apple", "Cranberry"))
+
+table(pdata$Treatment)
+```
+
+# Create POMA object and preprocess (imputation + normalization)
+
+We now create a POMA SummarizedExperiment object, then apply:
+
+1. `PomaImpute()` – to handle missing values.
+2. `PomaNorm()` – to normalize the data.
+
+```{r poma-object}
+data_sumexp <- PomaCreateObject(
+  metadata = pdata,
+  features = t(features)   # POMA expects features in columns
+)
+
+data_preprocessed <- data_sumexp %>%
+  PomaImpute() %>%
+  PomaNorm()
+
+data_preprocessed
+```
+
+The normalized, imputed feature matrix is now:
+
+```{r extract-preprocessed}
+expr_all <- assay(data_preprocessed)              # rows: features (PubChem), cols: samples
+sample_metadata <- colData(data_preprocessed) %>%
+  as.data.frame()
+
+dim(expr_all)
+head(expr_all[, 1:5])
+```
+
+# Differential analysis with limma (full POMA data)
+
+We focus on **Baseline vs Cranberry**, ignoring Apple for the main comparison.
+
+```{r limma-full-setup}
+group <- factor(sample_metadata$Treatment)
+
+sel <- group %in% c("Baseline", "Cranberry")
+expr_bc  <- expr_all[, sel]
+group_bc <- droplevels(group[sel])
+table(group_bc)
+```
+
+We fit a standard limma model:
+
+```{r limma-full-fit}
+design_full <- model.matrix(~ group_bc)
+colnames(design_full)
+
+fit_full <- lmFit(expr_bc, design_full)
+fit_full <- eBayes(fit_full)
+
+# coef = 2 corresponds to the contrast Cranberry vs Baseline
+limma_full <- topTable(fit_full, coef = 2, number = Inf) %>%
+  tibble::rownames_to_column("Feature")  # Feature = PubChem ID
+```
+
+We now add human-readable metabolite names by joining with `metaboliteNames`,
+and also annotate with HMDB IDs using the MW mapping file in a later step.
+
+```{r limma-full-annotate-basic}
+metabolite_anno <- metaboliteNames %>%
+  select(PubChem, Metabolite_name = names) %>%
+  distinct()
+
+limma_full <- limma_full %>%
+  left_join(metabolite_anno, by = c("Feature" = "PubChem")) %>%
+  relocate(Metabolite_name, .before = Feature)
+
+head(limma_full, 10)
+```
+
+## Enrichment lists – full POMA data
+
+For the full dataset, we define:
+
+- **background_full_pubchem**: all features (PubChem IDs) tested in limma.
+- **selected_full_pubchem**: features with FDR < 0.05.
+
+```{r enrichment-lists-full}
+background_full_pubchem <- limma_full$Feature
+
+selected_full_pubchem <- limma_full %>%
+  filter(adj.P.Val < 0.05) %>%
+  pull(Feature)
+
+length(background_full_pubchem)
+length(selected_full_pubchem)
+```
+
+These objects can be used directly with enrichment tools that accept **PubChem**
+IDs, or can be converted to HMDB using the mapping file.
+
+# HMDB mapping and HMDB-based subset
+
+We now load the file `data/MW_ST000291__map.csv`, which contains the mapping
+from PubChem (as `Query`) to HMDB.
+
+```{r hmdb-map}
+MW_map <- read_csv("data/MW_ST000291__map.csv", show_col_types = FALSE) %>%
+  clean_names()   # columns: query, match, hmdb, pubchem, chebi, kegg, metlin, smiles, comment
+
+head(MW_map)
+```
+
+We build a simple table linking **PubChem IDs (as character)** to **HMDB IDs**.
+
+```{r hmdb-map-prep}
+map_pubchem_hmdb <- MW_map %>%
+  mutate(PubChem = as.character(query)) %>%
+  select(PubChem, HMDB = hmdb) %>%
+  filter(!is.na(HMDB) & HMDB != "")
+
+head(map_pubchem_hmdb)
+```
+
+We now annotate the full limma results with HMDB IDs and define HMDB-based
+background and selected lists.
+
+```{r limma-full-hmdb-annot}
+limma_full <- limma_full %>%
+  left_join(map_pubchem_hmdb, by = c("Feature" = "PubChem")) %>%
+  relocate(HMDB, .after = Feature)
+
+head(limma_full, 10)
+
+# HMDB-based background and selected sets (from full POMA data)
+background_full_hmdb <- limma_full %>%
+  filter(!is.na(HMDB) & HMDB != "") %>%
+  pull(HMDB) %>%
+  unique()
+
+selected_full_hmdb <- limma_full %>%
+  filter(adj.P.Val < 0.05, !is.na(HMDB), HMDB != "") %>%
+  pull(HMDB) %>%
+  unique()
+
+length(background_full_hmdb)
+length(selected_full_hmdb)
+```
+
+At this point we have:
+
+- A **full limma analysis** on normalized POMA data.
+- PubChem-based and HMDB-based **background** and **selected** lists.
+
+However, to mimic the situation where we **restrict the analysis beforehand**
+to HMDB-annotated metabolites (as MetaboAnalyst would do), we also fit a
+**separate limma model on an HMDB-only subset of features**.
+
+# Limma analysis on HMDB-only subset
+
+We first restrict the expression matrix to features with a valid HMDB ID
+according to the mapping file.
+
+```{r expr-hmdb-subset}
+hmdb_pubchem_ids <- map_pubchem_hmdb$PubChem
+
+expr_bc_hmdb <- expr_bc[rownames(expr_bc) %in% hmdb_pubchem_ids, , drop = FALSE]
+
+dim(expr_bc_hmdb)
+```
+
+We then fit limma again on this restricted feature set.
+
+```{r limma-hmdb-fit}
+design_hmdb <- model.matrix(~ group_bc)
+
+fit_hmdb <- lmFit(expr_bc_hmdb, design_hmdb)
+fit_hmdb <- eBayes(fit_hmdb)
+
+limma_hmdb <- topTable(fit_hmdb, coef = 2, number = Inf) %>%
+  tibble::rownames_to_column("Feature")  # Feature = PubChem ID (subset)
+```
+
+We annotate again with metabolite names and HMDB IDs.
+
+```{r limma-hmdb-annot}
+limma_hmdb <- limma_hmdb %>%
+  left_join(metabolite_anno, by = c("Feature" = "PubChem")) %>%
+  left_join(map_pubchem_hmdb, by = c("Feature" = "PubChem")) %>%
+  relocate(Metabolite_name, .before = Feature) %>%
+  relocate(HMDB, .after = Feature)
+
+head(limma_hmdb, 10)
+```
+
+Now we define the **HMDB-only** enrichment lists from this restricted analysis:
+
+```{r enrichment-lists-hmdb}
+background_hmdb <- limma_hmdb %>%
+  filter(!is.na(HMDB) & HMDB != "") %>%
+  pull(HMDB) %>%
+  unique()
+
+selected_hmdb <- limma_hmdb %>%
+  filter(adj.P.Val < 0.05, !is.na(HMDB), HMDB != "") %>%
+  pull(HMDB) %>%
+  unique()
+
+length(background_hmdb)
+length(selected_hmdb)
+```
+
+These HMDB-based lists are precisely what we would feed to tools that require
+HMDB identifiers (e.g. MetaboAnalyst, certain disease or pathway mappings, etc.).
+
+# Comparison: full HMDB vs HMDB-subset analysis
+
+To quantify the impact of restricting the analysis to HMDB-annotated features,
+we compare the HMDB-based results from:
+
+- The **full POMA analysis** (HMDB extracted a posteriori).
+- The **HMDB-only limma analysis** (features restricted a priori).
+
+```{r comparison-hmdb}
+background_full_hmdb_ids <- background_full_hmdb
+background_hmdb_ids      <- background_hmdb
+
+selected_full_hmdb_ids <- selected_full_hmdb
+selected_hmdb_ids      <- selected_hmdb
+
+n_bg_full  <- length(background_full_hmdb_ids)
+n_bg_hmdb  <- length(background_hmdb_ids)
+
+n_sel_full <- length(selected_full_hmdb_ids)
+n_sel_hmdb <- length(selected_hmdb_ids)
+
+overlap_sel   <- length(intersect(selected_full_hmdb_ids, selected_hmdb_ids))
+jaccard_sel   <- overlap_sel / length(union(selected_full_hmdb_ids, selected_hmdb_ids))
+
+tibble(
+  Metric = c("Background size (HMDB)", "Significant metabolites (HMDB)",
+             "Overlap (significant HMDB)", "Jaccard index (significant HMDB)"),
+  Full_POMA  = c(n_bg_full, n_sel_full, overlap_sel, jaccard_sel),
+  HMDB_only  = c(n_bg_hmdb, n_sel_hmdb, NA, NA)
+)
+```
+
+# Summary
+
+In this document we have:
+
+1. Built a **POMA-based pipeline** for ST000291 that:
+   - retrieves SummarizedExperiment objects from Metabolomics Workbench,
+   - constructs a combined feature matrix using PubChem IDs,
+   - applies imputation and normalization via `PomaImpute()` and `PomaNorm()`.
+
+2. Performed a **limma-based differential analysis** comparing Baseline vs
+   Cranberry in the normalized POMA data, obtaining:
+   - a **full top table** (`limma_full`),
+   - **background** and **selected** sets based on PubChem and HMDB IDs.
+
+3. Built a separate **HMDB-only limma analysis** by restricting the feature
+   matrix to those metabolites with valid HMDB IDs using
+   `data/MW_ST000291__map.csv`, providing:
+   - HMDB-based **background** (`background_hmdb`),
+   - HMDB-based **selected** list (`selected_hmdb`).
+
+4. Quantified the impact of restricting to HMDB-annotated metabolites by
+   comparing HMDB-based results extracted **a posteriori** from the full POMA
+   analysis with those obtained from the HMDB-only limma fit.
+
+These objects (top tables, selected lists, and backgrounds) can now be used
+for downstream **enrichment analyses** with `localEnrichment`, MetaboAnalyst,
+or other tools that accept PubChem and/or HMDB identifiers.

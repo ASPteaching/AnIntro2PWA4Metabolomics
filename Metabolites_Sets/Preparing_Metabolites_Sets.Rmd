@@ -1,0 +1,868 @@
+---
+title: "Pathway Databases and Metabolites Sets"
+author: "Alex Sanchez"
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    code_folding: hide
+    self_contained: true
+    number_sections: true
+    df_print: paged
+    theme: readable
+knitr:
+  opts_chunk:
+    echo: true
+    cache: false
+    prompt: false
+    tidy: true
+    comment: NA
+    message: false
+    warning: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+A recurring problem in metabolomics, as in many other omics fields, is the difficulty of managing correctly the relationships between the biological entities we work with and the names or identifiers used to represent them. In practice, this problem appears in at least two common situations:
+
+- Identify them in a database: Given a metabolite with a given *common name* find  out its identifier in one or more  databases. 
+  - E.g. *what is the HMDB identifier of the alpha ketoisovaleric acid?*
+
+- Link the names or the IDs of metabolites with other entities, such as pathways, metabolites sets or chemical classes, stored in their specific databases. 
+  - E.g. *In which pathways stored in the SMPDB database appears  the alpha ketoisovaleric acid.*
+  
+In an ideal world where all metabolites had unique names, or unique identifiers for every metabolite that could be related with their names in different tables/databases etc, that would be a standard problem of managing databases. 
+
+But, of course, this is not the case. Many metabolites can be named by many different names or their variations and even once they are unique not all of them are annotated in all databases.
+
+Once here we are faced with several questions
+
+1. Is there a main reference database that contains
+  - most of the metabolites?
+  - links to other databases?
+
+2. How can these resources be queried?
+
+The search for resources quickly leads to some well known resources such as those liste : [Metabolomics Association of North America (MANA)](https://www.metabolomicsna.org/mana-databases).
+
+Querying the resources is usually done
+
+- Interactively, using the web interface they provide,
+- Programmatically, using either APIs also provide by the organizations or systems such as R with Bioconductor packages.
+
+Before discussing specific databases and tools, it is important to clarify how key terms are used throughout the document, in order to avoid ambiguities between metabolites, pathways and more general metabolite groupings.
+
+## Conceptual overview
+
+In practice we are going to deal with:
+
+- **Metabolomics results**, typically represented as a *list of measured or significant metabolites*, encoded through *identifiers from a specific metabolite database*, and  
+
+- **Sources of biological knowledge**, used to support the interpretation of metabolite lists, such as *pathway databases* and *metabolite set databases*.
+
+
+To avoid ambiguity in the rest of the document, this section clarifies how the terms *metabolite*, *pathway* and *metabolite set* are used, and how they relate to each other in the context of metabolomics analysis.
+
+### Metabolites and metabolite identifiers
+
+A **metabolite** is an individual chemical entity (for example, glucose, lactate or palmitic acid). In computational workflows, metabolites are typically represented by **database-specific identifiers** rather than by names. Common reference systems include HMDB, PubChem, ChEBI and KEGG Compound.
+
+A single metabolite may have multiple identifiers across databases, and different studies or tools may rely on different identifier systems. As a result, metabolomics results should be understood as **lists of metabolite identifiers tied to a specific database**, rather than as abstract metabolite names. This distinction is essential for reproducibility and downstream interpretation.
+
+### Pathways and pathway databases
+
+A **pathway** is a structured representation of a biochemical process, usually described as a network of reactions connecting metabolites through enzymatic steps. Pathways are often defined within a specific biological context, such as an organism or cellular compartment, and may differ across resources in scope and level of detail.
+
+**Pathway databases** curate and organize such biochemical pathways. From a data-analysis perspective, they provide biologically grounded groupings of metabolites and, in many cases, additional structure (e.g. reaction graphs or topology). Well-known examples of pathway databases used in metabolomics include the  [KEGG Pathways Database](https://www.genome.jp/kegg/pathway.html) and the [Small Molecule Pathways Database (SMPDB)](https://smpdb.ca/).
+
+Not all metabolite-related databases are pathway databases. For instance, [Chemical Entities of Biological Interest(ChEBI)](https://www.ebi.ac.uk/chebi/) focuses on chemical entities and ontology, but does not define biochemical pathways.
+
+### Metabolite sets and metabolite set databases
+
+A **metabolite set** is any collection of metabolites grouped according to a shared criterion. Pathways represent one important and biologically meaningful type of metabolite set, but they are **not the only one**.
+
+Metabolite sets may be defined based on:
+- functional criteria (e.g. pathway membership),  
+- chemical or structural properties (e.g. lipid classes, amino acid families),  
+- phenotypic or disease-related associations,  
+- experimental or targeted panels, or  
+- data-driven groupings derived from statistical or network-based analyses.
+
+**Metabolite set databases** curate and organize such groupings. Some pathway databases, such as KEGG or SMPDB, can also be used as metabolite set resources, depending on the analysis context. Other resources focus primarily on non-pathway sets, such as chemical classes or curated signatures.
+
+These distinctions are central to the rest of the document, which builds on them to discuss how pathway information and metabolite sets can be accessed and used in practical metabolomics workflows.
+
+
+## Accessing metabolites databases with Bioconductor
+
+In genomics and transcriptomics, Bioconductor has strongly simplified the process of *annotating* all types of features, prroviding a huge number of packages for many types of molecules and technologies. 
+
+Until recently, few packages were available for metabolites and metabolomics. However, in recent times, in parallel with a growing interest for metabolomics,  the scenario has changed and a few packages for annotating metabolites, most of them based on the Human Metabolome Database (HMDB) are available.
+
+Some of these are:
+
+- [metaboliteIDmapping](https://www.bioconductor.org/packages/release/data/annotation/html/metaboliteIDmapping.html)
+- [biodbHmdb](https://www.bioconductor.org/packages/release/bioc/html/biodbHmdb.html)
+- [hmdbQuery](https://www.bioconductor.org/packages/release/bioc/html/hmdbQuery.html)
+- [CompoundDb](https://www.bioconductor.org/packages/release/bioc/html/CompoundDb.html)
+
+With an appropriate use of such packages it may be possible to recover identifiers for metabolites and, for example, prepare these for a Pathway Analysis that can be performed using tools such as
+
+- [enrichmet](https://github.com/biodatalab/enrichmet)
+- [metaboAnalystR](https://github.com/xia-lab/MetaboAnalystR)
+
+Other tools such as 
+
+- [Pathview](https://www.bioconductor.org/packages/release/bioc/html/pathview.html) 
+
+can be useful to visualize the results of such analyses.
+
+Different packages exist for perfoming similar operations. A quick illustraion of how to extract the main information tables from them is presented below. More detail can be found in each package vignette.
+
+### metaboliteIDmapping 
+
+The package provides a comprehensive mapping table of nine different Metabolite identifier formats and their common name. The data has been collected and merged from four publicly available sources, including HMDB, Comptox Dashboard, ChEBI, and the graphite Bioconductor R package.
+
+It can be accessed at: [https://github.com/yigbt/metaboliteIDmapping](https://github.com/yigbt/metaboliteIDmapping)
+
+To install from Bioconductor: 
+
+```{r }
+if (!require(metaboliteIDmapping)) 
+  BiocManager::install("metaboliteIDmapping")
+
+```
+
+To access the dabase just load the package. The data is available as a tibble
+
+```{r}
+library(metaboliteIDmapping)
+data(package="metaboliteIDmapping")
+metabolitesMapping
+```
+
+The package vignette describes an alternative way to access the data, using the `AnnotationHub` package, but it is omitted here for simplicity.
+
+This is a huge table  so, for simplicity smaller datasets can be extracted from it.
+
+For example, if we are only interested in KEGG, HMDB or ChEBI identifiers:
+
+```{r}
+library(dplyr)
+
+metaboData <- metabolitesMapping %>%
+  select(Name, KEGG, HMDB, CID) %>% 
+  filter(!is.na(KEGG), KEGG != "")
+
+dim(metaboData)
+head(metaboData)
+
+save(metaboData, file = "data/metaboliteIDmapping_subset.rda")
+```
+
+> Some resources such as HMDB are primarily metabolite-oriented databases, whereas KEGG includes identifiers for both pathways (e.g. hsa00010) and compounds (e.g. C00031). Distinguishing between these two types of KEGG identifiers is essential when building pathway-based metabolite sets.
+
+# Pathway databases
+
+Pathway databases provide curated representations of biochemical processes in the form of pathways, typically describing *how metabolites are connected through enzymatic reactions*. In metabolomics workflows, they are primarily used as sources of biologically grounded metabolite groupings, and in some cases as providers of additional structure that can be exploited by pathway-based analysis methods.
+
+From a practical perspective, pathway databases play a dual role:
+- they define **biologically meaningful metabolite sets**, and  
+- they act as **reference frameworks** for interpreting metabolite lists in terms of known biochemical processes.
+
+Among the available resources, KEGG and SMPDB are two of the most commonly used pathway databases in metabolomics, although they differ substantially in scope, access mechanisms and degree of integration with computational workflows.
+
+## KEGG
+
+KEGG, for "Kyoto Encyclopedia of Genes and Genomes" is one of the most widely used pathway databases in systems biology and metabolomics. There is more in KEGG than simply Pathways, but for simplicity we use the term KEGG as a synonimous for the [Pathways database in KEGG](https://www.genome.jp/kegg/pathway.html). In the context of metabolomics, KEGG pathways describe metabolic processes as networks of reactions linking metabolites, enzymes and genes, typically in an organism-specific manner.
+
+From a workflow point of view, KEGG is particularly relevant because:
+- it provides a large and well-established collection of metabolic pathways, and  
+- it can be accessed **programmatically from R** through dedicated interfaces.
+
+Access to KEGG pathway information can be achieved in two main ways:
+- **Programmatic access**, for example via Bioconductor packages such as `KEGGREST` or related tools, which allow retrieval of pathway definitions and compound memberships directly from R.
+- **Graphical access**, through the KEGG web interface, which is often used for exploratory analysis, visualization and manual inspection.
+
+In practice, KEGG pathways are frequently used as pathway-based metabolite sets for enrichment or over-representation analyses, and they often serve as a default reference when a standardized and reproducible pathway resource is required.
+
+## SMPDB
+
+Small Molecule Pathway Database is a pathway resource specifically focused on pathways involving small molecules, with a strong emphasis on human metabolism, disease-related pathways and drug metabolism. As such, it is particularly attractive for metabolomics studies with a biomedical or clinical orientation.
+
+Conceptually, SMPDB is clearly a **pathway database**: it defines pathways as structured biochemical processes and provides explicit mappings between pathways and their member metabolites. However, from a practical and computational perspective, SMPDB differs from KEGG in an important way.
+
+Unlike KEGG, SMPDB does not currently have a level of native integration with Bioconductor that allows seamless programmatic access to pathway definitions and metabolite memberships. As a result:
+- access to SMPDB pathways is often performed through the **web interface**, and  
+- programmatic use typically requires **manual download, parsing and restructuring** of the data.
+
+For this reason, although SMPDB is a pathway database in conceptual terms, it often behaves as a **custom data source** within R-based workflows. Users may need to explicitly construct metabolite sets from SMPDB pathway definitions before they can be used in downstream analyses such as enrichment or pathway-based interpretation.
+
+## Practical implications for metabolomics workflows
+
+The comparison between KEGG and SMPDB highlights an important general point:  
+whether a resource is considered a “pathway database” conceptually does not necessarily determine how easily it can be incorporated into a reproducible computational workflow.
+
+In practice, pathway databases differ in:
+- their scope and biological focus,  
+- the identifier systems they rely on, and
+- the availability of programmatic access.
+
+These differences have direct consequences for how pathway information is retrieved, how metabolite identifiers are mapped, and how pathway-based metabolite sets are constructed and used in downstream analyses. Subsequent sections build on this distinction when discussing custom data sources and user-defined metabolite sets.
+
+# Custom data sources
+
+In spite of the existence of the previous packages, it may be sometimes useful to work with custom data sources, such as those compiled by a lab or obtained from a study.
+
+## Custom dabases from study datasets
+
+As an example we provide the file "myProject_map.csv" contains the ids of a dataset that has been obtained in a study. Given the lack of standardization of the molecule names the associated HMDB ids have been processed using [MetaboAnalyst web tool ID converter](https://www.metaboanalyst.ca/MetaboAnalyst/upload/ConvertView.xhtml) and a table has been obtained that becomes the source of names for this dataset.
+
+```{r}
+myProject_map <- read.csv("data/myProject_map.csv")
+dim(myProject_map)
+colnames(myProject_map)
+str(myProject_map)
+head(myProject_map[,1:7])
+save(myProject_map, file="data/myProject_map.Rda")
+```
+
+This table can be used directly or connected with those obtained from other sources using some unique identifier such as HMDB.
+
+
+## Custom databases for specific informations
+
+File `MEGA-r_name-HMDB-ChemicalClasses.xlsx` contains information on the chemical classes associated with the metabolites from the previous study. 
+
+It has been obtained from a distinct source so it may be conveient to link both tables which requires a common identifier to make it possible.
+
+First read the data
+
+```{r}
+library(openxlsx)
+metabsChemicalClasses<- openxlsx::read.xlsx("data/MEGA-r_name-HMDB-ChemicalClasses.xlsx")
+dim(metabsChemicalClasses)
+colnames(metabsChemicalClasses)
+str(metabsChemicalClasses)
+head(metabsChemicalClasses)
+save(metabsChemicalClasses, file="data/metabs_chemicalClases.Rda")
+```
+
+Both datasets can be combined using a common column such as HMDB, although this may not be necessary.
+
+```{r}
+metabsPlusChem <- dplyr::inner_join(myProject_map,
+metabsChemicalClasses,  by="HMDB")
+dim(myProject_map)
+dim(metabsChemicalClasses)
+dim(metabsPlusChem)
+length(intersect(myProject_map$HMDB,metabsChemicalClasses$HMDB))
+```
+
+> Notice how *joining both tables increase the number of rows originally in `myProject_map`, which is probably due to the fact that there may be metabolites appearing in multiple chemical classes, and we have used an `inner_join` query*
+
+```{r}
+require(dplyr)
+summary_join <- list(
+  n_myProject = nrow(myProject_map),
+  n_metabsChemicalClasses = nrow(metabsChemicalClasses),
+  n_common_HMDB = length(intersect(myProject_map$HMDB, metabsChemicalClasses$HMDB)),
+  n_rows_joined = nrow(metabsPlusChem),
+  n_unique_HMDB_joined = length(unique(metabsPlusChem$HMDB)),
+  duplicated_in_metabsChemicalClasses = metabsChemicalClasses %>%
+    count(HMDB) %>%
+    filter(n > 1) %>%
+    nrow()
+)
+
+cat("Summary of join results:\n",
+    "- myProject_map rows:                ", summary_join$n_myProject, "\n",
+    "- metabsChemicalClasses rows:       ", summary_join$n_metabsChemicalClasses, "\n",
+    "- Common HMDB IDs:                  ", summary_join$n_common_HMDB, "\n",
+    "- Rows after join:                  ", summary_join$n_rows_joined, "\n",
+    "- Unique HMDB after join:           ", summary_join$n_unique_HMDB_joined, "\n",
+    "- HMDBs duplicated in classes table:", summary_join$duplicated_in_metabsChemicalClasses, "\n")
+```
+
+
+## SMPDB as a custom database
+
+The small molecule pathway database contains a huge number of pathways associated with metabolites through its HMDB identifiers.
+
+Although it is not a "custom" database, one can be built from it by downloading and linking one file, `smpdb_pathways.csv`, with (around 48000) pathways and a zipped folder that contains the same number of csv files (one per pathway) with the HMDBIds of the IDs in that pathway.
+
+<!-- For instance the pathways file looks like this: the -->
+
+<!-- ```{r} -->
+<!-- smpdb_pathways <- read.csv("data/smpdb_pathways.csv") -->
+
+<!-- dim(smpdb_pathways) -->
+<!-- colnames(smpdb_pathways) -->
+<!-- str(smpdb_pathways) -->
+<!-- head(smpdb_pathways[,1:4]) -->
+<!-- tail(smpdb_pathways[,1:4]) -->
+<!-- ``` -->
+
+To build an appropriate metabolite set these have to be combined with a huge number of files, each file containing the HMDB identifiers for one pathway in the `smpdb_pathways` data frame.
+
+This has been processed elsewhere, using an ad-hoc function (`build_SMPDB.R`) that generates a list with an item per pathway, each of wich  contains a (nested) list with all the associated metabolite identifiers.
+
+```{r}
+load("data/smpdb_pathway.rda")
+names(smpdb_pathway)
+sapply(smpdb_pathway, head, 3)
+```
+
+This database is by far, more complete that the one that can be obtained from KEGG.
+
+# Metabolite sets
+
+The databases mentioned above are -except for the `smpdb_pathway` object- mostly  **pairwise mappings between metabolite identifiers across databases**. For example:
+
+```{r}
+head(myProject_map[,1:7])
+```
+
+While these are useful for working with the individual molecules, for some procedures such as Pathway or Enrichment Analysis we need *Metabolite Sets* relating each set (Pathway, GO term, KEGG id whatever) with the metabolites linked to it.
+
+Although some of these mappings may be available online or through bioconductor packages we are going to build some o them *manually* to have more control on what we work with.
+
+## Metabolite sets based on KEGG pathways
+
+Some annotation resources return pairwise mappings between metabolite identifiers across databases, for example linking HMDB IDs (HMDB000nnnn) to KEGG compound IDs (Cxxxxx). These identifiers correspond to **individual compounds** in the KEGG Compound database, not to biological pathways.
+
+For example:
+
+| HMDB ID | KEGG ID | Meaning |
+|----------|----------|---------|
+| HMDB0000122 | C00031 | Glucose |
+| HMDB0000243 | C00031 | Glucose (duplicate mapping) |
+| HMDB0000456 | C00042 | Glutamine |
+
+
+For pathway enrichment analysis, we need to know which **metabolites belong to the same biological pathway**.  
+In KEGG, those entities are represented by **pathway identifiers** of the form `mapXXXXX` (or `hsaXXXXX` for human-specific maps), such as:
+
+| Pathway ID | Pathway Name |
+|-------------|--------------|
+| map00010 | Glycolysis / Gluconeogenesis |
+| map00260 | Glycine, serine and threonine metabolism |
+| map00620 | Pyruvate metabolism |
+
+Each pathway in KEGG is associated with dozens of compound IDs (`Cxxxxx`), and **this is the structure that enrichment analysis requires**.
+
+Therefore, to build KEGG-based metabolite sets, two links are required:
+
+1. **KEGG pathways -> KEGG compounds**,  retrieved directly from the KEGG database using the `KEGGREST` package in R. 
+
+2. **KEGG compounds -> external metabolites identifiers**, such as HMDB or PubChem, obtained from annotation resources such as metaboliteIDmapping or from custom annotation resources.
+
+By combining both mappings, we can create the pathway-to-metabolite associations required for enrichment analysis. The implementation below is **identifier-agnostic** and allows the construction of KEGG-based EnrichmentSet objects for different metabolite ID types.
+
+> The *natural* way to store this information is as a nested list, as with SMPDB above. However many programs require this as a table (a data.frame or a `tibble`). To facilitate ease of format change, we will rely on the `EnrichmentSet`class defined in the `localEnrichment`package. 
+
+```{r}
+if (!requireNamespace("localEnrichment")) 
+  devtools::install_github("aspresearch/localEnrichment")
+```
+
+### Ad-hoc functions to create the sets
+
+I order to facilitate an easy creation of the required `EnrichmentSet`objects we first define some ad-hoc functions to retrieve KEGG pathway-compound mappings using the `KEGGREST`package,  and to extract the desired metabolite identifiers.
+
+```{r}
+library(dplyr)
+library(KEGGREST)
+
+get_kegg_path2compound <- function(cache_file = "cache/kegg_path2compound.rds") {
+
+  if (file.exists(cache_file)) {
+    message("Loading pathway-to-compound mapping from cache...")
+    return(readRDS(cache_file))
+  }
+
+  message("Downloading KEGG human pathways. This may take a few minutes...")
+
+  pathways_hsa <- KEGGREST::keggList("pathway", "hsa")
+  pids <- names(pathways_hsa)
+
+  path2compound <- vector("list", length(pids))
+  names(path2compound) <- pids
+
+  for (i in seq_along(pids)) {
+    pid <- pids[i]
+    if (i %% 20 == 0) message("Processing ", i, "/", length(pids))
+
+    ent <- try(KEGGREST::keggGet(pid)[[1]], silent = TRUE)
+    if (inherits(ent, "try-error") || is.null(ent$COMPOUND)) {
+      path2compound[[i]] <- character()
+    } else {
+      path2compound[[i]] <- names(ent$COMPOUND)
+    }
+  }
+
+  path2compound <- path2compound[lengths(path2compound) > 0]
+
+  dir.create("cache", showWarnings = FALSE)
+  saveRDS(path2compound, cache_file)
+  message("Cache saved to ", cache_file)
+
+  path2compound
+}
+
+```
+
+Next we create *extractor* functions, to obtain the specific identifiers we are interested in:
+
+```{r}
+normalize_kegg <- function(x) {
+  toupper(trimws(x))
+}
+```
+
+```{r}
+make_kegg_mapper <- function(metaboData, from = "KEGG", to, to_name = to) {
+  metaboData %>%
+    dplyr::filter(
+      !is.na(.data[[from]]), .data[[from]] != "",
+      !is.na(.data[[to]]),   .data[[to]]   != ""
+    ) %>%
+    dplyr::transmute(
+      KEGG = normalize_kegg(.data[[from]]),
+      !!to_name := trimws(as.character(.data[[to]]))
+    ) %>%
+    dplyr::filter(.data[[to_name]] != "") %>%
+    dplyr::distinct()
+}
+```
+
+And also a "cleaner function" to remove a repetitive suffix from KEGGH pathway names:
+
+```{r}
+clean_pathway_name <- function(x) {
+  x <- gsub(" - Homo sapiens \\(human\\)$", "", x, perl = TRUE)
+  trimws(x)
+}
+```
+
+In this case the recovery of ids is as easy as:
+
+```{r}
+kegg_to_hmdb <- make_kegg_mapper(metaboData, to = "HMDB")
+
+kegg_to_pubchem <- make_kegg_mapper(
+  metaboData,
+  to = "CID",
+  to_name = "PubChem"
+)
+
+kegg_to_keggcompound <- make_kegg_mapper(
+  metaboData,
+  to = "KEGG",
+  to_name = "KEGGcompound"
+)
+```
+
+
+And the originally created functions can be recasted as follows:
+
+```{r}
+get_kegg_to_hmdb <- function(metaboData) {
+  make_kegg_mapper(metaboData, to = "HMDB")
+}
+
+get_kegg_to_pubchem <- function(metaboData) {
+  make_kegg_mapper(metaboData, to = "CID", to_name = "PubChem")
+}
+
+get_kegg_to_keggcompound <- function(metaboData) {
+  make_kegg_mapper(metaboData, to = "KEGG", to_name = "KEGGcompound")
+}
+```
+
+
+Next, a *generic function* is defined to build a **KEGG-based metabolite set** for any supported identifier type.
+
+```{r}
+build_kegg_metaboliteset <- function(
+    path2compound,
+    pathway_names,
+    kegg_to_id,
+    id_type = NULL
+) {
+
+  stopifnot(is.list(path2compound))
+  stopifnot(ncol(kegg_to_id) == 2)
+  stopifnot(colnames(kegg_to_id)[1] == "KEGG")
+
+  join_col <- colnames(kegg_to_id)[2]
+
+  if (is.null(id_type)) {
+    id_type <- join_col
+  }
+
+  df_pc <- tibble::tibble(
+    Pathway = rep(names(path2compound), lengths(path2compound)),
+    KEGG = unlist(path2compound, use.names = FALSE)
+  ) %>%
+    dplyr::mutate(KEGG = normalize_kegg(KEGG))
+
+  df_join <- df_pc %>%
+    dplyr::inner_join(kegg_to_id, by = "KEGG", relationship = "many-to-many") %>%
+    dplyr::mutate(
+      PathwayName = pathway_names[Pathway],
+      PathwayName = clean_pathway_name(PathwayName)  ) %>%   
+    dplyr::filter(!is.na(PathwayName), PathwayName != "") %>%
+    dplyr::distinct(Pathway, PathwayName, .data[[join_col]]) %>%
+    dplyr::select(Pathway, PathwayName, dplyr::all_of(join_col))
+
+  buildEnrichmentSet(
+    data         = df_join,
+    id_col       = join_col,
+    category_col = "PathwayName",
+    set_id_col   = "Pathway",
+    set_name     = paste0("KEGG_pathways_hsa_", id_type),
+    source       = "KEGG",
+    species      = "Homo sapiens",
+    version      = as.character(Sys.Date()),
+    description  = paste0("KEGG pathways mapped to ", join_col),
+    sep          = ";"
+  )
+}
+```
+
+### Building KEGG-Based Metabolite (Enrichment)Sets
+
+First we need the KEGG pathway-to-compound mapping.
+
+```{r}
+path2compound <- get_kegg_path2compound()
+
+pathway_names <- KEGGREST::keggList("pathway", "hsa") |> as.character()
+names(pathway_names) <- names(KEGGREST::keggList("pathway", "hsa"))
+```
+
+In the following examples, we use `metaboData`, a reduced subset of `metaboliteIDmapping` created at the beginning of the document.
+
+We then prepare the  mappings from KEGG compound IDs to the metabolite identifier systems of interest.
+
+```{r}
+kegg_to_hmdb <- get_kegg_to_hmdb(metaboData)
+dim(kegg_to_hmdb)
+head(kegg_to_hmdb)
+
+kegg_to_pubchem <- get_kegg_to_pubchem(metaboData)
+dim(kegg_to_pubchem)
+head(kegg_to_pubchem)
+
+kegg_to_keggcompound <- get_kegg_to_keggcompound(metaboData)
+dim(kegg_to_keggcompound)
+head(kegg_to_keggcompound)
+```
+
+Now the corresponding `EnrichmentSet` objects can be built.
+
+```{r}
+library(localEnrichment)
+
+KEGGset_HMDB <- build_kegg_metaboliteset(
+  path2compound = path2compound,
+  pathway_names = pathway_names,
+  kegg_to_id    = kegg_to_hmdb
+)
+
+summary(KEGGset_HMDB)
+head(KEGGset_HMDB@data)
+
+KEGGset_PubChem <- build_kegg_metaboliteset(
+  path2compound = path2compound,
+  pathway_names = pathway_names,
+  kegg_to_id    = kegg_to_pubchem
+)
+
+summary(KEGGset_PubChem)
+head(KEGGset_PubChem@data)
+
+KEGGset_KEGGcompound <- build_kegg_metaboliteset(
+  path2compound = path2compound,
+  pathway_names = pathway_names,
+  kegg_to_id    = kegg_to_keggcompound
+)
+
+summary(KEGGset_KEGGcompound)
+head(KEGGset_KEGGcompound@data)
+```
+
+Finally, we convert the resulting objects into data-frame form and save them for later use.
+
+```{r}
+df_HMDB <- as.MetaboliteSetDataFrame(KEGGset_HMDB, id_type = "both")
+df_PubChem <- as.MetaboliteSetDataFrame(KEGGset_PubChem, id_type = "both")
+df_KEGGcompound <- as.MetaboliteSetDataFrame(KEGGset_KEGGcompound, id_type = "both")
+
+dir.create("results", showWarnings = FALSE)
+
+save(KEGGset_HMDB, df_HMDB, file = "results/KEGGset_HMDB.Rda")
+save(KEGGset_PubChem, df_PubChem, file = "results/KEGGset_PubChem.Rda")
+save(KEGGset_KEGGcompound, df_KEGGcompound, file = "results/KEGGset_KEGGcompound.Rda")
+```
+
+This implementation creates KEGG-based metabolite sets using HMDB, PubChem, or KEGG compound identifiers, and stores them in both EnrichmentSet and tabular form for downstream enrichment analyses.
+
+
+## Metabolite sets based on chemical classes
+
+Chemical classes provide a complementary type of metabolite grouping. Although they are usually less functionally informative than pathway-based sets, they can still be useful for enrichment analyses focused on broad structural or biochemical categories.
+
+If a table linking metabolites to chemical classes is available, an EnrichmentSet object can be constructed in the same way as for KEGG pathways. In this case, each set corresponds to a chemical class and contains the HMDB identifiers of the metabolites assigned to it.
+
+```{r}
+library(dplyr)
+library(stringr)
+
+# HMDB -> Chemical Class mapping
+hmdb_class <- metabsChemicalClasses %>%
+  select(HMDB, ChemicalClass) %>%
+  filter(!is.na(HMDB), HMDB != "",
+         !is.na(ChemicalClass), ChemicalClass != "") %>%
+  mutate(
+    HMDB = trimws(HMDB),
+    ChemicalClass = str_replace_all(trimws(ChemicalClass), "_", " ")
+  ) %>%
+  distinct()
+
+head(hmdb_class)
+dim(hmdb_class)
+```
+
+The resulting table can then be converted into an EnrichmentSet object using the localEnrichment package.
+
+```{r}
+library(localEnrichment)
+
+ChemicalClassSet <- buildEnrichmentSet(
+  data         = hmdb_class,
+  id_col       = "HMDB",
+  category_col = "ChemicalClass",
+  set_name     = "ChemicalClasses",
+  source       = "HMDB",
+  species      = "Homo sapiens",
+  version      = as.character(Sys.Date()),
+  description  = "Chemical class metabolite sets based on HMDB identifiers",
+  sep          = ";"
+)
+```
+
+Finally, the object can be converted into tabular form and saved for later use.
+
+```{r}
+ChemicalClassSet_df <- as.MetaboliteSetDataFrame(ChemicalClassSet, id_type = "both")
+
+dir.create("results", showWarnings = FALSE)
+
+save(ChemicalClassSet, ChemicalClassSet_df,
+     file = "results/ChemicalClassSet.Rda")
+
+dim(ChemicalClassSet_df)
+head(ChemicalClassSet_df)
+```
+
+This implementation creates a global collection of chemical-class-based metabolite sets using HMDB identifiers, which can later be restricted to the metabolite universe of a specific study if needed.
+
+## Metabolite sets based on SMPDB
+
+SMPDB provides pathway definitions together with the associated metabolites, typically represented by HMDB identifiers. In our case, a list linking SMPDB pathway names and their corresponding HMDB metabolite sets has been prepared previously.
+
+```{r}
+# load("data/smpdb_pathway.rda")
+names(smpdb_pathway)
+smpdb_pathway$sets[1:3]
+```
+
+The list of sets contains pathway names and associated HMDB identifiers, but not the stable SMPDB pathway identifiers. 
+
+These identifiers are retrieved from a complementary table containing pathway names and SMPDB IDs. By combining both sources, a complete pathway-to-metabolite table can be constructed and converted into an `EnrichmentSet` object.
+
+```{r}
+library(dplyr)
+library(tibble)
+
+# 1. Extract the list of SMPDB sets
+list_sets <- smpdb_pathway$sets
+stopifnot(is.list(list_sets))
+
+# 2. Convert the list into long format
+df_list <- bind_rows(
+  lapply(names(list_sets), function(nm) {
+    tibble(
+      PathwayName = nm,
+      HMDB = list_sets[[nm]]
+    )
+  })
+)
+
+# 3. Read the table containing SMPDB identifiers
+
+if(exists("data/smpdb_pathways_df.Rda")) {
+  load(file="data/smpdb_pathways_df.Rda")
+}else{
+  smpdb_df <-
+    read.csv("data/smpdb_pathways.csv",
+             stringsAsFactors = FALSE)
+    save(smpdb_df,
+       file="data/smpdb_pathways_df.Rda")  
+}
+
+
+stopifnot(all(c("Name", "SMPDB.ID") %in% colnames(smpdb_df)))
+
+# 4. Join pathway names with SMPDB stable identifiers
+df_long <- df_list %>%
+  left_join(
+    smpdb_df %>% select(Name, SMPDB.ID),
+    by = c("PathwayName" = "Name")
+  ) %>%
+  filter(!is.na(HMDB), HMDB != "",
+         !is.na(SMPDB.ID), SMPDB.ID != "") %>%
+  mutate(HMDB = trimws(HMDB),
+         PathwayName = trimws(PathwayName),
+         SMPDB.ID = trimws(SMPDB.ID)) %>%
+  distinct()
+
+# 5. Warn if pathway names could not be matched
+n_missing_ids <- sum(!unique(df_list$PathwayName) %in% smpdb_df$Name)
+if (n_missing_ids > 0) {
+  warning(n_missing_ids, " SMPDB pathway names from the list could not be matched to an SMPDB.ID.")
+}
+
+head(df_long)
+dim(df_long)
+```
+
+The resulting table can then be converted into an EnrichmentSet object.
+
+```{r}
+library(localEnrichment)
+SMPDBset <- buildEnrichmentSet(
+  data         = df_long,
+  id_col       = "HMDB",
+  category_col = "PathwayName",
+  set_id_col   = "SMPDB.ID",
+  set_name     = "SMPDB_pathways",
+  source       = "SMPDB",
+  species      = "Homo sapiens",
+  version      = as.character(Sys.Date()),
+  description  = "SMPDB pathway metabolite sets based on HMDB identifiers",
+  sep          = ";"
+)
+
+```
+
+We can inspect the resulting object and convert it into tabular form for downstream enrichment analyses.
+
+```{r}
+SMPDBset
+SMPDBset@data |> head()
+summary(SMPDBset)
+
+SMPDBset_df <- as.MetaboliteSetDataFrame(SMPDBset,  id_type ="both")
+dim(SMPDBset_df)
+head(SMPDBset_df)
+```
+
+Finally, the objects can be saved for later use.
+
+```{r}
+dir.create("results", showWarnings = FALSE)
+
+save(SMPDBset, SMPDBset_df, file = "results/SMPDB_pathways.Rda")
+```
+
+This implementation creates a global collection of SMPDB pathway-based metabolite sets using HMDB identifiers, stored both as an EnrichmentSet object and in tabular form for downstream enrichment analyses.
+
+## A collection of Metabolite Sets
+
+As a summary of the previous sections, we have generated a unified collection of EnrichmentSet objects and their corresponding tabular representations. These objects can be saved and reused in downstream enrichment analyses, for example with the enrichmet package.
+
+The collection currently includes:
+
+- KEGG-based metabolite sets
+
+  - KEGGset_HMDB and df_HMDB
+
+  - KEGGset_PubChem and df_PubChem
+
+  - KEGGset_KEGGcompound and df_KEGGcompound
+
+- Chemical-class-based metabolite sets
+
+  - ChemicalClassSet and ChemicalClassSet_df
+
+- SMPDB-based metabolite sets
+
+  - SMPDBset and SMPDBset_df
+
+```{r}
+show(KEGGset_HMDB)
+KEGGset_HMDB@data |> head()
+dim(KEGGset_HMDB@data)
+cat("df_HMDB\n")
+dim(df_HMDB)
+head(df_HMDB)
+
+show(KEGGset_PubChem)
+KEGGset_PubChem@data |> head()
+dim(KEGGset_PubChem@data)
+cat("df_PubChem\n")
+dim(df_PubChem)
+head(df_PubChem)
+
+show(KEGGset_KEGGcompound)
+KEGGset_KEGGcompound@data |> head()
+dim(KEGGset_KEGGcompound@data)
+cat("df_KEGGcompound\n")
+dim(df_KEGGcompound)
+head(df_KEGGcompound)
+
+show(ChemicalClassSet)
+ChemicalClassSet@data |> head()
+dim(ChemicalClassSet@data)
+cat("ChemicalClassSet_df\n")
+dim(ChemicalClassSet_df)
+head(ChemicalClassSet_df)
+
+show(SMPDBset)
+SMPDBset@data |> head()
+dim(SMPDBset@data)
+cat("SMPDBset_df\n")
+dim(SMPDBset_df)
+head(SMPDBset_df)
+```
+
+Finally, these objects can be saved together in a single binary file for later reuse in enrichment analyses.
+
+
+```{r}
+dir.create("results", showWarnings = FALSE)
+
+save(
+  KEGGset_HMDB, df_HMDB,
+  KEGGset_PubChem, df_PubChem,
+  KEGGset_KEGGcompound, df_KEGGcompound,
+  ChemicalClassSet, ChemicalClassSet_df,
+  SMPDBset, SMPDBset_df,
+  file = "results/MetaboliteSets_Collection.Rda"
+)
+```
+
+These metabolite sets can be further manipulated, for example converted between tabular and list representations or filtered using functions available in the `localEnrichment` package.
+

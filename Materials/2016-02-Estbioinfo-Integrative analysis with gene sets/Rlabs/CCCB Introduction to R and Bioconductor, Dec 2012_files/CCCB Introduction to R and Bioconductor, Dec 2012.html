@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<!-- saved from url=(0056)http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/ -->
+<html dir="ltr" lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>CCCB Introduction to R and Bioconductor, Dec 2012</title>
+
+
+
+<link rel="stylesheet" media="all" href="./CCCB Introduction to R and Bioconductor, Dec 2012_files/style1.css">
+<link rel="stylesheet" type="text/css" href="./CCCB Introduction to R and Bioconductor, Dec 2012_files/style.css">
+
+<script type="text/javascript">
+	/* <![CDATA[ */
+	function addLoadEvent(func){var oldonload=window.onload;if(typeof window.onload!='function'){window.onload=func;}else{window.onload=function(){oldonload();func();}}}
+	/* ]]> */
+</script>
+
+<script type="text/javascript" charset="utf-8">
+		try{
+			var id = location.hash.match( /\#\!\/entry\/(\d+)/ )[1];
+			if ( id ) {
+				window.location = "http://bcb.dfci.harvard.edu/~aedin?p=" + id;
+			};
+		}catch( error ){
+		}
+	</script>		
+	<style type="text/css">
+				#header h1 a {
+				color: #fff !important;
+			}
+</style>
+
+<style id="style-1-cropbar-clipper">/* Copyright 2014 Evernote Corporation. All rights reserved. */
+.en-markup-crop-options {
+    top: 18px !important;
+    left: 50% !important;
+    margin-left: -100px !important;
+    width: 200px !important;
+    border: 2px rgba(255,255,255,.38) solid !important;
+    border-radius: 4px !important;
+}
+
+.en-markup-crop-options div div:first-of-type {
+    margin-left: 0px !important;
+}
+</style></head>
+
+<body class="page page-id-4 page-child parent-pageid-2 two-column content-sidebar fixed highlander-enabled highlander-light">
+
+<div id="page-wrap1">
+
+<div id="page-wrap2">
+
+	<!-- page (actual site content, custom width) -->
+	<div id="page">
+
+	<div id="main-wrap">
+
+    	<div id="mid-wrap">
+
+		<div id="side-wrap">
+
+	<!-- mid column menu bar-->
+			<div id="mid">
+
+				<div id="header">
+
+				<div id="topnav" class="description"> Courses in R and a bit more from Aedin Culhane</div>
+
+				<h1 id="title">Intro to Bioconductor</h1>
+
+					<div id="tabs">
+						<div class="menu">
+						  <div id="tabs">
+	<div class="menu">
+	<ul>
+	<li class="current_page_item"><a href="http://bcb.dfci.harvard.edu/~aedin/" title="Home">Home</a></li>
+	<li class="page_item page-item-2"><a href="http://bcb.dfci.harvard.edu/~aedin/courses/" title="Courses">Courses</a>
+	</li><li class="page_item page-item-2"><a href="http://bcb.dfci.harvard.edu/~aedin/Rpackages/" title="R packages">Dept R Packages</a>
+	</li><li class="page_item page-item-2"><a href="http://bcb.dfci.harvard.edu/~aedin/cbmeeting/" title="CB Meetings">CB meetings</a>
+	</li><li class="page_item page-item-2"><a href="http://bcb.dfci.harvard.edu/~aedin/research" title="My research">My research</a>
+	<!--<ul class='children'>
+	<li class="page_item page-item-4"><a href="http://bcb.dfci.harvard.edu/~aedin/courses/cccb-introduction-to-r-and-bioconductor-may-2011/" title="CCCB Introduction to R and Bioconductor, May&nbsp;2011">CCCB Introduction to R and Bioconductor, May&nbsp;2011</a></li></ul></li>--></li></ul></div>
+	
+</div>					</div>
+
+				</div>
+				</div>
+<div id="mid-content">
+
+	
+		<div id="post-4" class="post-4 page type-page status-publish hentry">
+
+		<h2 class="title left">Introduction to R and Bioconductor, May 2012</h2>
+
+		<p class="right edit-post"></p>
+		<div class="clear"></div>
+
+		<div class="entry">
+			<div class="postbody entry clearfix">
+			
+
+<p><span style="text-decoration:underline;">Course Description</span></p>
+
+<p>This course is an introduction to R and Bioconductor, a powerful and flexible statistical language for analysis of genetic and genomics data (http://www.bioconductor.org/). The course will introduce attendees to the basics of using R for statistical programming, computation, graphics, and modeling, especially for analyzing high-throughput genomic data. We will start with a basic introduction to the R language, reading and writing data, and plotting data. Case studies and data will all be based on real gene expression and genomics data. We will introduce the main classes and packages in Bioconductor. Our goal is to get attendees up and running with R and Bioconductor such that they can use it in their research and are in a good position to expand their knowledge of R and Bioconductor on their own.
+</p>
+
+<p><strong> Instructors </strong></p>
+<ul>
+<li><a href="http://www.hsph.harvard.edu/research/aedin-culhane/">Aedin Culhane</a> contact: aedin@jimmy.harvard.edu</li>
+<li> Guest Lecturers: <ul> <li> Nicolai Juul Birkbak (SNP data) </li>
+                           <li> Svitlana Tyekucheva, Alejandro Quiroz  (Gene Set Analysis) </li>
+							<li> J. Fah Sathirapongsasuti (Exome Seq CNV) </li> 						  
+					   </ul>   
+
+</li></ul>
+
+<p><strong> Schedule</strong></p>
+<p>May 16th-  9:15am – 5:00pm <br>
+May 17th – 9:15am – 12:00pm</p>
+
+
+<p><strong> Required Software</strong></p>
+I recommend the following software. 
+
+<ul>
+<li> R.  Download R from <a href="http://www.r-project.org/">  from the R home page </a>
+</li><li> The integrated development envirnoment (IDE) <a href="http://www.rstudio.org/"> R Studio</a> available for Windows, Mac or Linux OS</li>
+<li> Install <a href="http://www.bioconductor.org/">Bioconductor</a>.  Start R and type the following command (it requires an internet connection) 
+<pre>source("http://www.bioconductor.org/biocLite.R")
+biocLite()
+</pre></li>
+<li> Latex
+<ul>
+<li> Windows:  <a href="http://miktex.org/"> MikTex</a> or there is a easy-to-install Tex software bundle called <a href="http://www.tug.org/protext">proTeXt</a> which
+includes MikTex, the latex editor TeXnicCenter and Ghostscript </li>
+<li> MacOS: <a href="http://www.tug.org/mactex/2011/"> MaxTEx </a>
+</li></ul>
+</li><li> Latex Editor (<a href="http://en.wikipedia.org/wiki/Comparison_of_TeX_editors"> a comparison of editors </a>)
+<ul>
+<li>Windows: Either <a href="http://www.tug.org/texworks/"> TexWorks</a>, <a href="http://www.texniccenter.org/"> TeXnicCenter</a> or simply an enchanced notepad like <a href="http://notepad-plus-plus.org/"> Notepad++</a></li>
+<li> MacOS: <a href="http://pages.uoregon.edu/koch/texshop/"> TeXshop</a> </li>
+<li> Linux:  I tend to use either Kate (within KDE), Emacs or <a href="http://www.tug.org/texworks/">Texworks</a> which is cross platform</li>
+
+<li> Convert Tex to a MSword Document using <a href="http://www.tug.org/applications/tex4ht/mn.html" <="" a=""> TeX4ht</a></li>
+</ul>
+</li></ul>
+
+
+These should be pretty straightforward download and install, but this document provides a little more detail instruction on <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/basic-introduction-to-r-and-bioconductor.pdf">installing R and Bioconductor (from May 2011) </a> extension packages (not required for course).
+
+
+<p><strong>Agenda</strong></p>
+
+Please install the following packages by copying and pasting this into R, or sourcing this script.
+<pre>install.packages(c("R2HTML", "lme4", "manipulate", "RColorBrewer",
+"googleVis","network","igraph","lattice","gplots", "venneuler")
+</pre>
+
+
+<strong>Day 1</strong>
+
+
+<ol>
+<li>History and Background to R, Installing R website  <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Slides.ppt"> slides</a></li>
+
+<li>Introduction to R language (classes, subsetting etc)
+<ul>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/1.Overview.pdf">Introduction Notes</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/1.Overview.R">R code for Introduction Notes</a></li>
+<!--<li><a href="1.Overview.rnw">Introduction rnw</a></li>-->
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Women.xls">Women.xls</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Women.txt">Women.txt</a></li>
+</ul>
+</li>
+
+<li>Plotting in R
+<ul>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/2.Plotting.pdf">Notes on Plotting in R</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/2.Plotting.R">R code for Plotting Notes</a></li>
+<!--<li><a href="2.Plotting.rnw">Plotting rnw</a></li>-->
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/ColorChart.pdf">Chart of colors in R</a></li>
+</ul>
+</li>
+
+<li>Reading Data into R and Bioconductor
+
+<pre>## Install Bioconductor Packages
+source("http://www.bioconductor.org/biocLite.R")
+biocLite(c("GEOquery", "ArrayExpress", "frma", "arrayQualityMetrics", 
+"affycoretools", "made4"))
+biocLite("HGU95Av2_Hs_ENSG",respos="http://brainarray.mbni.med.umich.edu/bioc")
+</pre>
+
+<ul>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/3.ReadWrite.pdf">Notes on reading/writing data in R</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/3.ReadWrite.R">Rcode for reading/writing data in R</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Women.xls">Women.xls</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Women.csv">Women.csv</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Women.txt">Women.txt</a></li>
+</ul>
+</li>
+
+
+<li>Expression Set Class, S4 Class,Example data workflows in R 
+<ul>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Slides.ppt"> slides</a></li>
+
+</ul>
+
+
+</li><li> Reading in SNP data
+<ul>
+<pre>source("http://aroma-project.org/hbLite.R");
+hbInstall("aroma.affymetrix");
+remove.packages("affxparser");
+source("http://www.braju.com/R/hbLite.R");
+hbBiocLite("affxparser");
+</pre>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/copynumbers.Rcourse.pdf">Notes reading SNP data using AROMA</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/rcourse.r">R code for SNP data
+</a></li><li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/rcourse.r"> Scripts for running ASCAT analysis </a><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/ASCAT.zip"> Compressed (zip) files of 5 scripts</a> or
+<ul> Download each of the 5 scripts 
+ <li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/ascat.R"> ascat.R</a></li>
+ <li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/aspcf.R"> aspcf.R</a></li>
+ <li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/organize.ascat.segments.R"> organize.ascat.segments.R</a></li>
+ <li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/predictGG.R"> predictGG.R</a></li>
+ <li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/min.cons.freq.R"> min.cons.freq.R</a></li>
+</ul>
+</li>
+</ul> 
+</li>
+
+
+<li> Normalization and custom cdf files 
+Install packages for this tutorial
+
+
+<ul>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/4.Normalization.pdf">Notes on normalization including using custom cdf file</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/4.Normalization.R">R code for Normalization Notes</a></li>
+<!--<li><a href="4.Normalization.rnw">rnw code for Normalization Notes</a></li>-->
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/cels.zip">zip of cel files</a></li>
+
+<li><b>Results</b><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Report_for_Cels/index.html"> Report from arrayQualityMetrics </a>
+</li></ul>
+</li>
+
+
+<li> Clustering and Exploratory Data Analysis in R  <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/EDA.ppt"> slides</a>
+<ul>
+Install packages for this tutorial
+<pre>## Install Bioconductor Packages
+source("http://www.bioconductor.org/biocLite.R")
+biocLite("made4")
+biocLite("hgu95av2.db")
+</pre>
+
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/EDA.pdf">Notes on EDA in R</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/EDA.R">R code for EDA Notes</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/data.vsn.csv">data.vsn</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/annt.txt">annt.txt</a></li>
+<!--<li><a href="EDA.rnw">EDA rnw</a></li>-->
+<li> Other potentially useful packages <a href="http://www.bioconductor.org/packages/devel/bioc/html/EDASeq.html"> EDA for sequence data EDASeq </a> </li>
+
+</ul></li>
+<li> Feature Selection (Limma etc), GSEA and Annotating data using annotate/BiomaRt
+<ul>
+<li> Feature Selection and Gene Annotation
+<a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/5-FeatureSelectionAnnot.pdf">Notes on Feature Selection using Limma and Annotating Genes in R</a></li>
+<!--<a href="5-FeatureSelectionAnnot.rnw">rmw on Feature Selection using Limma and Annotating Genes in R</a></li>-->
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/5-FeatureSelectionAnnot.R">R code for Feature Selection/Annotation Notes</a></li>
+
+
+<li> References which compare different feature selection approaches
+<ul>
+<li>Jeffery IB, Higgins DG, Culhane AC. (2006) <a href="http://www.biomedcentral.com/1471-2105/7/359">Comparison and evaluation of microarray feature selection methods.</a> BMC Bioinformatics 7:359.</li>
+<li>Murie C, Woody O, Lee AY, Nadon R. (2009) <a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2674054/?tool=pubmed">Comparison of small n statistical tests of differential expression applied to microarrays.</a> BMC Bioinformatics. 10:45.</li>
+</ul>
+</li><li>Gene Annotation HTML output<a title="example1.html" href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/example1.html" target="_blank"> Results of aafTableAnn()</a></li>
+</ul>
+
+
+</li><li> Literature mining, tag cloud  (will not be presented during class) 
+<ul>
+<li> See the Text Mining Package R library <a href="http://software.rc.fas.harvard.edu/mirrors/R/web/packages/tm/index.html">tm</a> and <a href="http://software.rc.fas.harvard.edu/mirrors/R/web/packages/wordcloud/index.html"> wordcloud </a>. There are also many network and graph packages will be covered later</li>
+<li> Sample <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/tagcloud.R">R script</a> to create a word cloud from frequently occuring words in pubmed abstracts </li>
+<li> Example of script output 
+
+<a href="./CCCB Introduction to R and Bioconductor, Dec 2012_files/tagcloud.png" target="_blank"> <img src="./CCCB Introduction to R and Bioconductor, Dec 2012_files/tagcloud.png" ,="" width="50," height="50"> </a>
+</li><li> Also see packages annotate, XML etc </li></ul>
+
+
+
+<ol>
+
+<strong>Day 2</strong>
+<p>
+For today please install the required packages by coping these commands in R 
+
+</p><ol>
+<li>Recap on previous day </li>
+<li>Overview of <a href="http://cccb.dfci.harvard.edu/">CCCB</a> and its resources (Mick Correll) </li>
+<li> Exome CNV analysis (Fah Sathirapongsasuti)
+<ul>
+
+<li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Exome_tutorial120517.pptx"> Slides (powerpoint)</a></li>
+<li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Exome_tutorial120517.pdf">  Slides (pdf)</a></li>
+
+<pre>source("http://bioconductor.org/biocLite.R")
+biocLite("DNAcopy")
+install.packages("ExomeCNV")
+</pre>
+<br>
+<li>
+<a href="https://secure.genome.ucla.edu/index.php/ExomeCNV_User_Guide"> Userguide to Exome CNV</a>
+</li><li>
+reference <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Sathirapongsasuti_2011.pdf"> Sathirapongsasuti et al., 2011 Exome sequencing-based copy-number variation and loss of heterozygosity detection: ExomeCNV</a><p></p>
+</li>
+<pre>library(ExomeCNV)
+
+chr.list = c("chr19","chr20","chr21")
+
+suffix = ".coverage"
+
+prefix = "http://genome.ucla.edu/~fah/ExomeCNV/data/normal."
+normal = read.all.coverage(prefix, suffix, chr.list, header=T)
+
+prefix = "http://genome.ucla.edu/~fah/ExomeCNV/data/tumor."
+tumor  = read.all.coverage(prefix, suffix, chr.list, header=T)
+
+demo.logR = calculate.logR(normal, tumor)
+
+demo.eCNV = c()
+for (i in 1:length(chr.list)) {
+    idx = (normal$chr == chr.list[i])
+    ecnv = classify.eCNV(normal=normal[idx,], tumor=tumor[idx,], logR=demo.logR[idx], min.spec=0.9999, min.sens=0.9999, option="spec", c=0.5, l=70)
+    demo.eCNV = rbind(demo.eCNV, ecnv)
+}
+
+demo.cnv = multi.CNV.analyze(normal, tumor, logR=demo.logR, all.cnv.ls=list(demo.eCNV), coverage.cutoff=5, min.spec=0.99, min.sens=0.99, option="auc", c=0.5)
+
+do.plot.eCNV(demo.eCNV, lim.quantile=0.99, style="idx", line.plot=F)
+do.plot.eCNV(demo.cnv, lim.quantile=0.99, style="bp", bg.cnv=demo.eCNV, line.plot=T)
+write.output(demo.eCNV, demo.cnv, "demo")
+
+</pre>
+ 
+<br>
+<li> <a href="http://circos.ca/"> Circos Circular image of genes</a> </li>
+
+
+
+</ul>
+</li>
+<li> Data Integration and Gene Set Analysis (Svitlana, Alejandro) 
+<br>
+For this analysis you will need the following packages
+<pre>source("http://bioconductor.org/biocLite.R")
+biocLite("RTopper")
+biocLite("limma")
+</pre>
+<ul>
+Gene Set Data Integration (Svitlana Tyekucheva)
+<li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Gen_sets_intro.pdf"> Slides (pdf) </a>
+</li><li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Msig_c2_cp_kegg_v3.rda"> Exercise Gene Set Data </a>
+</li><li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Intro_gene_sets_ex.R"> Exercise R Code </a>
+</li><li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Tyekucheva2011.pdf"> Tyekucheva et al., Integrating diverse genomic data using gene sets
+Genome Biology 2011, 12:R105 </a>
+</li></ul>
+
+<ul>
+Gene Group Analysis (Alejandro Quiroz-Zarate)
+<li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/GeneGroupAnalysisBetaCS_1.0.tar.gz"> Gene Group Analysis packages (For Mac Users)</a>
+</li><li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/GeneGroupAnalysisBetaCS_1.0.zip"> Gene Group Analysis packages (For Windows Users)</a>
+
+</li><li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/GeneGroupAnalysis.pptx"> Slides Gene Group Analysis (powerpoint) </a>
+</li><li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/GeneGroupAnalysis.pdf">Slides Gene Group Analysis (pdf) </a>
+</li><li> <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/GeneGroupAnalysis.R">R code for the Gene Group Analysis Exercise </a>
+</li></ul>
+
+<ul>
+R packages for Gene Set Analysis
+<li><a href="http://www.bioconductor.org/packages/2.10/bioc/html/GOstats.html">GoStats</a>
+</li><li><a href="http://www.bioconductor.org/packages/2.10/bioc/html/GSVA.html">GSVA</a>
+</li><li><a href="http://www.bioconductor.org/packages/2.10/bioc/html/GSEAlm.html">GSEAlm</a>
+</li><li> <a href="http://www.bioconductor.org/packages/2.10/bioc/html/globaltest.html"> GlobalTest</a>
+</li><li> <a href="http://www.bioconductor.org/packages/2.10/bioc/html/goseq.html"> goseq Gene Set analysis for RNA-Seq data </a>
+</li><li><a href="http://www.bioconductor.org/packages/2.10/bioc/html/RTopper.html">RTopper</a>
+</li><li><a herf="http://www.bioconductor.org/packages/2.10/bioc/html/GeneGroupAnalysis.html">GeneGroupAnalysis  </a>
+</li><li><a href="http://www.bioconductor.org/packages/2.10/bioc/html/iBBiG.html">iBBiG</a>
+</li></ul>
+
+
+<ul>
+ GeneSet and Pathway Databases
+<li>GeneSigDB <a title="GeneSIgDB" href="http://compbio.dfci.harvard.edu/genesigdb">http://compbio.dfci.harvard.edu/genesigdb</a></li>
+<li>MSigDB  <a href="http://www.broadinstitute.org/gsea/msigdb/index.jsp">http://www.broadinstitute.org/gsea/msigdb/index.jsp </a></li>
+<li>KEGG  <a href="http://www.genome.jp/kegg/">http://www.genome.jp/<strong>kegg</strong>/</a></li>
+<li>GO  <a href="http://www.geneontology.org/">http://www.geneontology.org/ </a></li>
+<li> Reactome<a href="http://www.reactome.org/ReactomeGWT/entrypoint.html">http://www.reactome.org</a>
+</li><li> Wikipathway <a href="http://www.wikipathways.org/"> http://wikipathways.org
+</a>
+</li></ul>
+</li></ol>
+<p></p>
+
+
+<!-------------Additional Stuff Not covered in Course---------->
+
+<br>
+<hr>
+<p><strong>Additional manuals</strong></p>
+<p>These will not be covered in the course, but maybe helpful if you are new to R.
+<a href="http://isites.harvard.edu/icb/icb.do?keyword=k76038"> Lecture notes from Bio503 Programming and Statistical Modeling in R (Jan 2011) </a></p>
+<p>New to R: Installation and getting help. <a href="http://bcb.dfci.harvard.edu/~aedin/courses/cccb-introduction-to-r-and-bioconductor-may-2011/basic-introduction-to-r-and-bioconductor.pdf">Basic Introduction to R and Bioconductor</a></p>
+<hr>
+
+<p><strong>R Resources</strong></p>
+<ul>
+<li>An excellent beginners guide to R is from <a href="http://cran.r-project.org/doc/contrib/Paradis-rdebuts_en.pdf">Emmanuel Paradis</a></li>
+<li>Introduction to R classes and objects <a href="http://cran.r-project.org/doc/manuals/R-intro.html"> on R site</a></li>
+<li>Tom Short’s R <a href="http://cran.r-project.org/doc/contrib/Short-refcard.pdf"> reference card</a> and other contributed are useful from the R <a href="http://cran.r-project.org/other-docs.html"> the R contributed documentation</a></li>
+
+<li>Stephen Eglen’s publications in PLoS Computational Biology on <a href="http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1000482"> A Quick Guide to Teaching R Programming to Computational Biology Students</a>. It includes links to lecture notes and an overview of useful introductory books in R.</li>
+<li>Simple Intro to Linear Models <a href="http://www.cyclismo.org/tutorial/R/linearLeastSquares.html">view</a></li>
+<li> Books for learning R and Bioconductor <a href="http://amzn.com/w/2PTDZDB6JMG8Q"> my amazon wish list </a></li>
+
+
+</ul>
+
+
+<p><strong>R Web Services</strong></p><p>
+</p><ul>
+<li><a href="http://www.math.montana.edu/Rweb/">Rweb</a></li>
+<li><a href="http://wiki.fhcrc.org/caBioc">caBIG</a></li>
+</ul>
+<p>
+</p>
+<p><strong>R Cloud Computing</strong></p><p>
+</p><ul>
+<li> There was an RCloud at <a href="http://www.ebi.ac.uk/">EBI </a> but I think this might be down</li>
+<li><a href="http://www.crdata.org/">CRdata.org</a></li>
+</ul>
+<p>
+</p>
+<p><strong>R Web Development Kits</strong></p><p>
+</p><ul>
+<li><a href="http://bioconductor.org/packages/release/bioc/html/RWebServices.html" rel="nofollow">RWebServices - exposes R packages as SOAP-based web services</a></li>
+<li><a href="http://biocep-distrib.r-forge.r-project.org/" rel="nofollow">Biocep-R</a></li>
+<li><a href="http://main.g2.bx.psu.edu/" rel="nofollow">Galaxy - Web Integration Framework</a>. Include SamTools and tools for analysis of NGS data</li>
+</ul>
+
+(Thanks to Tom Girke for some of these links)
+<hr>
+<p><strong>Bioconductor Resources</strong></p>
+<ul>
+<li><a href="http://www.bioconductor.org/workshops/">Bioconductor Courses</a></li>
+<li>A starter to Affymetrix data analysis <a href="http://www.bioconductor.org/workshops/2006/biocintro_oct/labs/Affy/AffyLab-lab.pdf">Jean Wu’s old but still useful lab on Affymetrix data analysis</a></li>
+
+<li><a href="http://manuals.bioinformatics.ucr.edu/home/R_BioCondManual">Thomas Girke’s (UC Riverside) excellent and extensive intro </a>into R and Bioconductor</li>
+
+<li><a href="http://manuals.bioinformatics.ucr.edu/home/ht-seq">Thomas Girke’s (UC Riverside) Analysis of RNA-Seq, ChIP-Seq and SNP-Seq Data </a> using R and Bioconductor</li>
+
+
+</ul>
+<hr>
+<p><strong>Methods comparing different feature selection approaches</strong>
+</p><ul>
+<li>Jeffery IB, Higgins DG, Culhane AC. (2006) <a href="http://www.biomedcentral.com/1471-2105/7/359">Comparison and evaluation of microarray feature selection methods.</a> BMC Bioinformatics 7:359.</li>
+<li>Murie C, Woody O, Lee AY, Nadon R. (2009) <a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2674054/?tool=pubmed">Comparison of small n statistical tests of differential expression applied to microarrays.</a> BMC Bioinformatics. 10:45.</li>
+</ul>
+<hr>
+
+<p><strong>Links to Gene Set Analysis Resources</strong>
+</p><ul>
+<li>GeneSigDB <a title="GeneSIgDB" href="http://compbio.dfci.harvard.edu/genesigdb">http://compbio.dfci.harvard.edu/genesigdb</a></li>
+<li>MSigDB  <a href="http://www.broadinstitute.org/gsea/msigdb/index.jsp"><cite>http://www.broadinstitute.org/gsea/msigdb/index.jsp</cite> </a></li>
+<li>KEGG  <a href="http://www.genome.jp/kegg/"><cite>http://<cite>www.genome.jp/<strong>kegg</strong>/</cite> </cite></a></li>
+<li>GO  <a href="http://www.geneontology.org/">http://<cite>www.geneontology.org/</cite> </a></li>
+</ul>
+<hr>
+<p><strong>RNA Seq Analysis Resources</strong>
+</p><ul>
+
+
+<li> General review: Oshlack A, Robinson MD, Young MD. (2010) <a href="http://www.ncbi.nlm.nih.gov/pubmed/21176179"> From RNA-seq reads to differential expression results.</a>Genome Biol. 2010;11(12):220. [PMID:21176179]</li>
+<li> 
+<a href="http://seqanswers.com/wiki/How-to/RNASeq_analysis"> Useful tutorial from SeqAnswers</a>
+</li>
+ 
+<li> <b>File Formats</b> 
+<ul> <li><a href="http://en.wikipedia.org/wiki/FASTQ_format"> FASTQ </a> is the sequence of a short read. FASTQ is an extension to a FASTA file and bundles the sequence and its quality data. Increasing NGS data is stored as SAM/BAM files which contain aligned reads.
+</li><li> <a ref="http://samtools.sourceforge.net/"> SAM (Sequence Alignment/Map) </a> format is a generic format for storing large nucleotide sequence alignments. It is rapidly becoming the standard for reporting short read alignment and is supported by a wide range of downstream analysis tools. SAM Tools provide various utilities for manipulating alignments in the SAM format
+</li><li> BAM files contain all the same information as SAM files, but is just compressed to be more space efficient and searchable, BAM files use a variant of gzip compression called BGZF. You should always convert your SAM files into BAM to save storage space and BAM files are faster to manipulate.  
+
+</li><li>For more information see on SAM/BAM see: Li H., Handsaker B., Wysoker A., Fennell T., Ruan J., Homer N., Marth G., Abecasis G., Durbin R. and 1000 Genome Project Data Processing Subgroup (2009) <a href="http://www.ncbi.nlm.nih.gov/pubmed/19505943"> The Sequence alignment/map (SAM) format and SAMtools </a>. Bioinformatics, 25, 2078-9. [PMID: 19505943] 
+</li></ul>
+
+</li><li> RNA Seq Tutorial (by Marc Carlson, Valerie Obenchain, Herve Pages, Paul Shannon,Daniel Tenenbaum, Martin Morgan∗
+from May 2012) 
+<ul> 
+<!----<li> Complete RNA seq Tutorial <a href="SeattleIntro2012.pdf">  Tutorial (pdf file) </a> --->
+<li> Complete RNA seq Tutorial <a href="http://www.bioconductor.org/help/course-materials/2012/SeattleMay2012/">  Tutorial (pdf file) </a>. 
+
+</li><li> Download the R packages to run this tutorial
+<pre>source("http://bioconductor.org/scratch-repos/pkgInstall.R")
+pkgInstall("SeattleIntro2012", type="source")
+</pre>
+
+</li><li> The R code just to run the RNA-seq part of this tutorial (page 49-56 of the pdf) <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/SeattleIntro2012_RNAseq.R"> SeattleIntro2012_RNAseq.R</a>  and the data <a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/counts.txt"> counts </a> which are RNA-seq counts from the Pasilla data set.
+<br>
+Brooks, AN, ̃Yang,L   Duff, MO, Hansen, KD,  Park,JW, ̃Dudoit, S, Brenner, SE and Graveley.BR (2011) Conservation of an RNA regulatory map between Drosophila and mammals. Genome Research, 193–202, 
+</li></ul>
+
+</li><li> <b>Repositories: </b>
+<ul> <li>Sequence Read Archive (<a href="http://www.ncbi.nlm.nih.gov/sra"> SRA</a>)  at NCBI. Use the <a href="http://www.ncbi.nlm.nih.gov/geo/browse/">GEO browser</a> to find data
+</li><li>European Nucleotide Archive (<a href="http://www.ebi.ac.uk/ena/home">ENA</a>) at EBI, Cambridge
+</li><li> The <a href="http://bowtie-bio.sourceforge.net/recount">ReCount repository</a> from Bowtie also has several example datasets
+</li></ul>
+
+</li><li> <b>A few of the many Bioconductor Packages</b>
+<ul>
+<li> <a href="http://www.bioconductor.org/packages/release/bioc/html/easyRNASeq.html"> easyRNASeq </a> a wrapper packages around several other packagse to make count summarization, normalization and analysis of RNA-seq data easier.
+</li><li> Normalization and exploratory data analysis of RNAseq data using <a href="http://www.bioconductor.org/packages/release/bioc/html/EDASeq.html"> EDAseq</a>
+</li><li>Differential Gene Expression analysis (among replicates)  <a href="http://www.bioconductor.org/packages/2.10/bioc/html/edgeR.html"> edgeR </a> and <a href="http://www.bioconductor.org/packages/release/bioc/html/DESeq.html">DESeq</a>  based on the negative binomial distribution.  
+</li><li>Differential exon level expression analysis: <a href="http://www.bioconductor.org/packages/release/bioc/html/DEXSeq.html"> DEXSeq</a>
+</li><li> The package <a href="http://www.bioconductor.org/packages/release/bioc/html/tweeDEseq.html">tweeDEseq</a> makes the data package <a href="http://www.bioconductor.org/packages/release/data/experiment/html/tweeDEseqCountData.html"> tweeDEseqCountData</a> contains three data sets of counts from RNA-seq experiments
+by Cheung et al. (2010), Montgomery et al. (2010) and Pickrell et al. (2010). The latter is RNA seq data on lymphoblastoid cell lines derived from 69 unrelated nigerian individuals. 
+</li><li>Gene Set Enrichment Analysis <a href="http://www.bioconductor.org/packages/2.10/bioc/html/goseq.html">goseq</a>
+
+<br>
+</li><li>
+To install these
+<pre>source("http://bioconductor.org/biocLite.R")
+biocLite(c("easyRNAseq", "EDAseq", "edgeR", "DEseq",
+ "DEXseq", "tweeDEseq", "tweeDEseqCountData", goseq))
+</pre>
+
+</li></ul>
+</li></ul>
+<hr>
+<p><strong>Survival Analysis (Survcomp)</strong>
+
+</p><ul>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/survival.pdf">Notes on Survival</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/survival.R">R code for survival</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/survival.Rnw">Rnw file for survival</a></li>
+<li><a href="http://bcb.dfci.harvard.edu/~aedin/courses/Bioconductor/Bioinformatics%202011%20Schroder-2.pdf">Manuscript describing survcomp</a></li>
+</ul>
+<hr>
+<p><strong>A few Code Tips</strong></p>
+
+<p>Function to create an ExpressionSet given 2 data matrices (or data.frames) containing 1) expression data and 2) annotation</p>
+<pre>makeEset&lt;-function(eSet, annt){
+          #Creating an ExpressionSet from eSet, a normalized gene expression matrix
+          # and annt, a data.frame containing annotation
+    metadata &lt;- data.frame(labelDescription = colnames(annt), row.names=colnames(annt))
+    phenoData&lt;-new("AnnotatedDataFrame", data=annt, varMetadata=metadata)
+    if (inherits(eSet, "data.frame")) eSet= as.matrix(eSet)
+    if (inherits(eSet, "ExpressionSet")) eSet=exprs(eSet)
+    data.eSet&lt;-new("ExpressionSet", exprs=eSet, phenoData=phenoData)
+    print(varLabels(data.eSet))
+    return(data.eSet)
+}</pre>
+
+
+<p> Starting with Biomart</p>
+
+<pre> 
+library(biomaRt)
+mart=useMart("ensembl")
+mart&lt;-useDataset("hsapiens_gene_ensembl",mart)
+geneAnnt&lt;-getBM(attributes=c("affy_hg_u95av2","hgnc_symbol","chromosome_name","band", "entrezgene"),filters="affy_hg_u95av2",values=c("1939_at","1503_at","1454_at"), mart=mart)
+</pre>
+
+
+<hr>
+
+
+<p>Updated.May 2012. Aedin Culhane
+</p></ol></li></ol></div>
+			</div>
+			
+						
+		</div>
+
+	</div>
+
+   
+   
+<!-- mid content -->
+
+</div>
+
+<!-- /main wrapper -->
+
+<div class="clearcontent"></div>
+
+
+<!-- /footer -->
+
+</div>
+<!-- /page -->
+
+</div>
+
+</div>
+<!-- /page wrappers -->
+
+
+
+</div></div></div></body><iframe allowtransparency="true" frameborder="0" id="abs-top-frame" src="./CCCB Introduction to R and Bioconductor, Dec 2012_files/top.html" style="position: fixed !important; z-index: 2147483647 !important; overflow: hidden !important; top: 0px !important; left: 0px !important; right: 0px !important; width: 0px !important; height: 0px !important; max-height: none !important; min-height: 0px !important; margin: 0px auto !important; padding: 0px !important; border: 0px !important; background-color: transparent !important; display: none !important;"></iframe></html>

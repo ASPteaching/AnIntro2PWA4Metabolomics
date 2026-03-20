@@ -1,0 +1,738 @@
+
+---
+title: "Benchmarking Enrichment Packages"
+subtitle: "ORA and MSEA for metabolomics using shared metabolite sets"
+author: "Alex Sanchez"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    code_folding: hide
+    self_contained: true
+    number_sections: true
+    theme: readable
+knitr:
+  opts_chunk:
+    echo: true
+    cache: false
+    prompt: false
+    tidy: true
+    comment: NA
+    message: false
+    warning: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(stringr)
+  library(readr)
+  library(localEnrichment)
+})
+
+
+# Helper for nicer printing of tibbles
+print_tbl <- function(x, n = 6) {
+  print(dplyr::as_tibble(x), n = n)
+}
+```
+
+# Introduction
+
+Enrichment analysis aims to facilitate the biological interpretation of omics results by relating lists of features (genes, proteins, metabolites) to prior biological knowledge stored in databases (pathways, ontologies, chemical
+classes, etc.).
+
+In genomics, ORA and GSEA workflows are now fairly standardized. In metabolomics, however, tools are more fragmented and rely on different
+identifier systems and pathway databases.
+
+The goals of this document are:
+
+1. **Quick-start:** show how to run basic over-representation analysis (ORA)  and metabolite set enrichment analysis (MSEA/GSEA-like) with several tools.
+2. **Naïve benchmarking:** compare the results of these tools on the same datasets, using MetaboAnalyst Web output as a "practical reference"gold standard".
+
+We will focus on:
+
+- `enrichmet` (pathway enrichment, GSEA, centrality, plots)
+- `localEnrichment` (our own infrastructure for metabolite sets and ORA/MSEA)
+- `ChemRich` (which does not prohttps://raw.githubusercontent.com/barupal/ChemRICH/refs/heads/master/chemrich_minimum_analysis.R) 
+- `MetaboAnalystR`, has become very hard to make it work so the examples will be run from its web site and downloaded.
+
+Rather than exhaustively exploring each tool, we restrict ourselves to a reproducible workflow:
+
+1. Use a **shared collection of metabolite sets** (`EnrichmentSet` objects).
+2. For each dataset, derive:
+   - a list of **significant metabolites** (*signature*),
+   - a **background** tailored to that signature, using `filterEnrichmentSet()`.
+3. Run ORA (and MSEA when possible) with the different tools on the same sets.
+
+
+# Data and metabolite sets
+
+Any pathway analysis requires two inputs:
+
+- A list of features usually associated with a phenotype (e.g. metabolites differentially quantified between two groups). 
+- A source of annotations for these features, that can be generically described as *Feature sets* or, as in this cas *Metabolite Sets*.
+
+## The datasets
+
+We use two datasets that have been preprocessed elsewhere (see file [Benchmarking-PrepareData.Rmd](Benchmarking-PrepareData.Rmd)).
+
+1. The **Cachexia** dataset. This is a popular example used by MetaboAnalyst, where a comparison between affected and control patients is performed. It has the drawback that only  *differential*  metabolites are provided, which makes it only partially interesting for some types of analyses. We keep it for its popularity in MetaboAnalyst.
+
+2. The **ST000291** dataset, downloaded from Metabolomics Workbench, and used in a fobitools use case. This is obtained by a nutritional intervention study where a comparion among consumption of Apple, Cranberries and Vaseline has been performed. In this case we have the full dataset and the results of comparing the groups using limma whih leads to around 40 differential metabolites. We focus only on the *Cranberry vs Baseline* comparison.
+
+### Loadinhg datasets
+
+The data for this use case has been prepared elsewhere and is available in the `data`directory.
+
+```{r load-data}
+# Cachexia: topTable + ID mapping
+cachexia_map_path  <- "data/Cachexia_map.csv"
+cachexia_tt_path   <- "data/Cachexia_topTable.Rda"
+
+Cachexia_map <- read.csv(cachexia_map_path, stringsAsFactors = FALSE)
+load(cachexia_tt_path)  # loads 'topCachexia'
+
+cat("Cachexia_map:\n")
+print_tbl(head(Cachexia_map))
+cat("\ntopCachexia:\n")
+print_tbl(head(topCachexia))
+
+# ST000291: Cranberry vs Baseline topTable + ID mapping
+st291_map_path   <- "data/MW_ST000291__map.csv"
+st291_tt_path    <- "data/MW_ST000291-topCvsB.Rda"
+
+MS_ST000291_map <- read.csv(st291_map_path, stringsAsFactors = FALSE)
+load(st291_tt_path)  # loads 'topCranVSBase'
+
+cat("\nMS_ST000291_map:\n")
+print_tbl(head(MS_ST000291_map))
+cat("\ntopCranVSBase:\n")
+print_tbl(head(topCranVSBase))
+```
+
+## Metabolite Sets
+
+We also use a **unified collection of metabolite sets**, previously constructed and saved as:
+
+- `KEGGset_global`, `KEGGset_global_df`
+- `KEGGset_study`,  `KEGGset_study_df`
+- `ChemicalClassSet`, `ChemicalClassSet_df`
+- `SMPDBset`, `SMPDBset_df`
+
+All sets use **HMDB IDs** as feature identifiers but can be easily converted into **PubChemIDs** using the `metaboliteIDmapping` package.
+
+### Load Metabolite Sets
+
+Metabolite sets have been prepared elsewhere and saved as `EnrichmentSet` objects of the class defined in the `localEnrichment` package.
+
+```{r load-data}
+# Metabolite sets (EnrichmentSet collection)
+mets_collection_path <- "databases/MetaboliteSets_Collection.Rda"
+load(mets_collection_path)
+
+cat("\nEnrichmentSet objects loaded:\n")
+show(KEGGset_global);      cat("\n")
+show(ChemicalClassSet);    cat("\n")
+show(SMPDBset);            cat("\n")
+
+cat("\nKEGGset_global_df:\n")
+print_tbl(head(KEGGset_global_df))
+
+cat("\nChemicalClassSet_df:\n")
+print_tbl(head(ChemicalClassSet_df))
+
+cat("\nSMPDBset_df:\n")
+print_tbl(head(SMPDBset_df))
+
+```
+
+
+Notice that the data.frames contain the "set name" in the first column. For Pathway Analysis it may be preferable -depending on the tool used- to have the Set ids. This information is also contained in the `EnrichmentSet` object and can be easily extracted from there.
+
+```{r}
+KEGGset_global_df_ids <-as.MetaboliteSetDataFrame(KEGGset_global, id_type ="both")
+head(KEGGset_global_df_ids)
+
+SMPDBset_df_ids <-as.MetaboliteSetDataFrame(SMPDBset, id_type ="both")
+head(SMPDBset_df_ids)
+
+```
+
+
+# Building signatures and backgrounds
+
+Our aim is to derive **signatures** and **backgrounds** that are compatible with the `EnrichmentSet` objects, which use **HMDB IDs**.
+
+We therefore:
+
+1. Map each topTable to HMDB IDs.
+2. Construct a vector of significant HMDB IDs (signature).
+3. Use `filterEnrichmentSet(Eset, ids)` to restrict the metabolite sets to those
+   that contain at least one of the signature metabolites.
+4. Build a **background** as the union of all metabolites in the filtered sets.
+
+## Cachexia: HMDB mapping and signature
+
+```{r cachexia-hmdb}
+library(tibble)
+
+# Convert topCachexia to tibble with metabolite name
+cachexia_tt <- topCachexia %>%
+  rownames_to_column(var = "Metabolite") %>%
+  left_join(Cachexia_map, by = c("Metabolite" = "Query"))
+
+cat("Cachexia limma table with mapping:\n")
+print_tbl(cachexia_tt)
+
+# p-value column and threshold
+p_col_cachexia <- "adj.P.Val"
+alpha_cachexia <- 0.05
+
+# Signature: HMDB IDs of significant metabolites
+cachexia_sig_HMDB <- cachexia_tt %>%
+  filter(!is.na(HMDB),
+         !!rlang::sym(p_col_cachexia) < alpha_cachexia) %>%
+  pull(HMDB) %>%
+  unique()
+
+length(cachexia_sig_HMDB)
+cachexia_sig_HMDB
+```
+
+Note that in this Cachexia dataset we only have *differential* metabolites,
+not the full list of measured features. A realistic background based purely
+on the data is therefore impossible. Instead, we derive a *functional background* from the metabolite-set collection.
+
+### Filter EnrichmentSets by signature (Cachexia)
+
+We now use `filterEnrichmentSet()` to keep only sets that contain at
+least one signature metabolite. This creates a **signature-induced subset**
+of KEGG pathways (or other sets).
+
+```{r cachexia-filter-es, eval=FALSE}
+library(localEnrichment)  
+# Filter KEGG global pathways to those that contain ≥1 Cachexia HMDB ID
+KEGGset_cachexia <- filterEnrichmentSet(KEGGset_global, ids = cachexia_sig_HMDB)
+
+show(KEGGset_cachexia)
+```
+
+To construct a background and a table suitable for `enrichmet()`, we need:
+
+- The set names retained in `KEGGset_cachexia`.
+- The HMDB members of each set.
+
+The exact internal structure of `EnrichmentSet` may vary. A common pattern is
+an S4 slot `sets` containing a named list of feature vectors. If this is the
+case, we can do:
+
+```{r cachexia-background, eval=FALSE}
+# Example assuming an S4 slot 'sets' with a named list of HMDB vectors
+slotNames(KEGGset_cachexia)
+
+# Extract background as the union of all HMDB IDs in the filtered sets
+sets_list_cachexia <- KEGGset_cachexia@sets
+background_cachexia_HMDB <- unique(unlist(sets_list_cachexia))
+
+length(background_cachexia_HMDB)
+
+# Pathway ↔ metabolite table for enrichmet()
+PathwayVsMetabolites_cachexia <- tibble::tibble(
+  Pathway     = names(sets_list_cachexia),
+  Metabolites = vapply(
+    sets_list_cachexia,
+    FUN = function(x) paste(x, collapse = ","),
+    FUN.VALUE = character(1)
+  )
+)
+
+print_tbl(head(PathwayVsMetabolites_cachexia))
+```
+
+> **Important:**  
+> If your `EnrichmentSet` implementation uses *different* slot names or has
+> accessor functions, adapt the lines using `KEGGset_cachexia@sets`
+> accordingly. The idea is simply to retrieve:
+> - a *named list* of HMDB vectors for each set, and
+> - its names, which are the set identifiers.
+
+If you prefer to avoid S4 internals, you can construct a filtered
+`PathwayVsMetabolites` table using the accompanying `*_df` object and
+the signature:
+
+```{r cachexia-background-alt}
+# Alternative: derive filtered KEGG df directly (without using slots)
+
+# Expand global KEGG df to long format
+kegg_long <- KEGGset_global_df %>%
+  mutate(Metabolites = str_split(Metabolites, ",")) %>%
+  unnest(Metabolites)
+
+# Keep sets that contain ≥1 signature HMDB ID
+selected_sets_cachexia <- kegg_long %>%
+  filter(Metabolites %in% cachexia_sig_HMDB) %>%
+  pull(set_name) %>%
+  unique()
+
+length(selected_sets_cachexia)
+
+# Filter KEGG df to these sets
+KEGGset_cachexia_df <- KEGGset_global_df %>%
+  filter(set_name %in% selected_sets_cachexia)
+
+# Functional background = union of all HMDB IDs in selected sets
+background_cachexia_HMDB <- KEGGset_cachexia_df %>%
+  mutate(Metabolites = str_split(Metabolites, ",")) %>%
+  unnest(Metabolites) %>%
+  pull(Metabolites) %>%
+  unique()
+
+length(background_cachexia_HMDB)
+head(background_cachexia_HMDB)
+
+# Data frame in the format expected by enrichmet()
+PathwayVsMetabolites_cachexia <- KEGGset_cachexia_df %>%
+  rename(Pathway = set_name)
+
+print_tbl(head(PathwayVsMetabolites_cachexia))
+```
+
+In the remainder, we will use this **df-based version**, which is simpler and
+does not depend on the internal structure of the `EnrichmentSet` object.
+
+
+## ST000291: PubChem and HMDB mappings and signature
+
+This dataset is annotated with PubChem identifiers, but the metaboliteSets available are based on HMDB.
+
+The code below shows how to prepare a list of selected metabolites and background straight from the available information. 
+
+```{r st291-Pbchem}
+## ST000291: signature (PubChem) and background
+
+# top table from limma
+st291_tt <- topCranVSBase   # ja carregat anteriorment
+
+# signature (adj.P.Val < 0.05)
+sig_st291 <- st291_tt %>%
+  filter(adj_pvalue  < 0.25) %>%
+  pull(PubChemCID) %>%
+  unique()
+
+# background = ALL tested metabolites
+bg_st291 <- st291_tt %>%
+  pull(PubChemCID) %>%
+  unique()
+
+cat("Signature size:", length(sig_st291), "\n")
+cat("Background size:", length(bg_st291), "\n")
+
+```
+
+These lists however cannot be directly used because of the way the MetaboliteSets are built.
+
+Instead, we will convert the identifiers from PubChem to HMDB using the `metaboliteIDmapping` package. 
+
+
+```{r}
+############################################################
+## ST000291 — Mapping PubChem → HMDB and Enrichment
+############################################################
+
+## 0. Load mapping table from metaboliteIDmapping
+library(metaboliteIDmapping)
+
+mapping_full <- metabolitesMapping   # tibble ~1M rows
+
+# Keep only PubChem↔HMDB rows
+mapping_pc_hmdb <- mapping_full %>%
+  dplyr::filter(!is.na(CID), !is.na(HMDB)) %>%
+  dplyr::select(CID, HMDB) %>%
+  dplyr::distinct()
+
+############################################################
+## 1. Prepare limma topTable for ST000291
+############################################################
+
+# The object topCranVSBase is already loaded earlier in the Rmd
+# It contains column: PubChemCID with numeric or character CIDs
+
+bg_pubchem <- topCranVSBase$PubChemCID %>% unique()
+
+sig_pubchem <- topCranVSBase %>%
+  dplyr::filter(pvalue< 0.05) %>%
+  dplyr::pull(PubChemCID) %>% unique()
+
+cat("Signature PubChem:", length(sig_pubchem), "\n")
+cat("Background PubChem:", length(bg_pubchem), "\n")
+
+
+############################################################
+## 2. PubChem → HMDB conversion (via metaboliteIDmapping)
+############################################################
+
+# Background HMDB
+bg_hmdb <- mapping_pc_hmdb %>%
+  dplyr::filter(CID %in% bg_pubchem) %>%
+  dplyr::pull(HMDB) %>% unique()
+
+# Signature HMDB
+sig_hmdb <- mapping_pc_hmdb %>%
+  dplyr::filter(CID %in% sig_pubchem) %>%
+  dplyr::pull(HMDB) %>% unique()
+
+cat("Signature HMDB:", length(sig_hmdb), "\n")
+cat("Background HMDB:", length(bg_hmdb), "\n")
+
+
+############################################################
+## 3. Quantify ID loss
+############################################################
+
+mapped_ok  <- mapping_pc_hmdb %>%
+  dplyr::filter(CID %in% bg_pubchem) %>%
+  dplyr::pull(CID) %>% unique()
+
+lost_pubchem <- setdiff(bg_pubchem, mapped_ok)
+
+cat("Total PubChem in topTable:", length(bg_pubchem), "\n")
+cat("Mapped PubChem→HMDB:", length(mapped_ok), "\n")
+cat("Lost PubChem (no HMDB):", length(lost_pubchem), "\n")
+cat("Loss %:", round(100 * length(lost_pubchem) / length(bg_pubchem), 1), "%\n")
+
+# Optional: print the lost IDs
+# lost_pubchem
+```
+
+### Filter EnrichmentSets by signature (ST000291)
+
+We repeat the same logic for the ST000291 signature.
+
+```{r st291-filter-es}
+KEGG_st291_filt <- filterEnrichmentSet(KEGGset_global, bg_hmdb)
+SMPDB_st291_filt <- filterEnrichmentSet(SMPDBset, bg_hmdb)
+ChemClass_st291_filt <- filterEnrichmentSet(ChemicalClassSet, bg_hmdb)
+
+############################################################
+## Extract MetaboliteSet DataFrames from filtered EnrichmentSets
+############################################################
+
+# KEGG
+KEGG_st291_df <- as.MetaboliteSetDataFrame(
+  x = KEGG_st291_filt,
+  id_type = "both",     # pots posar "id", "name", "both"
+  id_sep  = ","         # separador dels metabolits
+)
+
+# SMPDB
+SMPDB_st291_df <- as.MetaboliteSetDataFrame(
+  x = SMPDB_st291_filt,
+  id_type = "both",
+  id_sep  = ","
+)
+
+# Chemical Classes
+ChemClass_st291_df <- as.MetaboliteSetDataFrame(
+  x = ChemClass_st291_filt,
+  id_type = "both",
+  id_sep  = ","
+)
+
+# Preview tables
+cat("\nKEGG (filtered):\n")
+print(head(KEGG_st291_df))
+
+cat("\nSMPDB (filtered):\n")
+print(head(SMPDB_st291_df))
+
+cat("\nChemical Classes (filtered):\n")
+print(head(ChemClass_st291_df))
+
+```
+
+We now have:
+
+- `cachexia_sig_HMDB`, `background_cachexia_HMDB`,
+  `PathwayVsMetabolites_cachexia`
+- `sig_hmdb`, `bg_hmdb`,
+  `KEGG_st291_df`, `SMPDB_st291_df`, `ChemClass_st291_df`
+
+All in terms of HMDB IDs, consistent with the `EnrichmentSet` objects.
+
+# Enrichment with enrichmet
+
+We now use the `enrichmet()` function as defined in your package:
+
+```r
+enrichmet(
+  inputMetabolites,
+  PathwayVsMetabolites,
+  example_data = NULL,
+  top_n = 100,
+  p_value_cutoff = 1,
+  kegg_lookup = NULL,
+  mapping_df = NULL,
+  stitch_df = NULL,
+  output_dir = NULL,
+  save_excel = FALSE,
+  analysis_type = c("enrichment", "gsea", "centrality", "network",
+                    "heatmap", "membership", "interaction"),
+  run_plots = TRUE
+)
+```
+
+We will use:
+
+- `"enrichment"` for ORA,
+- `"gsea"` for MSEA/GSEA when we have a ranked list.
+
+## ORA for Cachexia (enrichmet)
+
+```{r enrichmet-cachexia-ora, eval=FALSE}
+library(enrichmet)
+
+results_cachexia_enrichmet <- enrichmet(
+  inputMetabolites     = cachexia_sig_HMDB,
+  PathwayVsMetabolites = PathwayVsMetabolites_cachexia,
+  top_n                = 50,
+  p_value_cutoff       = 0.05,
+  analysis_type        = c("enrichment"),
+  run_plots            = TRUE
+)
+
+cachexia_ora_enrichmet <- results_cachexia_enrichmet$pathway_enrichment_results
+print_tbl(head(cachexia_ora_enrichmet))
+
+# Optional plots:
+# results_cachexia_enrichmet$pathway_plot
+# results_cachexia_enrichmet$impact_plot
+```
+
+## ORA and GSEA/MSEA for ST000291 (enrichmet)
+
+For ST000291 we can also build an `example_data` table required by the GSEA
+part of `enrichmet()`:
+
+```{r enrichmet-st291-example-data}
+example_data_st291 <- st291_tt %>%
+  filter(!is.na(HMDB)) %>%
+  transmute(
+    met_id = HMDB,
+    pval   = !!rlang::sym("pvalue"),
+    log2fc = !!rlang::sym("log2FC")
+  )
+
+cat("example_data_st291:\n")
+print_tbl(head(example_data_st291))
+```
+
+Now we run `enrichmet()` requesting both ORA and GSEA:
+
+```{r enrichmet-st291-run, eval=FALSE}
+results_st291_enrichmet <- enrichmet(
+  inputMetabolites     = st291_sig_HMDB,
+  PathwayVsMetabolites = PathwayVsMetabolites_st291,
+  example_data         = example_data_st291,
+  top_n                = 100,
+  p_value_cutoff       = 0.05,
+  analysis_type        = c("enrichment", "gsea"),
+  run_plots            = TRUE
+)
+
+st291_ora_enrichmet  <- results_st291_enrichmet$pathway_enrichment_results
+st291_msea_enrichmet <- results_st291_enrichmet$gsea_results
+
+cat("ORA (ST000291, enrichmet):\n")
+print_tbl(head(st291_ora_enrichmet))
+
+cat("\nMSEA/GSEA (ST000291, enrichmet):\n")
+print_tbl(head(st291_msea_enrichmet))
+
+# Optional plots:
+# results_st291_enrichmet$pathway_plot
+# results_st291_enrichmet$impact_plot
+# results_st291_enrichmet$gsea_plot
+```
+
+# Enrichment with localEnrichment (skeleton)
+
+This section assumes that `localEnrichment` provides helper functions such as
+`filter_ES_by_background()`, `run_ORA()` and `run_MSEA()`, operating on
+`EnrichmentSet` objects. The idea is to use the *same* HMDB signatures and
+backgrounds as above.
+
+```{r localEnrichment-skeleton, eval=FALSE}
+library(localEnrichment)
+
+# Construct EnrichmentSets restricted to the functional background
+KEGG_cachexia_ES <- filterEnrichmentSet(KEGGset_global, ids = background_cachexia_HMDB)
+KEGG_st291_ES    <- filterEnrichmentSet(KEGGset_global, ids = background_st291_HMDB)
+
+# Example ORA for Cachexia
+ora_cachexia_local <- run_ORA(
+  sig = cachexia_sig_HMDB,
+  bg  = background_cachexia_HMDB,
+  ES  = KEGG_cachexia_ES
+)
+
+# Example ORA + MSEA for ST000291
+ora_st291_local <- run_ORA(
+  sig = st291_sig_HMDB,
+  bg  = background_st291_HMDB,
+  ES  = KEGG_st291_ES
+)
+
+msea_st291_local <- run_MSEA(
+  ranked_stats = example_data_st291$log2fc,
+  ids          = example_data_st291$met_id,
+  ES           = KEGG_st291_ES
+)
+
+print_tbl(head(ora_cachexia_local))
+print_tbl(head(ora_st291_local))
+print_tbl(head(msea_st291_local))
+```
+
+> Adapt the calls above to match the exact function signatures of
+> your `localEnrichment` implementation. The key idea is to reuse:
+>
+> - `cachexia_sig_HMDB`, `background_cachexia_HMDB`, `KEGG_cachexia_ES`
+> - `st291_sig_HMDB`, `background_st291_HMDB`, `KEGG_st291_ES`
+
+# ChemRich (outline)
+
+ChemRich performs enrichment based on **chemical similarity clusters**, not
+predefined pathways. It typically requires:
+
+- effect size (e.g. log2FC),
+- p-values,
+- a structural identifier (InChIKey, SMILES, etc.).
+
+Since ChemRich is provided as a web tool, the usual workflow is:
+
+1. Prepare a CSV with at least ID, log2FC and p-value.
+2. Upload to ChemRich web.
+3. Export the results table.
+4. Re-import into R for comparison.
+
+For ST000291:
+
+```{r chemrich-st291-export, eval=FALSE}
+chemrich_input_st291 <- st291_tt %>%
+  filter(!is.na(PubChemCID)) %>%
+  transmute(
+    PubChemCID = PubChemCID,
+    log2FC     = log2FC,
+    pvalue     = pvalue
+  )
+
+readr::write_csv(chemrich_input_st291,
+                 "results/chemrich_ST000291_input.csv")
+```
+
+After running ChemRich on the web and exporting results:
+
+```{r chemrich-st291-import, eval=FALSE}
+chemrich_st291_results <- readr::read_csv("results/chemrich_ST000291_results.csv")
+print_tbl(head(chemrich_st291_results))
+```
+
+# MetaboAnalyst Web (outline)
+
+MetaboAnalyst Web is used here as a practical reference point (“gold
+standard”). The workflow is:
+
+1. Prepare an input table in the expected format (ID + intensities or statistics).
+2. Upload and run:
+   - ORA (e.g. KEGG pathways),
+   - MSEA (for full tables such as ST000291).
+3. Export results as CSV and save under `results/MetaboAnalyst/`.
+
+```{r metaboanalyst-import, eval=FALSE}
+ma_cachexia_ora <- readr::read_csv(
+  "results/MetaboAnalyst/cachexia_kegg_ORA.csv"
+)
+
+ma_st291_ora <- readr::read_csv(
+  "results/MetaboAnalyst/ST000291_kegg_ORA.csv"
+)
+
+ma_st291_msea <- readr::read_csv(
+  "results/MetaboAnalyst/ST000291_kegg_MSEA.csv"
+)
+
+print_tbl(head(ma_cachexia_ora))
+print_tbl(head(ma_st291_ora))
+print_tbl(head(ma_st291_msea))
+```
+
+# Comparison of results (skeleton)
+
+The comparison strategy is:
+
+1. Harmonize pathway identifiers across tools (e.g. KEGG pathway IDs).
+2. Select top-N hits per method (by adjusted p-value).
+3. Build tables of overlaps and, optionally, visual summaries.
+
+Below is a simple skeleton for comparing ORA results for ST000291 using KEGG.
+
+```{r compare-ora-st291, eval=FALSE}
+# Assume we have:
+# - st291_ora_enrichmet  (from enrichmet)
+# - ora_st291_local      (from localEnrichment)
+# - ma_st291_ora         (from MetaboAnalyst)
+
+clean_kegg <- function(x) {
+  x %>%
+    tolower() %>%
+    str_trim()
+}
+
+# Adapt column names to your actual results
+ora_st291_enrich <- st291_ora_enrichmet %>%
+  mutate(source = "enrichmet",
+         pathway_id = clean_kegg(Pathway))
+
+ora_st291_local2 <- ora_st291_local %>%
+  mutate(source = "localEnrichment",
+         pathway_id = clean_kegg(pathway))
+
+ora_st291_ma2 <- ma_st291_ora %>%
+  mutate(source = "MetaboAnalyst",
+         pathway_id = clean_kegg(Pathway))
+
+ora_all <- bind_rows(
+  ora_st291_enrich,
+  ora_st291_local2,
+  ora_st291_ma2
+)
+
+# Top 10 per method
+ora_top10 <- ora_all %>%
+  group_by(source) %>%
+  slice_min(order_by = adj_pvalue, n = 10) %>%
+  ungroup()
+
+print_tbl(ora_top10, n = 30)
+```
+
+A similar approach can be used for MSEA results, focusing on ST000291 and
+the methods that provide ranked enrichment (enrichmet, localEnrichment,
+MetaboAnalyst, and ChemRich clusters in a more qualitative way).
+
+---
+
+This R Markdown document is meant to be executed **chunk by chunk** so that
+you can inspect objects, adjust paths and function calls (especially those
+depending on your localEnrichment implementation) and gradually build a
+robust, reproducible benchmarking workflow.

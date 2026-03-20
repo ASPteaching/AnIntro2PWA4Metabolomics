@@ -1,0 +1,513 @@
+---
+title: "Enrichment Analysis IN Metabolomics"
+subtitle: "Data preparation"
+author: "Alex Sanchez"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: '3'  
+  html_document:
+    toc: TRUE
+    toc_depth: 4
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    code_folding: hide
+#   fig_width: 8
+#   fig_height: 6
+    self_contained: true
+    number_sections: true
+    df_print: paged
+    theme: readable 
+knitr:
+  opts_chunk:
+    echo: true
+    cache: false
+    prompt: false
+    tidy: true
+    comment: NA
+    message: false
+    warning: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r libraries, message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+
+library(readxl)
+library(readr)
+
+library(limma)
+library(stringr)
+library(rvest)
+library(kableExtra)
+library(tidyverse)
+
+library(BiocFileCache)
+
+})
+
+```
+
+# Introduction
+
+Enrichment Analysis -also called Pathway Analysis- generically describes a variety of analyses, -not always related neither with enrichment or with pathways- that can be done, once a set of biological features has been obtained from an omics study, in order to gain insight on its biological interpretation.
+
+## Components required for enrichment analysis
+
+Although the analyses can differ from one another the input is usually the same. It is usally required:
+
+1. A **list of biological features**, usually described by their identifiers in some biological database, such as HMDB or KEGG.
+2. Some type of **table or relation between the identifiers and a knowlwdge database**, which is queried during the analysis.
+3. **[Optional] a background or universe** that represents the set of all possible featueres that could have been obtained in the study. These may be the IDs of all features in a given "ome" (genome, metabolome, ...) or also the IDs of all the features that were queried by the experiment, eg. genes or metabolites in a given panel,
+4. **[Optional] An effect size** (Fold change, correlation, t-test value,...) measuring the relevance of a given feature.
+This document contains the preprocessing and analysis of two metabolomics datasets that will be used for benchmarking several enrichment analysis packages.
+
+In this document we present and prepare three datasets, that will be later used for Enrichment Analyses.
+
+The datasets are:
+
+- The *Cachexia dataset* a well known case study used in many MetaboAnalyst tutorials.
+- The *MST000291 dataset*, resulting from a nutritional study, and used by the fobitools package as an example. The original data required to generate the lists are  available in MetabolomicsWorkbench.
+- The *KrasG12D mutation dataset*, a list of cancer related metabolites used by the `Enrichmet` package in a tutorial.
+
+# The cachexia dataset
+
+This is an example introduced by Xia et alt. in MetaboAnalyst and is used in several tutorials on how to use this software.
+
+The dataset is available as a .csv file in the metaboData repository in github (https://github.com/nutrimetabolomics/metaboData/blob/main/Datasets/2024-Cachexia/human_cachexia.csv). For implicity it has been downladed from there and re-stored as an Excel File.
+
+```{r}
+human_cachexia <- read_excel("data/human_cachexia.xlsx")
+dim(human_cachexia)
+colnames(human_cachexia)[c(1:3, 20:22, 70:72)]
+```
+
+There seem to be two groups defined by the prefix cach / ctrl in the data
+
+## Selection of differentially quantified metabolites
+
+In order to run an Over Representation Anaalysis (ORA) we only need a list of differentially quantified metabolites which we usually may obtain from some comparison test.
+
+This dataset, however, contains **only metabolites that have been shown to be significantly different among the groups**. so, in principle this previous step may not seem necessary.
+
+Anyway the comparison is performed, not only because it allows to check this, but also because it will provide an effect size measure that can be use for MSEA analysis.
+
+The code below shows the analysis performed below, using the Bioconductor `limma` package to compare the two groups provided in the dataset.
+
+```{r}
+
+# 1. Definir el vector de grups a partir dels noms de les columnes
+sample_names <- colnames(human_cachexia)[-1]   # excepte 'Metabolite'
+
+group <- ifelse(str_detect(sample_names, "^ctrl"), "Control", "Cachexia")
+group <- factor(group)
+
+# 2. Construir la matriu d'expressió (metabolits x mostres)
+X <- as.matrix(human_cachexia[ , -1])
+rownames(X) <- human_cachexia$Metabolite
+
+# 3. Disseny experimental
+design <- model.matrix(~ 0 + group)
+colnames(design) <- levels(group)
+
+fit <- lmFit(X, design)
+cont.matrix <- makeContrasts(Cachexia - Control, levels = design)
+fit2 <- contrasts.fit(fit, cont.matrix)
+fit2 <- eBayes(fit2)
+
+topCachexia <- topTable(fit2, number = Inf) %>% mutate(ordByLimma =1:nrow(X))
+
+head(round(topCachexia,3),10)
+tail (round(topCachexia,3))
+
+```
+
+Alternatively a row-wise t-test can be applied
+
+```{r}
+topCachexiaByT<- genefilter::rowttests(x=X, fac=group) %>% mutate(p.adj= p.adjust(p.value, method="BH")) %>% arrange(p.value) %>% mutate(orderByT=1:nrow(X))
+ 
+```
+
+Both tests yield similar results as can be seen in the naive comparison showed below.
+
+```{r}
+head(round(topCachexia[,c(3,1,4,5,7)],4))
+head(round(topCachexiaByT,4))
+merged_table <- merge(
+  topCachexia[,c(3,1,4,5,7)],
+  topCachexiaByT,
+  by="row.names"
+) %>% arrange(p.value)
+
+rownames(merged_table) <- merged_table$Row.names
+merged_table$Row.names <- NULL
+
+```
+
+The results of both tests can be saved to disk for later use
+
+```{r}
+# 6. Mostrar els primers resultats
+
+save(topCachexia, topCachexiaByT, file="data/Cachexia_topTable.Rda")
+write.table(rownames(topCachexia), file="data/cachexia_ids.txt", row.names = FALSE, quote=FALSE)
+```
+
+
+## Selected Metabolites and its identifiers
+
+Metabolites in the table are identified by their common names, a type of identifier very useful for scientists working with these metabolites at chemical or nutritional level.
+
+However, most enrichment analysis tools require a more objective ID from public databases such as PubChem, HumanDB or KEGG. 
+
+Retrieving metabolites by their name (for example from MetaboliteIDmapping) may be a frustrating task because small changes in the names make them unrecognizable.
+
+In this case, however, the associated identifiers for these metabolites, when available, have been obtained using [MetaboAnalyst Compound ID converter](https://www.metaboanalyst.ca/MetaboAnalyst/upload/ConvertView.xhtml). 
+
+> Probably the fact that the example came from MtaboAnalyst has greatly facilitated the conversion.
+
+The equivalence names-IDs has been saved as a .csv file
+
+```{r}
+cachexia_map <- read.csv("data/Cachexia_map.csv")
+head(cachexia_map)
+```
+
+The resulting identifiers may be used as input for enrichment analysis.
+
+## Components required for Enrichment Analysis
+
+If we check the required elements described above we have:
+
+1. *The list of selected identifiers?* 
+**YES**: Any of the columns in the `cachexia_map` table HMDB, KEGG.
+2. *A table relating Pathwyas and IDs* **YES**. Although it is not provided with the example -because MetaboAnalystR usually queries the web- a standard EnrichmentSet object relating the IDs and the KEGG or the SMPDB database are available as described in the document [DB4Metabolomics.html]().
+3. *The background?* **NO**. We don't know which metabolites were analyzed in this study, so, by default we will use the whole Pathway Database.
+4. *An effect size*? **YES**. Either the difference `groupCachexia-groupControl` or the associated F-statistic.
+
+
+# The ST000291 dataset
+
+This dataset comes from a study that has been uploaded to Metabolomics Workbench with ID ST0000291: [LC-MS Based Approaches to Investigate Metabolomic Differences in the Urine of Young Women after Drinking Cranberry Juice or Apple Juice](https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Study&StudyID=ST000291)
+
+> **WARNING** Although the original study followed a 2×2 crossover design, the Metabolomics Workbench dataset (ST000291) does not include subject identifiers, and therefore paired or repeated-measures models cannot be applied. As a result, treatment groups must be analysed as independent samples.
+
+> This choice is conservative: ignoring the within-subject pairing increases residual variance and therefore raises the probability of false negatives, not false positives. Consequently, any metabolites that remain significant under this independent-samples analysis are likely to represent strong and biologically robust treatment effects.
+
+Once downloaded the data consists of three separate files
+
+- The features data
+  - 1541 variables, 45 samples
+
+- The metadata
+  - 45 rows, two columns (sample name, group name)
+  
+The metabolite names
+  - 1541 row, 3 columns (original name, PubChem ID and KEGG ID)
+
+The downloaded data are stored in a particular format "MWTab" so some functions to extract data from it have been prepared.
+
+
+## Data loading and preprocessing
+
+Data in Metabolomics Workbench is not preprocessed so some work has to be performed before they can be analyzed.
+
+The preprocessing steps are performed using the POMA Bioconductor package and can be found in the acompanying script `Rcode/scripts/MW_ST000291_getTopTables.R`
+
+After preprocessing the Bioconductor limma package may be used to perform pairwise comparisons, whose results have been saved to a binary file.
+
+```
+limma_res = list(ApplvsBase = limma_resAB, 
+                 CranvsBase = limma_resCB,
+                 ApplvsCran = limma_resAC)
+```
+
+## Restricting the analysis to metabolites with HMDB_ID
+
+`Pubchem` identifiers are widely used but they be ambiguous and this may result in small number of coincidences among the list and the EnrichmentSet IDs, which have been created separately.
+
+To simplify this we have converted PubChem IDs to other systems using again that has been generated MetaboAnalyst ID converter.
+
+The list of equivalences has been stored in file `MW_ST000291__map.csv` 
+
+```{r}
+MW_map <- readr::read_csv("data/MW_ST000291__map.csv", show_col_types = FALSE) %>%
+  janitor::clean_names() %>%
+  mutate(
+    PubChemCID = as.character(query), 
+    HMDB = ifelse(hmdb == "" | is.na(hmdb), NA, hmdb)
+  ) %>%
+  select(PubChemCID, HMDB)
+
+head(MW_map)
+
+``` 
+
+This has been used to filter out all metabolites not mapped to HMDB.
+
+The analysis has been reproduced with this restricted dataset and a new topTable for the comparison Appl vs Cranberry has been generated.
+
+The resulting topTables have been saved to file=`data/MW_ST000291-limma_res.Rda`
+Focussing on the HMDB based top table:
+
+```{r}
+load("data/MW_ST000291-limma_res.Rda")
+head(limma_HMDB_CB)
+```
+
+## Components required for Enrichment Analysis
+
+If we check the required elements described above we have:
+
+1. *The list of selected identifiers?* 
+**YES**: The first 19 (adj.pvalue < 0.49) identifiers in the column Metabolite
+2. *A table relating Pathwyas and IDs* **YES**. Although it is not provided with the example a standard EnrichmentSet object relating the IDs and the KEGG or the SMPDB database are available as described in the document [DB4Metabolomics.html]().
+3. *The background?* **YES**. We can use as background the set of all identifiers in the column "metabolite"
+4. *An effect size*? **YES**. Either the columns `log2FC` or the associated t-statistic.
+
+
+# The KrasG12D mutation dataset
+
+The `enrichmet` package includes a tutorial that uses these example data, available from  Zotero (records: 15498097). 
+
+The data used in the tutorial are described only briefly as **summary statistics from a differential metabolomics analysis** involving **KrasG12D mutation** and **KrasG12D mutation with TAp73 deletion**. 
+The authors indicate that they selected a list of 57 KEGG identifiers corresponding to the top metabolites, and used as background the set of **all human KEGG metabolites associated with KEGG pathways**. The ranked metabolite list appears to include at least **log2 fold change** and **p-value** information, since these variables are used for the MetSEA analysis. Beyond this, the article does not report the original data matrix, sample size, experimental platform, biological model, preprocessing steps, or the full list of metabolites, so the dataset is only minimally documented in the paper. 
+
+For ease of reproducibility we have previously downloaded all the objects included in the use-case and saved them into a binary file: `data/enrichmet_example.Rda`
+
+## Components required for enrichment analysis
+
+The objects provided by the package can be directly mapped to what we have called the "components required" for enrichment analysis:
+
+1. *The list of selected identifiers?*
+**YES**: A list of 57 KEGG identifiers representing the selected metabolites is provided in the object `inputMetabolites`. These identifiers are also represented in the summary statistics table, although in several rows the field `met_id` contains multiple candidate KEGG IDs separated by `|`, so a normalization step is required before using the table in downstream enrichment analyses.
+
+2. *A table relating pathwyas and IDs* **YES**. The table `EM_PathwayVsMetabolites` provided with the example data relates Pathways with their associated KEGG IDs. For simplicity of use a standard `EnrichmentSet` object has been prepared from this object.
+
+3. *The background?* **PARTIALLY**. No explicit background vector is distributed as a separate object. However, a practical background can be derived from the summary statistics table after normalizing the KEGG identifiers so that each row is assigned a single canonical identifier.
+
+4. *An effect size?* **YES**. Columns `pval` and `log2fc` from object `EM_summaryStats` are available and can be used to derive ranked inputs for quantitative enrichment analysis.
+
+
+## Optional Input Files
+
+`Enrichmet` may use some optional files to  enhance the analysis and its biological interpretation:
+  
+  - **`KEGGLookup`**  
+  A reference file linking KEGG compound IDs (https://www.kegg.jp/) to metabolite names or other annotations, which helps standardize identifiers and improve pathway mapping.
+
+- **`STITCHInteractions`**  
+  A dataset of known or predicted interactions between metabolites or proteins, obtained from the freely available STITCH database (http://stitch.embl.de/). These interactions are useful for constructing networks to support pathway analysis.
+The example file is supplied as:
+  [chemical_chemical.tsv](https://zenodo.org/api/records/15498097/files/chemical_chemical.tsv). Users may provide their own interaction data appropriate for their species.
+
+- **`mapping_df`**  
+  A mapping data frame that links STITCH identifiers with metabolite names, facilitating integration between datasets.
+The provided example file is available here:  [mapping_df.xlsx](https://zenodo.org/api/records/15498097/files/mapping_df.xlsx)  
+Users can substitute this with a mapping file relevant to their species of interest.
+
+
+## Data downloading and preparation
+
+The code below describes how the data can be downloaded and saved into a binary file.
+
+
+```{r}
+# InputMetabolites: A vector or list containing the metabolites of interest.
+inputMetabolites <- c(
+  "C02721", "C03736", "C03139", "C00074", "C02862", "C00092", "C00275",
+  "C00386", "C10172", "C00361", "C00242", "C19806", "C16358", "C16357",
+  "C16353", "C02140", "C05488", "C01181", "C03017", "C02632", "C00246",
+  "C00079", "C08317", "C00588", "C16527", "C00065", "C00249", "C00836",
+  "C02990", "C03690", "C04025", "C06424", "C00123", "C00606", "C03067",
+  "C00539", "C00633", "C00519", "C00366", "C00148", "C00219", "C08261",
+  "C00385", "C06429", "C05637", "C00295", "C06428", "C16513", "C01909",
+  "C03299", "C01530", "C01571", "C08278", "C00599", "C15587", "C00144",
+  "C03739"
+)
+```
+
+```{r}
+# Standard cache location
+cache_dir <- tools::R_user_dir("enrichmet", "cache")
+bfc <- BiocFileCache(cache_dir, ask = FALSE)
+
+# Helper function to download & cache any file from Zenodo
+get_cached_file <- function(url) {
+  bfcrpath(bfc, url)
+}
+
+# -------------------------
+# Load files with caching
+# -------------------------
+
+# PathwayVsMetabolites
+pathway_url <- "https://zenodo.org/api/records/15498097/files/Human-PathwaysVsMetabolites.csv/content"
+pathway_path <- get_cached_file(pathway_url)
+PathwayVsMetabolites <- read.csv(pathway_path)
+str(PathwayVsMetabolites)
+
+# SummaryStatistics
+example_url <- "https://zenodo.org/api/records/15498097/files/example_data.xlsx/content"
+example_path <- get_cached_file(example_url)
+example_data <- read_excel(example_path)
+show(example_data[1:3,])
+
+
+# KEGGLookup
+kegg_url <- "https://zenodo.org/api/records/15498097/files/kegg_lookup.xlsx/content"
+kegg_path <- get_cached_file(kegg_url)
+kegg_lookup <- read_excel(kegg_path)
+head(kegg_lookup)
+
+# Mapping_df
+mapping_url <- "https://zenodo.org/api/records/15498097/files/mapping_df.xlsx/content"
+mapping_path <- get_cached_file(mapping_url)
+mapping_df <- read_excel(mapping_path)
+head(mapping_df)
+
+# STITCHInteractions
+# stitch_url <- "https://zenodo.org/records/15498097/files/chemical_chemical.tsv"
+# stitch_path <- get_cached_file(stitch_url)
+# stitch_df <- read_tsv(stitch_path)
+# head(stitch_df)
+
+```
+
+### Normalization of KEGG identifiers in the summary statistics table
+
+The summary statistics table distributed with the `enrichmet` example (`example_data`) does not always contain a single KEGG compound identifier per row. In several cases, the field `met_id` contains multiple candidate KEGG identifiers separated by the character `|`, and some rows also contain leading, trailing or repeated separators.
+
+This representation is inconvenient for enrichment analysis because ORA and GSEA-like methods require a unique feature identifier per row. Therefore, before storing the example data for downstream use, we define a canonical KEGG identifier for each row.
+
+For reproducibility, we retain the original identifier string in a new column called `met_id_raw`, and create a cleaned column `met_id` using the following rule:
+
+1. split the original field by the separator `|`,
+2. remove empty fragments,
+3. retain only valid KEGG compound identifiers,
+4. keep the first valid KEGG identifier as the canonical one for that row.
+
+This step is intended to obtain a consistent one-row/one-identifier representation suitable for enrichment analysis. It should not be interpreted as a full biochemical disambiguation of the original metabolite annotation.
+
+```{r}
+extract_first_kegg_id <- function(x) {
+  if (is.na(x) || !nzchar(x)) return(NA_character_)
+  parts <- stringr::str_split(x, "\\|", simplify = FALSE)[[1]]
+  parts <- stringr::str_trim(parts)
+  parts <- parts[parts != ""]
+  parts <- parts[stringr::str_detect(parts, "^C\\d{5}$")]
+  if (length(parts) == 0) return(NA_character_)
+  parts[1]
+}
+
+example_data_raw <- example_data
+
+example_data <- example_data %>%
+  dplyr::mutate(
+    met_id_raw = met_id,
+    met_id = purrr::map_chr(met_id_raw, extract_first_kegg_id)
+  )
+
+example_data %>%
+  dplyr::filter(is.na(met_id) | met_id != met_id_raw) %>%
+  dplyr::select(met_id_raw, met_id) %>%
+  head(20)
+```
+
+After assigning a canonical KEGG identifier to each row, multiple rows may map to the same identifier. Since ranked enrichment methods require a single score per feature, duplicated KEGG identifiers are collapsed by retaining the row with the smallest adjusted p-value, and using the absolute log2 fold change as a secondary tie-breaker.
+
+
+```{r}
+example_data_clean <- example_data %>%
+  dplyr::filter(!is.na(met_id)) %>%
+  dplyr::arrange(padj, desc(abs(log2fc))) %>%
+  dplyr::distinct(met_id, .keep_all = TRUE)
+
+cat("Rows in raw summary table:", nrow(example_data_raw), "\n")
+cat("Rows after KEGG normalization:", nrow(example_data), "\n")
+cat("Rows after collapsing duplicated KEGG IDs:", nrow(example_data_clean), "\n")
+```
+
+We finally verify that the list of selected metabolites is represented in the cleaned summary statistics table.
+
+```{r}
+inputMetabolites_unique <- unique(inputMetabolites)
+
+cat("Selected metabolites:", length(inputMetabolites_unique), "\n")
+cat("Unique KEGG IDs in cleaned summary table:", dplyr::n_distinct(example_data_clean$met_id), "\n")
+cat("Selected metabolites found in cleaned summary table:",
+    sum(inputMetabolites_unique %in% example_data_clean$met_id), "\n")
+
+setdiff(inputMetabolites_unique, example_data_clean$met_id)
+```
+
+
+The data from `enrichMet` example is not an `EnrichmentSet`, so a new one is created from the `PathwayvsMetabolites` data.frame:
+
+First we prepare the `long` version of `PathwayVsMetabolites`:
+
+```{r}
+tmp <- PathwayVsMetabolites %>%
+  mutate(Metabolites = strsplit(Metabolites, ","))
+
+unnested <- tidyr::unnest(tmp, cols = c(Metabolites))
+
+PathwayVsMetabolites_long <- dplyr::rename(unnested, kegg_id = Metabolites)
+
+PathwayVsMetabolites_long <- PathwayVsMetabolites_long %>%
+  mutate(PathwayID = paste0("PW_", as.integer(as.factor(Pathway))))
+
+head(PathwayVsMetabolites_long)
+```
+
+With this we can directly build the `EnrichmentSet` object:
+
+```{r}
+require(localEnrichment)
+
+KEGGset_KEGG <- buildEnrichmentSet(
+  data = PathwayVsMetabolites_long,
+  id_col = "kegg_id",
+  category_col = "Pathway",
+  set_id_col = "PathwayID",
+  set_name = "KEGG_hsa_pathways",
+  source = "KEGG",
+  species = "Homo sapiens",
+  version = Sys.Date(),
+  description = "KEGG human pathways mapped to KEGG compound IDs",
+  sep = ";"
+)
+
+summary(KEGGset_KEGG)
+head(KEGGset_KEGG@data)
+```
+
+All the data is saved as a binary file to be used later
+
+
+```{r}
+EM_inputMetabolites <- unique(inputMetabolites)
+EM_summaryStats_raw <- example_data_raw
+EM_summaryStats <- example_data_clean
+EM_PathwayVsMetabolites <- PathwayVsMetabolites
+EM_mapping_df <- mapping_df
+# EM_stitch_df <- stitch_df
+EM_kegg_lookup <- kegg_lookup
+
+save(
+  EM_inputMetabolites,
+  KEGGset_KEGG,
+  EM_PathwayVsMetabolites,
+  EM_summaryStats,
+  EM_summaryStats_raw,
+  EM_kegg_lookup,
+  EM_mapping_df,
+  file = "data/enrichmet_example.Rda"
+)
+```
+
+

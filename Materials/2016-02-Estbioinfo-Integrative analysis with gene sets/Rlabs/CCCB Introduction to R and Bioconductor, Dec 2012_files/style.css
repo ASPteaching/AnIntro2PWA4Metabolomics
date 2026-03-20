@@ -1,0 +1,37 @@
+div#likes { margin-top: 15px; }
+
+like-button { border: 1px solid #eee; padding: 2px 6px; font-size: 13px; font-family: arial, tahoma, sans-serif; }
+
+#wpl-likebox { clear: left; font-size: 11px; font-family: arial, tahoma, verdana, sans-serif !important; min-height: 30px; margin: 10px 0 !important; padding: 5px 0 10px 0 !important; }
+
+#wpl-button { float: left; background: url( http://s2.wp.com/i/buttonbg.png ) top left repeat-x; margin-right: 7px; border: 1px solid #d4d4d4; -moz-border-radius: 3px; -webkit-border-radius: 3px; border-radius: 3px; }
+
+#wpl-button a { border-bottom: none !important; color: #666 !important; line-height: 130% !important; text-decoration: none !important; outline: none; float: left; padding: 3px 6px 2px 24px !important; font-size: 11px !important; background: url( http://s1.wp.com/i/likestar.png ) 6px 49.8% no-repeat; }
+
+#wpl-button a:hover { border-bottom: none !important; }
+
+#wpl-button.liked { background: #feffce; border: 1px solid #f3e389; }
+
+#wpl-button.liked a { color: #ba871b !important; }
+
+#wpl-likebox #wpl-count { min-height: 25px; line-height: 130% !important; float: left; padding-top: 4px; }
+
+#wpl-likebox #wpl-avatars { clear: left; max-height: 98px; overflow: hidden; margin-top: 15px; line-height: 130% !important; }
+
+#wpl-likebox #wpl-avatars img { border: none !important; }
+
+#wpl-likebox #wpl-mustlogin { line-height: 14px !important; font-size: 11px; clear: left; margin-top: 5px; background: #f0f0f0; padding: 10px; width: 65%; -moz-border-radius: 3px; -webkit-border-radius: 3px; border-radius: 3px; }
+
+#wpl-likebox #wpl-mustlogin a { color: #888; text-decoration: underline; }
+
+#wpl-likebox #wpl-mustlogin p { margin: 5px 0; padding: 0 }
+
+#wpl-likebox #wpl-mustlogin input.input { padding: 2px; background: #fff; font-size: 11px; font-family: inherit; border: 1px solid #ccc; -moz-box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1) inset; -webkit-box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1) inset; line-height: 12px; }
+
+#wpl-likebox #wpl-mustlogin input#wp-submit { border: 1px solid #ccc; font-size: 11px; background: #fafafa; repeat-x; -moz-border-radius: 3px; -webkit-border-radius: 3px; border-radius: 3px; padding: 2px 4px !important; line-height: 12px; }
+
+#wpl-likebox #wpl-mustlogin label { position: relative; cursor: text; }
+
+#wpl-likebox #wpl-mustlogin label span { position: absolute; top: 0px; left: 5px; padding: 0 !important; }
+
+#wpl-likebox #wpl-mustlogin label span { top /*\**/: -10px\9; }
