@@ -1,4 +1,7 @@
-# Introduction to Patway Analysis for Metabolomics
+---
+layout: default
+title: An Introduction to Pathway Analysis for Metabolomics
+---
 
 This repository contains materials created for a Workshop introducing *Pathway Analysis for Metabolomics* 
 presented in the the [2nd International Conference of the Spanish Society of Metabolomics, SESMET 2024](https://congreso2024sevilla.sesmet.org/).
