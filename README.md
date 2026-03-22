@@ -5,7 +5,7 @@ presented in the the [2nd International Conference of the Spanish Society of Met
 
 # Slides
 
-- [Presentation Slides](https://aspteaching.github.io/AnIntro2PWA4Metabolomics/PWA-4_Metabolomics-Slides.html)
+- [Presentation Slides](https://aspteaching.github.io/AnIntro2PWA4Metabolomics/Slides/PWA-4_Metabolomics-Slides.html)
 
 
 # Labs/Documents
