@@ -26,6 +26,7 @@ knitr:
     comment: NA
     message: false
     warning: false
+bibliography: "../PWAReferences.bib"
 editor_options:
   chunk_output_type: console
 ---
@@ -55,20 +56,23 @@ Enrichment analysis aims to facilitate the biological interpretation of omics re
 
 In genomics, ORA and GSEA workflows are relatively well standardized,  and code-based (`clusterProfiler` or graphical-interface (`g-profiler` or `Reactome`) are well established tools. 
 
-In metabolomics, however, the scenario is more-fragmented and available tools take more heterogeneorus approaches and rely on different
-identifier systems and pathway databases.
+In metabolomics, however, the scenario is more-fragmented and available tools take more heterogeneorus approaches and rely on different identifier systems and pathway databases.
 
 The goals of this document are:
 
-1. **Quick-start:** show how to run basic over-representation analysis (ORA)  and metabolite set enrichment analysis (MSEA/GSEA-like) with several tools.
+1. **Quick-start:** show how to run basic over-representation analysis (ORA)  and metabolite set enrichment analysis (GSEA-like) with several tools.
 2. **Naïve benchmarking:** compare the results of these tools on the same datasets.
 
 We will focus on:
 
 - `enrichmet` (pathway enrichment, GSEA, centrality, plots)
 - `localEnrichment` (our own infrastructure for metabolite sets and ORA/GSEA)
+
+If time permits we will progressively incorporate other tools/approaches such as:
+
 - `ChemRich` (https://raw.githubusercontent.com/barupal/ChemRICH/refs/heads/master/chemrich_minimum_analysis.R) 
-- `MetaboAnalystR`, has become very hard to make it work so the examples will be run from its web site and downloaded.
+- `Fella` (https://bioconductor.org/packages//release/bioc/vignettes/FELLA/inst/doc/quickstart.html)
+- `MetaboAnalystR`, which has become very hard to make it work so the examples will be run from its web site and downloaded.
 
 Rather than exhaustively exploring each tool, we restrict ourselves to a reproducible workflow:
 
@@ -86,7 +90,7 @@ The selection has been based on "popularity" and availability, but the workflow 
 
 5. As more analyses are avilable we will increase comparisons among results to check which analyses are related and which lead different results because they are indeed different analyses.
 
-> We have decided to adopt the term GSEA also for metabolomics to avoid confussions because the authors who introduced the term MSEA (Xia and Wishart, 2011) used this term to refer to both ORA and GSEA applied to metabolite sets.
+> We have decided to adopt the term GSEA also for metabolomics to avoid confusions because the authors who introduced the term MSEA [@Xia2010MSEA] used this term to refer to both ORA and GSEA applied to metabolite sets.
 
 # Data and metabolite sets
 
@@ -558,8 +562,7 @@ head(GSEA_cachexia_KEGG_EM)
 
 ### GSEA with `enrichmet` and KEGGsets_KEGG
 
-In this case we must provide a more rigid data structure. 
-Moreover, in some recent versions of `enrichmet` the  `perform_gsea_analysis()` function expects KEGG-like identifiers in the `met_id` column, so for this step we use the KEGG annotation instead of HMDB.
+`enrichmet` seems to have a strange design flaw:  in some recent versions of the package the  `perform_gsea_analysis()` function expects KEGG-like identifiers in the `met_id` column, so for this step we use the KEGG annotation instead of HMDB.
 
 First, we build the summary statistics table required by `enrichmet`:
 
@@ -1317,7 +1320,7 @@ Key characteristics:
 - Uses a **user-provided list of significant metabolites** together with a predefined KEGG-based background.
 - Computes enrichment **independently for each pathway**.
 - Adjusts *p*-values using **Benjamini–Hochberg correction** and reports q-values.
-- Outputs ranked pathways together with significance metrics, typically visualized using −log10(*p*) plots.
+- Outputs ranked pathways together with significance metrics, typically visualized using minus $log10(p)$ plots.
 
 Conceptually, this implementation is equivalent to standard ORA, with the main specificity being the direct integration of curated KEGG pathway mappings and a streamlined one-step workflow.
 
