@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+<rect width="100%" height="100%" fill="white"/>
+<text x="450" y="40" font-family="Arial" font-size="28" text-anchor="middle">Schematic GSEA running-sum curve</text>
+<line x1="90" y1="430" x2="830" y2="430" stroke="black" stroke-width="2"/>
+<line x1="90" y1="80" x2="90" y2="430" stroke="black" stroke-width="2"/>
+<text x="460" y="470" font-family="Arial" font-size="20" text-anchor="middle">Ranked metabolites</text>
+<text x="35" y="255" font-family="Arial" font-size="20" text-anchor="middle" transform="rotate(-90 35 255)">Running sum</text>
+<line x1="90" y1="255" x2="830" y2="255" stroke="#777" stroke-dasharray="8,8" stroke-width="1.5"/>
+<path d="M100,255 
+         C150,230 180,180 220,150
+         C260,120 310,105 350,95
+         C390,88 435,98 470,125
+         C505,150 540,210 585,260
+         C620,300 670,340 720,375
+         C760,398 790,412 820,425" 
+      fill="none" stroke="#1f77b4" stroke-width="5"/>
+<circle cx="350" cy="95" r="6" fill="#d62728"/>
+<text x="365" y="88" font-family="Arial" font-size="18">ES</text>
+<g stroke="black" stroke-width="2">
+  <line x1="140" y1="430" x2="140" y2="395"/>
+  <line x1="175" y1="430" x2="175" y2="395"/>
+  <line x1="220" y1="430" x2="220" y2="395"/>
+  <line x1="255" y1="430" x2="255" y2="395"/>
+  <line x1="290" y1="430" x2="290" y2="395"/>
+  <line x1="345" y1="430" x2="345" y2="395"/>
+  <line x1="380" y1="430" x2="380" y2="395"/>
+  <line x1="610" y1="430" x2="610" y2="395"/>
+  <line x1="690" y1="430" x2="690" y2="395"/>
+</g>
+<text x="620" y="165" font-family="Arial" font-size="18">Pathway members concentrated near the top</text>
+<text x="620" y="195" font-family="Arial" font-size="18">produce a large positive enrichment score</text>
+</svg>

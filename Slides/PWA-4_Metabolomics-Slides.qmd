@@ -30,7 +30,7 @@ knit:
       warning: false
     knit_options:
       width: 75
-#bibliography: "Metabolomics.bib"
+bibliography: "PWAReferences.bib"
 editor_options: 
   chunk_output_type: console
 ---
@@ -133,7 +133,7 @@ editor_options:
 ```{r echo=FALSE}
 library(dplyr)
 x <- read.csv("data/cachexia-t_test_all.csv") %>% 
-  dplyr::arrange(p.value) %>%
+  dplyr::arrange(P.Value) %>%
   dplyr::select(X) %>% rename("Metabolites"=X)
 head(x,12)
 ```
@@ -277,15 +277,19 @@ Once a list of feature is obtained it can be studied on a one-by-one basis
 
 ## And here comes Pathway Analysis
 
-- Pathway Analysis studies the list as a whole.
+- Pathway Analysis (PWA) aims to interpret metabolomics results in terms of biological processes rather than individual compounds.
+  - Instead of asking whether one metabolite changes, 
+  - It asks whether *a coordinated group of metabolites associated with the same biochemical function shows evidence of perturbation*.
+  
+## The components of PWA
 
-- With this aim it combines:
+- With the previous goals in mind most PWA methods combines:
   - The list of features, with
   - Pre-existing sources of information related to them
 
 - And, after some processing, it yields 
-    - some type of scores about
-    - groups of features appearing to be significantly related with the process being studied.
+  - some type of scores about
+  - groups of features appearing to be coordinatedly related with the process being studied.
 
 
 ## How can we interpret these lists?
@@ -469,21 +473,61 @@ process pathways (70)
 
 # Analysis Methods
 
+## The main idea of PWA
+
+- Pathway Analysis (PWA) aims to interpret metabolomics results in terms of biological processes rather than individual compounds.
+  - Instead of asking whether one metabolite changes, 
+  
+  - It asks whether *a coordinated group of metabolites associated with the same biochemical function shows evidence of perturbation*.
+  
+- PWA will usually rely on (1) a list of interesting metabolites and (2) some type of knowledge source.
+
 ## Types of Pathway Analysis
 
 ![[Khatri et alt. 10 years of Pathway Analysis](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002375)
 ](images/PWA-4_Metabolomics-Slides_insertimage2_6.png)
 
-## Over-representation Analysis
+## Before We Begin {.smaller}
+
+### Targeted vs Untargeted Metabolomics
+
+- Metabolomics uses two main experimental approaches: targeted and untargeted.
+
+- In **targeted metabolomics**:
+  - The metabolites are identified and quantified beforehand.  
+  - This means that each variable in the dataset corresponds to a known compound, which can be directly linked to biochemical pathways.
+
+- In **untargeted metabolomics**: 
+  - The data consist of *spectral features* defined by mass-to-charge ratio and retention time.  
+  - These features are not directly identified as metabolites and may correspond to multiple possible compounds.
+
+## Targeted vs Untargeted
+
+```{r, fig.align='center', fig.cap="Comparison of targeted and untargeted metabolomics approaches highlighting key features. Videtič Paska, A. (2025) https://BioRender.com/7vhpmxv."}
+knitr::include_graphics("images/targetedVSuntargeted.png")
+```
+
+
+## PWA and type of metabolomics {.smaller}
+
+- Pathway analysis is straightforward in targeted metabolomics, but becomes more challenging in the untargeted setting, where annotation is incomplete or uncertain.
+
+- Most classical pathway analysis methods, such as ORA, GSEA and FELLA, are primarily designed for targeted data, where metabolite identities are known.
+
+- For untargeted metabolomics, specific approaches such as Mummichog have been developed to perform pathway analysis directly from spectral features, avoiding the need for full metabolite identification.
+
+## (1): ORA {.smaller}
+
+### Over-representation Analysis
 
 - Given
   - A feature (metabolites) list (from some study).
-  - A collection of feature (metabolites) sets (...)
+  - A collection of Pathways (metabolites sets)
   
-- The goal is finding out if any of the  feature sets *surprisingly enriched* in the feature list?
+- The goal is finding out if any of the  Pathways is *surprisingly enriched* in features in the feature list
 
   - Need to define "surprisingly” (statistics)
-  - Need to deal with test multiplicity?
+  - Need to deal with test multiplicity
 
 ## Obtaining feature lists
 
@@ -539,50 +583,74 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
 ## Summary: Recipe for ORA
 
 1. Define feature list (e.g. thresholding analyzed list ) and background list,
+
 2. Select feature sets to test for enrichment,
+
 3. Run enrichment tests and adjust for multiple testing
+
 4. Interpret your enrichments
-5. Publish!  ;)
+
 
 ## Posible problems with ORA
 
-- No “natural” value for the threshold
+- No "natural" value for the threshold used to define significance
 - Possible loss of statistical power due to thresholding
 - No resolution between significant signals with different strengths
 - Weak signals neglected
-- Different results at different threshold settings
-- Based on the wrong assumption of independent feature (or feature group) sampling, which increases false positive predictions.
+- Different results at different threshold settings.
+- Based on the unrealistic assumption of independent feature (or feature group) sampling, which increases false positive predictions.
 
-## Functional Class Scoring
 
-- Also known as:
+## (2): Functional Class Scoring {.smaller}
 
-  - *Analysis of ranked lists*
+### Gene Set Enrichment Analysis (GSEA)
 
-  - *Metabolite Set Enrichment Analysis*
+- Rooted in the  *Gene Set Enrichment Analysis* (GSEA) method developed  to overcome ORA limitations [@Subramanian2005].
 
-- Rooted in the  *Gene Set Enrichment Analysis* (GSEA) method developed  to overcome ORA limitations.
+- The key innovation of GSEA  is that It avoids dichotomizing the data into significant and non-significant metabolites.
+- Instead, it uses all measured metabolites and asks whether the members of a pathway tend to accumulate near the top or near the bottom of a ranked list.
 
 :::{.center}
-![](images/PWA-4_Metabolomics-Slides_insertimage2_14.png){width=70%}
+![](images/PWA-4_Metabolomics-Slides_insertimage2_14.png){width=60%}
 :::
 
 ## The GSEA Method (1) {.smaller}
 
-- GSEA method compares, for each feature set, the distribution of the test statistic within the set with the overall distribution of those statistics, i.e. the calculated for all genes.
+- Core of GSEA is a *running-sum* statistic computed along a ranked list.
+  - If a metabolite is in the pathway, the running sum increases; 
+  - when it does not belong to the pathway, the running sum decreases. 
+- The *Enrichment Score* is the maximum departure from zero and can be summarized as: $ES = \max \left| \sum_{i=1}^{N} w_i \right|$, where the contribution, $w_i>0$ if the i-th metabolite is in the pathway and negative otherwise.
+ - Many possible ways to compute  $w_i$. Original GSEA method:
+    - If a feature is in the  set:  $w_i=+\sqrt{(N-N_s)/N_s}$.
+    - If a feature is not in the set, $w_i=-\sqrt{N_s/(N-N_s)}$.
 
-- To do this, test statistics are ranked (from biggest to smallest) and for gene set a running sum is computed such that 
-  - If a feature is in the  set *add* a certain quantity ($\sqrt{(N-N_s)/N_s}$) 
-  - If a feature is not in the set, *substract* a (small) quantity ($\sqrt{N_s/(N-N_s)}$)
+## Enrichment Scores
   
+  ![](images/PWA-4_Metabolomics-Slides_insertimage2_15.png)
+  
+
 ## The GSEA tests {.smaller}
+
+- To determine significance of Enrichment Score:
+  - Rank all metabolites according to a statistic that captures the contrast of interest. 
+  - Computes an enrichment score for each pathway
+  - Evaluate significance by comparing the observed score with scores obtained under permutation. 
+  - Adjust p-values for multiple testing.
 
 - If the distribution of the *running sum* doesn't differ from a *random walk* then the list can be declared significantly enriched in that set.
 
 - Original test was a Kolmogorov-Smirnov test (K-S test) statistic with P-values  computed by randomization.
-  
-  ![](images/PWA-4_Metabolomics-Slides_insertimage2_15.png)
-  
+
+
+## GSEA may improve ORA
+
+- A pathway can contain many metabolites changing moderately but in the same direction. 
+- ORA may fail here because very few metabolites cross the significance threshold. 
+- GSEA, can still detect these metabolites systematically concentrated near the top or bottom of ranking.
+
+- Interpretation is  more global than in ORA: coordinated patterns may be detected even if no single metabolite is significant by itself.
+
+
 ## GSEA Extensions/Alternatives {.smaller}
 
 - **Wilcoxon test**:  
@@ -593,23 +661,74 @@ Given a feature list, “fl”, and a feature set, “FS”, check if the % of g
   - Instead of testing individual features, it assesses the global effect of the gene set on the outcome. 
   - This method is beneficial in identifying pathways or feature sets that have a combined influence on a phenotype, rather than relying on individual feature-level analysis.
 
-## PWA for untargeted studies
+## GSEA limitations
+
+- The choice of ranking statistic matters, and different rankings can lead to different conclusions. 
+- The method can also be less intuitive  than ORA because the enrichment score is not based on a simple overlap count. 
+- In metabolomics, where pathways are often small and annotation is incomplete, its performance may be less robust than in transcriptomics.
+
+## (3): Fella {.smaller}
+
+- A topology-based strategy for metabolomics pathway analysis [@PicartArmada2018].
+- Instead of treating pathways as isolated metabolite sets, FELLA uses the structure of the metabolic network itself. 
+- In this framework, metabolites, reactions, enzymes and pathways are connected through a graph, and the observed signal is propagated through that graph to identify the most relevant biological context [@Lu2023].
+
+- This is conceptually appealing because metabolism is inherently networked, and a method that incorporates network structure can capture relationships that set-based methods may miss.
+
+## FELLA Method (1) {.smaller}
+
+- FELLA builds a graph from a pathway database, typically KEGG, and then 
+- It uses diffusion or PageRank-like algorithms to propagate the evidence associated with the input metabolites through the network [@Lu2023; @Xia2011]. 
+- Significance is evaluated by permutation, for example through an expression of the form
+$$
+P = \frac{r_{perm} \ge r_{obs} + 1}{N_{perm} + 1}
+$$
+where the observed score is compared with the scores obtained under random input sets.
+
+## FELLA Method (2) {.smaller}
+
+- The workflow begins with a set of annotated metabolites. 
+- These metabolites are *mapped to the graph* and a *diffusion step* is performed in order to spread the signal to neighboring reactions, enzymes and pathways. 
+- Permutation testing used to assess  significance of the resulting scores.
+
+- This procedure allows the method to exploit indirect relationships, not just direct overlap with pathway members: 
+  - If the metabolites detected in a study do not all belong to the same pathway, but several of them are connected through nearby reactions or shared enzymatic context. A set-based method might fail to emphasize that structure, whereas FELLA may reveal that these metabolites jointly point toward a coherent region of the metabolic network.
+
+## FELLA limitations
+
+- The main limitation of FELLA is that it requires annotation, which means that it cannot be directly applied to raw untargeted peak lists. 
+- In addition, its results depend strongly on the quality, completeness and biological relevance of the network used. - Finally, topology-based methods are typically more computationally demanding and sometimes more difficult to explain than set-based methods [@Khatri2012; @Lu2023].
+
+## (4): Mummichog
 
 - What to do when you don’t know what the metabolites ions are?
 
-- Most popular option is Mummichog (Li et al. 2013).
+- Most popular option is Mummichog [@Li2013], a method that *bypasses the requirement of full metabolite identification* before pathway analysis.
 
 ![](images/PWA-4_Metabolomics-Slides_insertimage2_16.png)
 
 ## Mummichog pathway mapping {.smaller}
 
-- Ions are divided into significant and non-significant groups.
-  - E.g 1000 ions,150 with p-val <0.05
-- Repeat many times
-  - Randomly take 150 of the remaining non-significant ions and mapped onto known pathways.
-  - This provides an estimate of how likely it is to observe random association of non-significant ions with pathways.
-  
-- The significant ions are now mapped to the pathways and evidence is sought for enhanced associations (Fisher exact test)
+- The method is based on a simple but powerful intuition: 
+  - If the data contain true biological signal, then *the candidate metabolites associated with the significant features should collectively point to a limited number of pathways*. 
+  - In contrast, false matches are expected to scatter more randomly across the pathway database
+
+## Mummichog Method (1)
+
+- The method starts from an **untargeted peak list** 
+- and builds pathway evidence before exact metabolite identification has been completed.
+
+![](images/mummichog_workflow.svg){fig-alt="Schematic workflow of Mummichog in untargeted metabolomics." width=92%}
+
+## Mummichog Method (2) {.smaller}
+
+- Mummichog starts from a table of untargeted features with associated p-values or other statistics.
+- From here a subset of (the most) significant features is selected.
+- Each feature is matched to *one or more* candidate metabolites according to its mass/charge (m/Z) ratio. 
+- Candidate metabolites are projected onto pathways, and an ORA-like enrichment calculation is performed *to determine whether the observed pathway evidence is stronger than random expectation*.
+  - It differs from classical ORA in that significance is assessed by permutation under a feature-based null model rather than by relying on the analytical hypergeometric distribution. 
+  - Mummichog is described as an ORA-based method that *improves recall*, although often *at the cost of lower precision* [@Lu2023].
+
 
 ## Mummichog change of approach
 
@@ -625,8 +744,147 @@ functional activity bypassing metabolite identification.
 true metabolite, gray the false matches. The conventional approach first requires the identification of metabolites before mapping them to the
 metabolic network. 
 
-3. (C) mummichog maps all possible metabolite matches to the network and looks for local enrichment, which reflects the true activity because the false matches will distribute randomly
+3. (C) mummi hog maps all possible metabolite matches to the network and looks for local enrichment, which reflects the true activity because the false matches will distribute randomly
 :::
+
+## A mummichog pseudo-example
+
+- Imagine a dataset with 1000 peaks where the top (most significant) 100 peaks are retained. 
+- Even if their identities are not known, many may still map to overlapping sets of candidate metabolites.
+- If a relevant biological pathway is truly perturbed, those candidates will tend to accumulate in that pathway more strongly than expected by chance.
+
+- The interpretation is therefore probabilistic and pathway-centered rather than metabolite-centered.
+
+## Mummichog: limitations
+
+- Because multiple candidate metabolites can be assigned to each feature, the method may generate false positives. 
+- Its performance depends on the quality and coverage of the pathway database and on the quality of the mass matching step.
+- The output is extremely useful for hypothesis generation, but it should not be confused with definitive metabolite identification.
+
+
+## Comparison of the four  {.smaller}
+
+| Method     | Family    | Input          | Strength                                              | Limitation                          |
+|-------------|----------------|------------------------|------------------------------------------------------------|------------------------------------------|
+| ORA         | Set-based      | Significant metabolite list | Simple, intuitive and easy to communicate               | Depends on an arbitrary threshold        |
+| GSEA        | Functional class scoring | Ranked metabolite list | Detects coordinated  changes without thresholding | Depends on ranking and annotation        |
+| Mummichog   | ORA-like untargeted data| Untargeted peak list | Works before full metabolite identification              | Can increase false positives             |
+| FELLA       | Topology-based | Annotated metabolites  | Incorporates network context and indirect relationships   | Requires annotation and more computation |
+
+## PWA Methods summary {.smaller}
+
+- There is no universally best method for pathway analysis in metabolomics. 
+- ORA is simple and often useful as a baseline. 
+- GSEA is attractive when one expects coordinated moderate changes across a pathway.
+- FELLA adds network context and can be very informative when reliable annotation is available.
+- Mummichog is especially valuable for untargeted LC-MS data because it allows pathway-level interpretation before complete identification. 
+- In practice, the best choice depends on the study design, the annotation level, the biological question, and the balance one wishes to strike between interpretability, sensitivity and specificity [@Khatri2012; @Karnovsky2020; @Lu2023].
+
+
+
+
+# Limitations and Recommendations
+
+## Some limitations {.smaller}
+
+- Incomplete Pathway Databases
+
+- Metabolite Misidentification
+
+- Chemical Bias of Assays
+
+- Background Set Selection
+
+- Selection of Compounds of Interest
+
+- Multiple testing issues
+
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_23.png)
+
+::: {.notes}
+
+### Incomplete Pathway Databases
+
+Limitation: Pathway databases are often incomplete and evolve over time, leading to discrepancies in pathway coverage and definitions.
+Recommendation: Use up-to-date databases and consider integrating multiple databases to improve coverage and accuracy​​.
+
+### Metabolite Misidentification
+
+Limitation: Metabolite misidentification can result in both false-positive and false-negative pathway identifications.
+Recommendation: Utilize stringent identification criteria and multiple identification methods to minimize misidentification rates​​.
+
+### Chemical Bias of Assays
+
+Limitation: Different analytical platforms have biases toward detecting specific types of compounds, affecting pathway accessibility.
+Recommendation: Combine multiple assay types to cover a broader range of metabolites and acknowledge assay-specific biases in the analysis​​.
+
+### Background Set Selection
+
+Limitation: The choice of background set can significantly influence the results of over-representation analysis (ORA).
+Recommendation: Define an assay-specific background set that includes all detectable compounds to reduce false-positive pathways​​.
+
+### Selection of Compounds of Interest
+
+Limitation: The criteria for selecting compounds of interest (e.g., significance thresholds) greatly impact PA results.
+Recommendation: Use appropriate statistical thresholds and apply multiple testing correction methods to ensure robust selection of compounds of interest​​.
+
+### Lack of Ground-Truth Datasets
+
+Limitation: The absence of ground-truth datasets makes it difficult to validate PA methods and results.
+Recommendation: Develop and use simulated or experimental ground-truth datasets to better assess PA methods and improve their accuracy
+
+:::
+
+
+# Pathway Analysis Tools
+
+## Pathway Analysis Tools
+
+::: {.center}
+
+![Common pathway analysis tools for metabolomics data.](images/PWA-4_Metabolomics-Slides_insertimage2_24.png)
+
+:::
+## A comparison of tools
+
+::: {.center}
+
+![[Evaluation and comparison of bioinformatic tools for the enrichment analysis of metabolomics data](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-2006-0) ](images/PWA-4_Metabolomics-Slides_insertimage2_26.png)
+:::
+
+## The space of tools (in 2017)
+
+![](images/PWA-4_Metabolomics-Slides_insertimage2_27.png)
+
+## Not the same, not that different
+
+
+- ORA tools provided consistent results among tools revealing that these analyses are robust and reproducible regardless of their analytic approach.
+
+- Redundancy of identifiers, Use of chemical class identifiers and Incompleteness of databases sets limit the extent of the analyses and reduce their accuracy. 
+
+- More work in the completeness of metabolite/pathway databases is required to get more accurate and global insights of the metabolome.
+# Summary, and all that
+
+## Summary
+
+- Pathway Analysis is a useful approach to help gain biological understanding from omics-based studies.
+
+- There are many ways, many methods, many tools
+
+- Guide the choice by
+ a combination of *meaning*, *availability*, *ease of use* and *usefulness*. 
+
+- Usually obtained from a good understanding of what it does and ow it is done.
+
+- Different methods may yield different results.
+<br>Worth checking!
+
+## Acknowledgements
+
+
+# APPENDICES
 
 # Multiple testing problem and adjustments
 
@@ -687,7 +945,7 @@ metabolic network.
 
 ```{r echo=FALSE}
 cachexia.t_test <- read.csv("data/cachexia-t_test_all.csv", row.names=1)
-rawPs <- cachexia.t_test$p.value
+rawPs <- cachexia.t_test$P.Value
 names(rawPs) <- row.names(cachexia.t_test)
 bonfP <- p.adjust(rawPs, method= c("bonferroni"))
 bhP <-  p.adjust(rawPs, method= c("BH"))
@@ -696,108 +954,4 @@ Ordered <-round(pVals[order(pVals$raw),] ,6)
 kableExtra::kable(Ordered)
 ```
 
-# Limitations and Recommendations
-
-## Some limitations {.smaller}
-
-- Incomplete Pathway Databases
-
-- Metabolite Misidentification
-
-- Chemical Bias of Assays
-
-- Background Set Selection
-
-- Selection of Compounds of Interest
-
-- Multiple testing issues
-
-
-![](images/PWA-4_Metabolomics-Slides_insertimage2_23.png)
-
-::: {.notes}
-
-### Incomplete Pathway Databases
-
-Limitation: Pathway databases are often incomplete and evolve over time, leading to discrepancies in pathway coverage and definitions.
-Recommendation: Use up-to-date databases and consider integrating multiple databases to improve coverage and accuracy​​.
-
-### Metabolite Misidentification
-
-Limitation: Metabolite misidentification can result in both false-positive and false-negative pathway identifications.
-Recommendation: Utilize stringent identification criteria and multiple identification methods to minimize misidentification rates​​.
-
-### Chemical Bias of Assays
-
-Limitation: Different analytical platforms have biases toward detecting specific types of compounds, affecting pathway accessibility.
-Recommendation: Combine multiple assay types to cover a broader range of metabolites and acknowledge assay-specific biases in the analysis​​.
-
-### Background Set Selection
-
-Limitation: The choice of background set can significantly influence the results of over-representation analysis (ORA).
-Recommendation: Define an assay-specific background set that includes all detectable compounds to reduce false-positive pathways​​.
-
-### Selection of Compounds of Interest
-
-Limitation: The criteria for selecting compounds of interest (e.g., significance thresholds) greatly impact PA results.
-Recommendation: Use appropriate statistical thresholds and apply multiple testing correction methods to ensure robust selection of compounds of interest​​.
-
-### Lack of Ground-Truth Datasets
-
-Limitation: The absence of ground-truth datasets makes it difficult to validate PA methods and results.
-Recommendation: Develop and use simulated or experimental ground-truth datasets to better assess PA methods and improve their accuracy
-
-:::
-
-
-# Pathway Analysis Tools
-
-## PAthway Analysis Tools
-
-::: {.center}
-
-![Common pathway analysis tools for metabolomics data.](images/PWA-4_Metabolomics-Slides_insertimage2_24.png)
-
-:::
-## A comparison of tools
-
-::: {.center}
-
-![[Evaluation and comparison of bioinformatic tools for the enrichment analysis of metabolomics data](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-2006-0) ](images/PWA-4_Metabolomics-Slides_insertimage2_26.png)
-:::
-
-## The space of tools (in 2017)
-
-![](images/PWA-4_Metabolomics-Slides_insertimage2_27.png)
-
-## Not the same, not that different
-
-
-- ORA tools provided consistent results among tools revealing that these analyses are robust and reproducible regardless of their analytic approach.
-
-- Redundancy of identifiers, Use of chemical class identifiers and Incompleteness of databases sets limit the extent of the analyses and reduce their accuracy. 
-
-- More work in the completeness of metabolite/pathway databases is required to get more accurate and global insights of the metabolome.
-# Summary, and all that
-
-## Summary
-
-- Pathway Analysis is a useful approach to help gain biological understanding from omics-based studies.
-
-- There are many ways, many methods, many tools
-
-- Guide the choice by
- a combination of *meaning*, *availability*, *ease of use* and *usefulness*. 
-
-- Usually obtained from a good understanding of what it does and ow it is done.
-
-- Different methods may yield different results.
-<br>Worth checking!
-
-## Acknowledgements
-
-
-
-## References and resources
-
-
+## References

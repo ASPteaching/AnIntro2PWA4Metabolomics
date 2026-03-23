@@ -1,6 +1,6 @@
 ---
 title: "Metabolite Set Enrichment Analysis"
-subtitle: "ORA and MSEA for metabolomics"
+subtitle: "ORA and GSEA for metabolomics"
 author: "Alex Sanchez"
 date: "`r Sys.Date()`"
 output:
@@ -66,7 +66,7 @@ The goals of this document are:
 We will focus on:
 
 - `enrichmet` (pathway enrichment, GSEA, centrality, plots)
-- `localEnrichment` (our own infrastructure for metabolite sets and ORA/MSEA)
+- `localEnrichment` (our own infrastructure for metabolite sets and ORA/GSEA)
 - `ChemRich` (https://raw.githubusercontent.com/barupal/ChemRICH/refs/heads/master/chemrich_minimum_analysis.R) 
 - `MetaboAnalystR`, has become very hard to make it work so the examples will be run from its web site and downloaded.
 
@@ -80,12 +80,13 @@ The selection has been based on "popularity" and availability, but the workflow 
 3. For each dataset we have prepared:
    - A list of **significant metabolites** (*signature*),
    - A **background** tailored to that signature created either ad-hoc or from the original 
-   - An **effect size** table with summary statistics that can be used for MSEA tests.
+   - An **effect size** table with summary statistics that can be used for GSEA tests.
    
-4. Given these components we will run enrichment analysis on them (ORA and MSEA when possible) with the different tools on the same sets.
+4. Given these components we will run enrichment analysis on them (ORA and GSEA when possible) with the different tools on the same sets.
 
 5. As more analyses are avilable we will increase comparisons among results to check which analyses are related and which lead different results because they are indeed different analyses.
 
+> We have decided to adopt the term GSEA also for metabolomics to avoid confussions because the authors who introduced the term MSEA (Xia and Wishart, 2011) used this term to refer to both ORA and GSEA applied to metabolite sets.
 
 # Data and metabolite sets
 
@@ -500,13 +501,13 @@ plot <- create_enrichment_plot(ORA_cachexia_KEGG_EM)
 plot
 ```
 
-## Metabolite Set Enrichment Analysis
+## Metabolite Set Enrichment Analysis (GSEA)
 
-To run MSEA we will use the whole dataset, not only significant metabolites and, additionally, a measure of effect size.
+To run GSEA we will use the whole dataset, not only significant metabolites and, additionally, a measure of effect size.
 
-### MSEA with `localEnrichment` and KEGGsets_HMDB
+### GSEA with `localEnrichment` and KEGGsets_HMDB
 
-MSEA in `localEnrichment` has been written to match MetaboAnalyst function so it is also called `qea_test`.
+GSEA in `localEnrichment` has been written to match MetaboAnalyst function so it is also called `qea_test`.
 
 The test requires all the metabolites with an effect size measure.
 
@@ -531,7 +532,7 @@ QEA_cachexia_KEGG_LE<- qea_test(
 
 ```
 
-### MSEA with `enrichmet` and KEGGsets_HMDB
+### GSEA with `enrichmet` and KEGGsets_HMDB
 
 In this case we have to provide a more rigid data structure that can be extracted from cachegia_tt.
 
@@ -555,7 +556,7 @@ head(GSEA_cachexia_KEGG_EM)
 ```
 
 
-### MSEA with `enrichmet` and KEGGsets_KEGG
+### GSEA with `enrichmet` and KEGGsets_KEGG
 
 In this case we must provide a more rigid data structure. 
 Moreover, in some recent versions of `enrichmet` the  `perform_gsea_analysis()` function expects KEGG-like identifiers in the `met_id` column, so for this step we use the KEGG annotation instead of HMDB.
@@ -679,7 +680,7 @@ head(GSEA_cachexia_KEGG_EM[,1:3],10)
 <!--   theme_minimal(base_size = 12) -->
 <!-- ``` -->
 
-<!-- ### MSEA for the EnrichMet Example -->
+<!-- ### GSEA for the EnrichMet Example -->
 
 <!-- First we build a "scores" vector with the effect sizes, named by the Metabolites names -->
 
@@ -690,7 +691,7 @@ head(GSEA_cachexia_KEGG_EM[,1:3],10)
 <!-- head(EM_scores) -->
 <!-- ``` -->
 
-<!-- This vector is passed to the MSEA function -->
+<!-- This vector is passed to the GSEA function -->
 
 
 <!-- ```{r} -->
@@ -849,25 +850,25 @@ head(GSEA_cachexia_KEGG_EM[,1:3],10)
 <!-- ``` -->
 
 
-<!-- ### MSEA for the ST000291 dataset -->
+<!-- ### GSEA for the ST000291 dataset -->
 
-<!-- MSEA, requires more information than Enrichment Analysis and indeed it also returns different results, even if performed on the same collection of sets. -->
+<!-- GSEA, requires more information than Enrichment Analysis and indeed it also returns different results, even if performed on the same collection of sets. -->
 
-<!-- The idea behind MSEA is that, even when we cannot find *Enriched sets* in a given list iot may be possible to observe some tendency among features belonging to a given sets to show similar behavior, this meaning that they tend to show a positive (or a negative) effect at the same time or even to show the same positive or negative correlation. When this is the case we describe thses sets as *differentially enriched (Metabolite) sets*. -->
+<!-- The idea behind GSEA is that, even when we cannot find *Enriched sets* in a given list iot may be possible to observe some tendency among features belonging to a given sets to show similar behavior, this meaning that they tend to show a positive (or a negative) effect at the same time or even to show the same positive or negative correlation. When this is the case we describe thses sets as *differentially enriched (Metabolite) sets*. -->
 
 <!-- The test to decide if a certain set is differentially enriched is based on observing if the scores of the metabolites in this set tend to vary at random or, instead they tend to be consistently high (consistently low). -->
 
-<!-- Although the first versions oF MSEA based the decision on the distribution of the p-values, later methods have realized that it can alo be based on some effect size measure such as the t-statistic. the log-fold change or even the correlation. -->
+<!-- Although the first versions oF GSEA based the decision on the distribution of the p-values, later methods have realized that it can alo be based on some effect size measure such as the t-statistic. the log-fold change or even the correlation. -->
 
 <!-- ```{r} -->
 <!-- ## ------------------------------- -->
-<!-- ## 2) MSEA / QEA (Quantitative Enrichment Analysis) -->
+<!-- ## 2) GSEA / QEA (Quantitative Enrichment Analysis) -->
 <!-- ## ------------------------------- -->
 <!-- ## ST291_scores ha de ser un vector numèric amb noms = PubChem IDs. -->
 <!-- ## Exemple d’estructura (NO s’executa): -->
 <!-- ##   ST291_scores <- setNames(topTable$logFC, topTable$PubChemCID) -->
 
-<!-- # QEA/MSEA -->
+<!-- # QEA/GSEA -->
 
 <!-- ## ============================ -->
 <!-- ## Construir ST291_scores -->
@@ -919,7 +920,7 @@ head(GSEA_cachexia_KEGG_EM[,1:3],10)
 <!--   geom_col(fill = "#EF4444") + -->
 <!--   coord_flip() + -->
 <!--   labs( -->
-<!--     title = "ST000291 – KEGG QEA/MSEA (Top 20 pathways)", -->
+<!--     title = "ST000291 – KEGG QEA/GSEA (Top 20 pathways)", -->
 <!--     x     = "KEGG pathway", -->
 <!--     y     = "-log10(FDR)" -->
 <!--   ) + -->
@@ -938,7 +939,7 @@ head(GSEA_cachexia_KEGG_EM[,1:3],10)
 <!--   geom_point(alpha = 0.8) + -->
 <!--   scale_color_manual(values = c(positive = "#22C55E", negative = "#F97316")) + -->
 <!--   labs( -->
-<!--     title = "ST000291 – KEGG QEA/MSEA (Bubble plot, Top 30)", -->
+<!--     title = "ST000291 – KEGG QEA/GSEA (Bubble plot, Top 30)", -->
 <!--     x     = "Enrichment score (ES)", -->
 <!--     y     = "-log10(FDR)", -->
 <!--     size  = "Set size", -->
@@ -1055,7 +1056,7 @@ head(GSEA_cachexia_KEGG_EM[,1:3],10)
 <!-- ``` -->
 
 
-<!-- ## MSEA comparison -->
+<!-- ## GSEA comparison -->
 
 <!-- Similarly we have -->
 
@@ -1175,7 +1176,7 @@ plot
 Because both analyses use the same KEGG identifiers and a pathway mapping derived from the same source, this example is particularly convenient to compare the behaviour of the two implementations.
 
 
-## MSEA / QEA with localEnrichment and KEGGset_KEGG
+## GSEA / QEA with localEnrichment and KEGGset_KEGG
 
 To run a quantitative enrichment analysis with localEnrichment, we need a numeric score for all metabolites in the ranked list. Here we will use the log2fc column from EM_summaryStats.
 
@@ -1215,7 +1216,7 @@ nrow(QEA_EM_KEGG_LE_sig)
 head(QEA_EM_KEGG_LE_sig[, c("set_id", "set_name", "p_value", "p_adj")], 10)
 ```
 
-## MSEA / GSEA with enrichmet
+## GSEA with enrichmet
 
 The enrichmet package already provides a function to perform a GSEA-like analysis from the summary statistics table.
 
@@ -1321,11 +1322,11 @@ Key characteristics:
 Conceptually, this implementation is equivalent to standard ORA, with the main specificity being the direct integration of curated KEGG pathway mappings and a streamlined one-step workflow.
 
 
-## Quantitative Enrichment Analysis (QEA / MSEA)
+## Quantitative Enrichment Analysis (QEA / GSEA)
 
 ### Concept
 
-Quantitative Enrichment Analysis (QEA), also known as **Metabolite Set Enrichment Analysis (MSEA)**, is the analogue of GSEA for metabolomics and other continuous-valued omics data. 
+Quantitative Enrichment Analysis (QEA), also known as **Metabolite Set Enrichment Analysis (GSEA)**, is the analogue of GSEA for metabolomics and other continuous-valued omics data. 
 
 Instead of dichotomizing features into
 “significant/non-significant,” QEA uses **the entire ranked list** of features, each with an associated score such as:
@@ -1341,11 +1342,11 @@ For each metabolite set, QEA tests whether its members tend to appear **towards 
 This avoids arbitrary cutoffs and provides sensitivity to subtle but consistent
 shifts across a pathway or chemical class.
 
-### MSEA variant implemented in `localEnrichment`
+### GSEA variant implemented in `localEnrichment`
 
-There are several variants of MSEA/QEA in the literature:
+There are several variants of GSEA/QEA in the literature:
 
-1. **ORA-like MSEA** (MetaboAnalyst’s early implementation):  uses Fisher tests on selected metabolites → *not what we use here*.
+1. **ORA-like GSEA** (MetaboAnalyst’s early implementation):  uses Fisher tests on selected metabolites → *not what we use here*.
 
 2. **SSPA / Mean/median tests** (subset-based statistics):  
    compares mean scores inside vs. outside a set → *not used here*.
@@ -1356,7 +1357,7 @@ There are several variants of MSEA/QEA in the literature:
 4. **GSEA-style running-sum statistic** (Subramanian et al., PNAS 2005):  
    uses an enrichment score based on a weighted random walk and permutation testing: **this is the method implemented in `qea_test()`**.
 
-`localEnrichment` implements a *GSEA-style running-score MSEA*, adapted to metabolomics.
+`localEnrichment` implements a *GSEA-style running-score*, adapted to metabolomics.
 
 Specifically:
 
@@ -1368,11 +1369,11 @@ Specifically:
   (negative enrichment) deviation from zero.
 - Significance is evaluated by **permuting feature positions**, exactly as in classical GSEA.
 
-This is the most statistically robust form of QEA/MSEA and is the same approach used in modern tools such as **fgsea**, **clusterProfiler::GSEA()**, and the updated **MetaboAnalyst 5.0 “QEA” module**.
+This is the most statistically robust form of QEA/GSEA and is the same approach used in modern tools such as **fgsea**, **clusterProfiler::GSEA()**, and the updated **MetaboAnalyst 5.0 “QEA” module**.
 
 ### Implementation in `EnrichMet` (MetSEA)
 
-`EnrichMet` implements MSEA (referred to as **MetSEA**) using the **fgsea algorithm**, which corresponds to a fast implementation of the GSEA running-sum statistic.
+`EnrichMet` implements GSEA (referred to as **MetSEA**) using the **fgsea algorithm**, which corresponds to a fast implementation of the GSEA running-sum statistic.
 
 Main elements:
 
@@ -1392,7 +1393,7 @@ In practice, this implementation is methodologically equivalent to the GSEA-styl
 - it leverages **fgsea for computational efficiency**, enabling fast analysis of large datasets  
 - it is tightly integrated with KEGG pathway definitions and the ORA workflow within the same pipeline
 
-Overall, both `localEnrichment` and `EnrichMet` implement conceptually the same class of QEA/MSEA methods (GSEA-like), differing mainly in computational backend and workflow integration rather than in statistical principles.
+Overall, both `localEnrichment` and `EnrichMet` implement conceptually the same class of QEA/GSEA methods (GSEA-like), differing mainly in computational backend and workflow integration rather than in statistical principles.
 # Resources and references
 
 ## Resources

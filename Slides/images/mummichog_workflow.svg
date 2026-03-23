@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420">
+<rect width="100%" height="100%" fill="white"/>
+<text x="500" y="36" font-family="Arial" font-size="28" text-anchor="middle">Schematic Mummichog workflow</text>
+
+<rect x="30" y="110" width="190" height="140" rx="12" ry="12" fill="#eef5ff" stroke="#4c78a8" stroke-width="2"/>
+<text x="125" y="150" font-family="Arial" font-size="22" text-anchor="middle">Untargeted peak list</text>
+<text x="125" y="183" font-family="Arial" font-size="18" text-anchor="middle">m/z, RT, p-values,</text>
+<text x="125" y="208" font-family="Arial" font-size="18" text-anchor="middle">test statistics</text>
+
+<rect x="280" y="90" width="200" height="180" rx="12" ry="12" fill="#f4f8ec" stroke="#59a14f" stroke-width="2"/>
+<text x="380" y="128" font-family="Arial" font-size="22" text-anchor="middle">Candidate mapping</text>
+<text x="380" y="162" font-family="Arial" font-size="18" text-anchor="middle">Each significant peak is</text>
+<text x="380" y="187" font-family="Arial" font-size="18" text-anchor="middle">mapped to several</text>
+<text x="380" y="212" font-family="Arial" font-size="18" text-anchor="middle">possible metabolites</text>
+
+<rect x="540" y="90" width="200" height="180" rx="12" ry="12" fill="#fff5ea" stroke="#f28e2b" stroke-width="2"/>
+<text x="640" y="128" font-family="Arial" font-size="22" text-anchor="middle">Pathway evidence</text>
+<text x="640" y="162" font-family="Arial" font-size="18" text-anchor="middle">Candidate metabolites</text>
+<text x="640" y="187" font-family="Arial" font-size="18" text-anchor="middle">are projected onto</text>
+<text x="640" y="212" font-family="Arial" font-size="18" text-anchor="middle">known pathways</text>
+
+<rect x="800" y="90" width="170" height="180" rx="12" ry="12" fill="#f9eef9" stroke="#b07aa1" stroke-width="2"/>
+<text x="885" y="128" font-family="Arial" font-size="22" text-anchor="middle">Permutation test</text>
+<text x="885" y="162" font-family="Arial" font-size="18" text-anchor="middle">Random peak sets</text>
+<text x="885" y="187" font-family="Arial" font-size="18" text-anchor="middle">define the null</text>
+<text x="885" y="212" font-family="Arial" font-size="18" text-anchor="middle">distribution</text>
+
+<line x1="220" y1="180" x2="280" y2="180" stroke="#444" stroke-width="3"/>
+<polygon points="280,180 268,173 268,187" fill="#444"/>
+<line x1="480" y1="180" x2="540" y2="180" stroke="#444" stroke-width="3"/>
+<polygon points="540,180 528,173 528,187" fill="#444"/>
+<line x1="740" y1="180" x2="800" y2="180" stroke="#444" stroke-width="3"/>
+<polygon points="800,180 788,173 788,187" fill="#444"/>
+
+<text x="500" y="330" font-family="Arial" font-size="21" text-anchor="middle">True biological signals tend to accumulate in pathways, whereas false matches are expected to be more random.</text>
+</svg>
