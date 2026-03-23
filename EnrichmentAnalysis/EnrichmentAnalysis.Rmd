@@ -536,6 +536,30 @@ QEA_cachexia_KEGG_LE<- qea_test(
 
 ```
 
+The results can be plotted similarly to how we did with ORA.
+
+```{r}
+# GSEA/QEA plot with localEnrichment
+top_cachexia_qea <- QEA_cachexia_KEGG_LE$table %>%
+  dplyr::arrange(p_adj) %>%
+  dplyr::slice(1:20)
+
+top_cachexia_qea$set_name <- factor(
+  top_cachexia_qea$set_name,
+  levels = rev(unique(top_cachexia_qea$set_name))
+)
+
+localEnrichment::plot_enrichment(
+  results = top_cachexia_qea,
+  type = c("bar", "dot"),
+  top = 20,
+  x_measure = "-log10(p_adj)",
+  color_by = "p_adj",
+  title = "Cachexia: GSEA/QEA with localEnrichment"
+)
+```
+
+
 ### GSEA with `enrichmet` and KEGGsets_HMDB
 
 In this case we have to provide a more rigid data structure that can be extracted from cachegia_tt.
@@ -607,6 +631,13 @@ GSEA_cachexia_KEGG_EM <- perform_gsea_analysis(
 head(GSEA_cachexia_KEGG_EM)
 ```
 
+ANd plot the results.
+
+```{r}
+# GSEA plot with enrichmet
+plot <- create_gsea_plot(GSEA_cachexia_KEGG_EM, top_n = 20)
+plot
+```
 
 ### Comparison of results
 
@@ -1219,6 +1250,29 @@ nrow(QEA_EM_KEGG_LE_sig)
 head(QEA_EM_KEGG_LE_sig[, c("set_id", "set_name", "p_value", "p_adj")], 10)
 ```
 
+And finmally GSEA results can be plotted:
+
+```{r}
+# GSEA/QEA plot with localEnrichment
+top_kras_qea <- QEA_EM_KEGG_LE$table %>%
+  dplyr::arrange(p_adj) %>%
+  dplyr::slice(1:20)
+
+top_kras_qea$set_name <- factor(
+  top_kras_qea$set_name,
+  levels = rev(unique(top_kras_qea$set_name))
+)
+
+localEnrichment::plot_enrichment(
+  results = top_kras_qea,
+  type = c("bar", "dot"),
+  top = 20,
+  x_measure = "-log10(p_adj)",
+  color_by = "p_adj",
+  title = "KRASG12D example: GSEA/QEA with localEnrichment"
+)
+```
+
 ## GSEA with enrichmet
 
 The enrichmet package already provides a function to perform a GSEA-like analysis from the summary statistics table.
@@ -1230,6 +1284,13 @@ GSEA_EM_KEGG_EM <- perform_gsea_analysis(
 )
 
 head(GSEA_EM_KEGG_EM[, 1:3], 10)
+```
+
+And a plot:
+
+```{r}
+create_gsea_plot(GSEA_EM_KEGG_EM, top_n = 15)
+plot
 ```
 
 This allows a direct comparison with the localEnrichment implementation, since both analyses are now based on the same ranked metabolite list and the same KEGG pathway definitions.
@@ -1264,12 +1325,9 @@ top_gsea_em
 ```
 
 In this KRASG12D example the compatibility between both tools is cleaner than in the Cachexia case, because:
-
-the identifiers are already KEGG compound identifiers,
-
-the pathway mapping used by enrichmet is directly available,
-
-the EnrichmentSet object used by localEnrichment has been built from the same source.
+- the identifiers are already KEGG compound identifiers,
+- the pathway mapping used by enrichmet is directly available,
+- the `EnrichmentSet` object used by `localEnrichment` has been built from the same source.
 
 This makes the example particularly useful as a controlled use case to compare the behaviour of the two packages under nearly identical inputs.
 
@@ -1281,7 +1339,7 @@ This makes the example particularly useful as a controlled use case to compare t
 
 **Over-Representation Analysis (ORA)** is a classical approach used to identify biological sets (such as pathways, chemical classes, or ontological categories) that are statistically *enriched* in a predefined list of significant features, typically metabolites or genes.
 
-The key idea is to test whether a particular set contains **more significant features than expected by chance**, given a specified background.
+The key idea is to test whether a particular set contains **more significant features than expected by chance**, given a specified background [@rivals2007; @Khatri2012].
 
 For each set, a contingency table is constructed: 
 
@@ -1296,7 +1354,7 @@ where:
 - **m** = number of features in the given set  
 - **k** = number of selected features that belong to that set
 
-A statistical test (typically **Fisher’s exact test** or the **hypergeometric test**) is then applied to compute the probability of observing at least *k* selected features in the set under a random sampling model.
+A statistical test (typically **Fisher’s exact test** or the **hypergeometric test**) is then applied to compute the probability of observing at least *k* selected features in the set under a random sampling model [@rivals2007].
 
 The resulting *p*-values are adjusted for multiple testing (e.g., Benjamini–Hochberg FDR correction), and the **fold enrichment** is often reported as:
 
@@ -1313,7 +1371,7 @@ The function `ora_test()` implements this classical ORA workflow in a flexible a
 
 ### Implementation in `EnrichMet`
 
-`EnrichMet` follows the same classical ORA framework, specifically applied to KEGG pathways. For each pathway, it constructs a 2×2 contingency table comparing detected metabolites versus a background set, and applies **Fisher’s exact test** to evaluate enrichment. :contentReference[oaicite:0]{index=0}
+`EnrichMet` follows the same classical ORA framework, specifically applied to KEGG pathways. For each pathway, it constructs a 2×2 contingency table comparing detected metabolites versus a background set, and applies **Fisher’s exact test** to evaluate enrichment [@Mekonnen2025].
 
 Key characteristics:
 
@@ -1329,7 +1387,7 @@ Conceptually, this implementation is equivalent to standard ORA, with the main s
 
 ### Concept
 
-Quantitative Enrichment Analysis (QEA), also known as **Metabolite Set Enrichment Analysis (GSEA)**, is the analogue of GSEA for metabolomics and other continuous-valued omics data. 
+Quantitative Enrichment Analysis (QEA), also known as **Metabolite Set Enrichment Analysis (GSEA)**, is the analogue of GSEA for metabolomics and other continuous-valued omics data [@Subramanian2005; @Xia2011]. 
 
 Instead of dichotomizing features into
 “significant/non-significant,” QEA uses **the entire ranked list** of features, each with an associated score such as:
@@ -1345,6 +1403,7 @@ For each metabolite set, QEA tests whether its members tend to appear **towards 
 This avoids arbitrary cutoffs and provides sensitivity to subtle but consistent
 shifts across a pathway or chemical class.
 
+
 ### GSEA variant implemented in `localEnrichment`
 
 There are several variants of GSEA/QEA in the literature:
@@ -1358,7 +1417,7 @@ There are several variants of GSEA/QEA in the literature:
    model score–membership associations → *not used here*.
 
 4. **GSEA-style running-sum statistic** (Subramanian et al., PNAS 2005):  
-   uses an enrichment score based on a weighted random walk and permutation testing: **this is the method implemented in `qea_test()`**.
+   uses an enrichment score based on a weighted random walk and permutation testing: **this is the method implemented in `qea_test()`** [@Subramanian2005].
 
 `localEnrichment` implements a *GSEA-style running-score*, adapted to metabolomics.
 
@@ -1370,13 +1429,14 @@ Specifically:
   - misses contribute `-1/(N - Nh)`
 - The Enrichment Score (**ES**) is the maximum (positive enrichment) or minimum
   (negative enrichment) deviation from zero.
-- Significance is evaluated by **permuting feature positions**, exactly as in classical GSEA.
+- Significance is evaluated by **permuting feature positions**, exactly as in classical GSEA [@Subramanian2005].
 
-This is the most statistically robust form of QEA/GSEA and is the same approach used in modern tools such as **fgsea**, **clusterProfiler::GSEA()**, and the updated **MetaboAnalyst 5.0 “QEA” module**.
+This is the most statistically robust form of QEA/GSEA and is the same approach used in modern tools such as **fgsea** [@Korotkevich2016FastGS], **clusterProfiler::GSEA()**, and the updated **MetaboAnalyst 5.0 “QEA” module**.
+
 
 ### Implementation in `EnrichMet` (MetSEA)
 
-`EnrichMet` implements GSEA (referred to as **MetSEA**) using the **fgsea algorithm**, which corresponds to a fast implementation of the GSEA running-sum statistic.
+`EnrichMet` implements GSEA (referred to as **MetSEA**) using the **fgsea algorithm**, which corresponds to a fast implementation of the GSEA running-sum statistic [@Korotkevich2016FastGS; @Mekonnen2025].
 
 Main elements:
 
@@ -1397,9 +1457,8 @@ In practice, this implementation is methodologically equivalent to the GSEA-styl
 - it is tightly integrated with KEGG pathway definitions and the ORA workflow within the same pipeline
 
 Overall, both `localEnrichment` and `EnrichMet` implement conceptually the same class of QEA/GSEA methods (GSEA-like), differing mainly in computational backend and workflow integration rather than in statistical principles.
-# Resources and references
 
-## Resources
+# Resources
 
 - [The tidymass project](https://www.tidymass.org/)
 
@@ -1408,8 +1467,10 @@ Overall, both `localEnrichment` and `EnrichMet` implement conceptually the same 
 - [Data Analysis in Metabolomics](https://xbiomeanalysis.github.io/Metabolomics_Aanlysis/)
 
 
+# References
 
-## References
+::: {#refs}
+:::
 
 # Session information
 

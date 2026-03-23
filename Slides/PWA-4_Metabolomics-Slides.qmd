@@ -30,7 +30,7 @@ knit:
       warning: false
     knit_options:
       width: 75
-bibliography: "PWAReferences.bib"
+bibliography: "../PWAReferences.bib"
 editor_options: 
   chunk_output_type: console
 ---
