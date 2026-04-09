@@ -102,7 +102,7 @@ Any pathway analysis requires, at least, two inputs:
 
 ## The datasets
 
-We use three datasets that have been preprocessed elsewhere (see file: [PrepareData-4-EnrichmentAnalysis.Rmd](PrepareData-4-EnrichmentAnalysis.Rmd)) and 
+We use three datasets that have been preprocessed elsewhere (see file: [PrepareData.html](PrepareData.html)) and 
 
 1. The **ia** dataset. This is a popular example used by `MetaboAnalyst`, where a comparison between affected and control patients is performed. It has the drawback that only  *differential*  metabolites are provided, which makes it only partially interesting for some types of analyses. We keep it for its popularity.
 
@@ -564,18 +564,18 @@ localEnrichment::plot_enrichment(
 
 In this case we have to provide a more rigid data structure that can be extracted from cachegia_tt.
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 data4gsea <- cachexia_tt[,c("HMDB", "P.Value", "logFC")]
 colnames(data4gsea) <- c("met_id", "pval", "log2fc")
 ```
 
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 head(PwVSMet_HMDB, n=10)
 head(data4gsea, n=12)
 ```
 
-```{r eval=FALSE}
+```{r }
 GSEA_cachexia_KEGG_EM<- perform_gsea_analysis(
   example_data =data4gsea ,
   PathwayVsMetabolites= PwVSMet_HMDB
@@ -586,7 +586,8 @@ head(GSEA_cachexia_KEGG_EM)
 
 ### GSEA with `enrichmet` and KEGGsets_KEGG
 
-`enrichmet` seems to have a strange design flaw:  in some recent versions of the package the  `perform_gsea_analysis()` function expects KEGG-like identifiers in the `met_id` column, so for this step we use the KEGG annotation instead of HMDB.
+`enrichmet`  `perform_gsea_analysis()` function seems to expect by default  KEGG-like identifiers in the `met_id` column. 
+Although this is probably our fault in invoking the function, in order to compare its performance using HMDB or KEHH identifiers, *we decided to repeat the analysis using  KEGG annotation instead of HMDB*.
 
 First, we build the summary statistics table required by `enrichmet`:
 
@@ -631,7 +632,7 @@ GSEA_cachexia_KEGG_EM <- perform_gsea_analysis(
 head(GSEA_cachexia_KEGG_EM)
 ```
 
-ANd plot the results.
+And plot the results.
 
 ```{r}
 # GSEA plot with enrichmet
@@ -1293,7 +1294,74 @@ create_gsea_plot(GSEA_EM_KEGG_EM, top_n = 15)
 plot
 ```
 
-This allows a direct comparison with the localEnrichment implementation, since both analyses are now based on the same ranked metabolite list and the same KEGG pathway definitions.
+This allows a direct comparison with the `localEnrichment` implementation, since both analyses are now based on the same ranked metabolite list and the same KEGG pathway definitions.
+
+## Enrichmet Wrapper: 2-in-1
+
+`Enrichmet` implements a wrapper function that performs both ORA and GSEA and facilitates the execution and visualization of results:
+
+
+```{r}
+EM_results <-enrichmet(
+  inputMetabolites = EM_sig,
+  PathwayVsMetabolites =  EM_PathwayVsMetabolites, 
+  example_data= EM_summaryStats, 
+  top_n = 100,
+  p_value_cutoff = 1,
+  run_plots = TRUE)
+```
+
+The object `EM_results` stores the results of ORA, MSEA as well as the information required for several plots:
+
+```{r}
+names(EM_results)
+```
+
+This object can be used to extract the analysis results and all the visualitzations that can be performed.
+
+```{r}
+head(EM_results$pathway_enrichment_results)
+```
+
+```{r}
+head(EM_results$gsea_results)
+```
+
+```{r display-plots1, results='asis', fig.align='center', fig.width=12, fig.height=8}
+print(EM_results$pathway_plot)
+```
+Fig. 1. Pathway enrichment plot. The plot shows enriched pathways with their corresponding –log10 p-values. Circle size represents the number of metabolites associated with each pathway, while color indicates the adjusted p-value. Pathway enrichment was performed using Fisher’s exact test based on metabolite-to-pathway mappings, with metabolite lists as input.
+
+```{r display-plots2, results='asis', fig.align='center', fig.width=12, fig.height=8}
+print(EM_results$impact_plot)
+```
+
+Fig. 2. Pathway impact plot. The plot integrates enrichment significance with pathway topology to highlight the most influential pathways. The y-axis shows the −log10 p-value and x-axis shows the pathway impact value. Circle size reflects the pathway impact, while color represents the adjusted p-value. Together, these features emphasize pathways that are both statistically significant and topologically central.
+
+```{r display-plots3, results='asis', fig.align='center', fig.width=12, fig.height=8}
+print(EM_results$gsea_plot)
+```
+Fig. 3. Metabolite Set Enrichment Analysis (MetSEA) plot. The plot shows enriched pathways with their corresponding –log10 p-values. Circle size represents the number of metabolites associated with each pathway, while color indicates the Normalized Enrichment Score (NES).
+
+```{r display-plots4, results='asis', fig.align='center', fig.width=12, fig.height=8}
+print(EM_results$rbc_plot)
+```
+Fig. 4. Relative Betweenness Plot. This plot displays the Relative Betweenness Centrality (RBC) of input metabolites, with RBC on the x-axis and corresponding values on the y-axis. It highlights the topological importance and potential regulatory influence of metabolites within the metabolic network.
+```{r display-plots5, results='asis', fig.align='center', fig.width=12, fig.height=8}
+print(EM_results$network_plot)
+```
+Fig. 5. Pathway–Metabolite Network Plot. This plot visualizes the relationships between enriched pathways and input metabolites, highlighting their connectivity and functional associations within the metabolic network. Edges indicate associations between pathways and their corresponding metabolites, while nodes are colored to distinguish pathways from metabolites.
+
+```{r display-plots6, results='asis', fig.align='center', fig.width=12, fig.height=8}
+print(EM_results$heatmap_plot)
+```
+Fig. 6. Pathway Heatmap. Metabolites are displayed on the y-axis and pathways on the x-axis. The heatmap uses a gradient of −log10 p-values to indicate the significance of enriched pathways and the involvement of each metabolite within the corresponding pathway.
+
+```{r display-plots7, results='asis', fig.align='center', fig.width=15, fig.height=10}
+ComplexHeatmap::draw(EM_results$membership_plot)
+```
+Fig. 7. Pathway Membership plot. Metabolites are displayed on the y-axis and pathways on the x-axis. The heatmap plot illustrates pathway membership by showing each pathway along with its associated metabolites.Only pathways with at least two mapped metabolites are included.
+
 
 ## Quick comparison of the top pathways
 

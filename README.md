@@ -12,7 +12,7 @@ presented in the the [2nd International Conference of the Spanish Society of Met
 
 - Creating Metabolite Sets for Pathway Analysis
   - [Preparing Metabolite Sets](https://aspteaching.github.io/AnIntro2PWA4Metabolomics/Metabolites_Sets/Preparing_Metabolites_Sets.html)
-  - [`localEnrichment` package](https://github.com/aspresaearch/localEnrichment)
+  - [`localEnrichment` package](https://github.com/aspresearch/localEnrichment)
 
 - Applying Enrichment Analysis Tools
 
